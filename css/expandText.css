@@ -1,0 +1,155 @@
+
+
+
+/* START OF CSS FOR EXPANDINGTEXTAREA */
+
+/* Tiny reset; you probably already have this */
+    .expandingArea textarea, 
+    .expandingArea p,
+    .expandingArea pre {
+      margin: 0;
+      padding: 0;
+      outline: 0;
+      border: 0;
+    -webkit-box-shadow:none;
+    -moz-box-shadow:none;
+    box-shadow:none;
+    }
+
+    /* The containing element has the expandingArea
+       class, define any border or inset box-shadow
+       etc. here that you want to style your textarea.
+       I've just added a simple 1px solid mid-grey
+       border. You can also set a min-height property
+       here if you want and it works as expected. */
+    .expandingArea {
+        position: relative;
+        border: 1px solid #FFFFFF;
+        width: 276px;
+        float:left;
+        margin-top:3px;
+        margin-bottom:3px;
+        margin-left:1px;
+        margin-right:1px;
+        background: #C0C0FF;
+
+    }
+
+    .expandingArea textarea:focus {
+        border: 1px solid #0000FF;
+        background: #A0A0FF;
+    }
+
+    .expandingArea:hover {
+        background: #B0B0FF;
+    }
+
+    /* Any padding should go in here; it needs to be
+       the same for both the pre and the textarea. You
+       also need to make sure both have exactly the
+       same font and line height properties, although
+       the exact values can of course be anything you
+       want. */
+    .expandingArea textarea,
+    .expandingArea pre {
+      padding: 5px;
+      background: transparent;
+      font: 400 13px/16px helvetica, arial, sans-serif;
+      /* Make the text soft-wrap */
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+   .expandingArea textarea {
+      /* The border-box box model is used to allow
+         padding whilst still keeping the overall width
+         at exactly that of the containing element.
+       */
+      -webkit-box-sizing: border-box;
+         -moz-box-sizing: border-box;
+          -ms-box-sizing: border-box;
+              box-sizing: border-box;
+      /* This height is used when JS is disabled */
+      height: 100px;
+      width: 100%;
+    }
+
+    .expandingArea.active textarea {
+      /* Hide any scrollbars */
+      overflow: hidden;
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      /* Remove WebKit user-resize widget */
+      resize: none;
+    }
+
+    .expandingArea pre {
+      display: none;
+    }
+
+    .expandingArea.active pre {
+      display: block;
+      /* We don't actually want to see this text, it's just for sizing */
+      visibility: hidden;
+    }
+    
+    .shrinkfitDiv {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+	/*	display:inline-block; */
+        display:flex;
+    -webkit-box-align: stretch;
+    -moz-box-align: stretch;
+    -ms-flex-align: stretch;
+    -webkit-align-items: stretch;
+    align-items: stretch;
+      /*   align-items:stretch; */
+      /*  width:955px; */
+        width:276px;
+        border: 2px solid white;
+        background: #FFFFFF;
+        overflow:hidden
+    }
+
+    .expandingAreaWhiteBG {
+        background: #FFFFFF;
+    }
+
+    .expandingAreaWhiteBG:hover {
+        background: #FFFFFF;
+    }
+
+    .expandingAreaWhiteBG textarea:focus {
+        background: #FFFFFF;
+        border: 0px;
+    }
+
+    .expandingAreaGreyBG {
+        background: #D0D0D0;
+    }
+
+    .expandingAreaGreyBG textarea:focus {
+        border: 1px solid #606060;
+        background: #B0B0B0;
+    }
+
+    .expandingAreaGreyBG:hover {
+        background: #C0C0C0;
+    }
+
+    .expandingAreaGreyText textarea {
+        color: #808080;
+    }
+
+    .calendarBody {
+        margin:0;
+        padding:0px 5px;
+    {
+
+/* END OF CSS FOR EXPANDINGTEXTAREA */
+
+

@@ -1,0 +1,7 @@
+New Transaction:
+	1) Display all transactions for current month (or any month as desired) with 'copy' button beside each one
+	2) Choose Document (defaults to no document for when the transaction has no supporting document)
+	3) Choose to either 'copy' a current transaction for modification (any already selected document will replace existing doc), or create a new one (selected doc will be attached)
+	4) Edit transaction as required (selection boxes/lists will appear for changing some fields - they will allow new values to be created on the hoof)
+	5) Save transaction
+	6) New transaction will appear in its context

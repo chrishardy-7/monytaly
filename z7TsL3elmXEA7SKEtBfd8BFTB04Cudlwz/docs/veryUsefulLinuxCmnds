@@ -1,0 +1,5 @@
+
+sudo -H -u www-data (become www-data)
+
+namei (trace a path to its end and show structure - useful for testing whether something can be got at!)
+

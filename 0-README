@@ -1,0 +1,5 @@
+./build and ./web are links to dirs of the same name in ./Q3dj4G8/ , they are required for viewer.js pdf display to work! These dirs may have been modified slightly so can't necessarily be just replaced by new downloaded versions.
+./archive dir has been removed from ./Q3dj4G8/z7TsL3elmXEA7SKEtBfd8BFTB04Cudlwz/ so it is not included in the git repository
+index.php link points at ./Q3dj4G8/index.page
+globals.php is an example file (which will require editing to insert passwords etc.) that needs to go in /var/monytalyData/Q3dj4G8/
+

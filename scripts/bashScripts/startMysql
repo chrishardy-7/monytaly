@@ -1,0 +1,4 @@
+#!/bin/bash
+
+gnome-terminal --geometry 318x30+0-0 --execute mysql -u root --password=p1sh testing
+

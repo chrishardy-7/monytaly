@@ -1,0 +1,203 @@
+1) create ssh keys on laptop, use a pass phrase.
+2) create ubuntu 18.04 64bit server droplet with ssh access only (paste public ssh key while creating).
+3) log in as root from terminal on laptop - change root PW as required.
+4) create new user: adduser chris, usermod -aG sudo chris, cd /home/chris, mkdir -p ./.ssh, cd .ssh, echo 'public ssh key text generated at 1) above' >> authorized_keys.
+5) ensure sytem is up-to-date: sudo apt-get update, sudo apt-get dist-upgrade
+6) install monitoring from digitalocean: curl -sSL https://agent.digitalocean.com/install.sh | sh
+
+7) install apache2: sudo apt-get install apache2
+8) install mariadb and enable for bootup and make secure (also allows root PW change: sudo apt-get install mariadb-server mariadb-client, sudo systemctl enable mariadb.service, mysql_secure_installation
+9) look at page about PWless login to mariadb from linux root/sudo - decide what to do (may be fine to leave it as long as a secure root mariadb PW exists)!: https://www.linuxmaker.com/en/tutorials/mariadb-problem-with-root-login.html
+10) install php: sudo apt-get install php libapache2-mod-php php-common php-mbstring php-xmlrpc php-soap php-gd php-xml php-intl php-mysql php-cli php-zip php-curl
+10b) install imageMagick: sudo apt-get install php-imagick  ##################### ensure pdf section in /etc/ImageMagick-6/policy.xml is set to 'read|write' and not 'none' !!! otherwise exeptiion: unauthorised will be thrown ###
+11) restart apache2: sudo systemctl restart apache2.service
+12) create test file: sudo nano /var/www/html/phpinfo.php and write '<?php phpinfo( ); ?>' to it. make sure firewall is open to html and test it.
+
+13) check access log: sudo tail -f /var/log/apache2/access.log
+14) check error log: sudo tail -f /var/log/apache2/error.log
+15) set up virtual host for monytaly.uk: https://www.digitalocean.com/community/tutorials/how-to-install-the-apache-web-server-on-ubuntu-18-04#step-5-%E2%80%94-setting-up-virtual-hosts-(recommended) , step 5 (other useful stuff too)
+16) on: sudo apache2ctl configtest result gives: 'Could not reliably determine the server's fully qualified domain name...' not found satisfactory way of fixing this but old frankfurt site has same problem and seems to work ok.
+17) disable ufw & ensure digOcean FW allows http & https,
+18) set up letsencrypt: sudo add-apt-repository ppa:certbot/certbot, sudo apt update, sudo apt-get dist-upgrade, sudo apt install python-certbot-apache, sudo certbot --apache -d monytaly.uk (choose 2: redirect to secure HTTPS access)
+
+########## OUTPUT OF LETSENCRYPT COMMAND ###########
+chris@UBUNTU-18-04x64-1CPU-2gb-LON1-01:~$ sudo certbot --apache -d monytaly.uk
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Plugins selected: Authenticator apache, Installer apache
+Enter email address (used for urgent renewal and security notices) (Enter 'c' to
+cancel): chris@thehardys.net
+
+-------------------------------------------------------------------------------
+Please read the Terms of Service at
+https://letsencrypt.org/documents/LE-SA-v1.2-November-15-2017.pdf. You must
+agree in order to register with the ACME server at
+https://acme-v01.api.letsencrypt.org/directory
+-------------------------------------------------------------------------------
+(A)gree/(C)ancel: A
+
+-------------------------------------------------------------------------------
+Would you be willing to share your email address with the Electronic Frontier
+Foundation, a founding partner of the Let's Encrypt project and the non-profit
+organization that develops Certbot? We'd like to send you email about EFF and
+our work to encrypt the web, protect its users and defend digital rights.
+-------------------------------------------------------------------------------
+(Y)es/(N)o: N
+Obtaining a new certificate
+Performing the following challenges:
+http-01 challenge for monytaly.uk
+Enabled Apache rewrite module
+Waiting for verification...
+Cleaning up challenges
+Created an SSL vhost at /etc/apache2/sites-available/monytaly.uk-le-ssl.conf
+Enabled Apache socache_shmcb module
+Enabled Apache ssl module
+Deploying Certificate to VirtualHost /etc/apache2/sites-available/monytaly.uk-le-ssl.conf
+Enabling available site: /etc/apache2/sites-available/monytaly.uk-le-ssl.conf
+
+Please choose whether or not to redirect HTTP traffic to HTTPS, removing HTTP access.
+-------------------------------------------------------------------------------
+1: No redirect - Make no further changes to the webserver configuration.
+2: Redirect - Make all requests redirect to secure HTTPS access. Choose this for
+new sites, or if you're confident your site works on HTTPS. You can undo this
+change by editing your web server's configuration.
+-------------------------------------------------------------------------------
+Select the appropriate number [1-2] then [enter] (press 'c' to cancel): 2
+Enabled Apache rewrite module
+Redirecting vhost in /etc/apache2/sites-enabled/monytaly.uk.conf to ssl vhost in /etc/apache2/sites-available/monytaly.uk-le-ssl.conf
+
+-------------------------------------------------------------------------------
+Congratulations! You have successfully enabled https://monytaly.uk
+
+You should test your configuration at:
+https://www.ssllabs.com/ssltest/analyze.html?d=monytaly.uk
+-------------------------------------------------------------------------------
+
+IMPORTANT NOTES:
+ - Congratulations! Your certificate and chain have been saved at:
+   /etc/letsencrypt/live/monytaly.uk/fullchain.pem
+   Your key file has been saved at:
+   /etc/letsencrypt/live/monytaly.uk/privkey.pem
+   Your cert will expire on 2018-08-01. To obtain a new or tweaked
+   version of this certificate in the future, simply run certbot again
+   with the "certonly" option. To non-interactively renew *all* of
+   your certificates, run "certbot renew"
+ - Your account credentials have been saved in your Certbot
+   configuration directory at /etc/letsencrypt. You should make a
+   secure backup of this folder now. This configuration directory will
+   also contain certificates and private keys obtained by Certbot so
+   making regular backups of this folder is ideal.
+ - If you like Certbot, please consider supporting our work by:
+
+   Donating to ISRG / Let's Encrypt:   https://letsencrypt.org/donate
+   Donating to EFF:                    https://eff.org/donate-le
+########## END OF OUTPUT OF LETSENCRYPT COMMAND ###########
+
+19) sudo nano /etc/apache2/sites-enabled/monytaly.uk.conf, comment out (#) condition line 'RewriteCond %{SERVER_NAME} =monytaly.uk', sudo service apache2 restart
+    this will force https:// for everything incoming - including plain ip addr: 159.65.88.198 (which should be rejected by the client for certificate not valid even though the connection will still be encrypted)
+
+
+20) do certificate renewal dry run to ensure all firewalls etc. will allow renewal (needs ports 80 http, and 433 https open to all): sudo certbot renew --dry-run
+21) set up certifiacate autorenewal with cron (root): sudo crontab -e, append '30 2 * * 1 /usr/bin/certbot renew >> /var/log/le-renew.log' to file and save.
+22) check cron functionality: sudo systemctl status cron, or look at cron log to check things: sudo grep -i cron /var/log/syslog
+23) could temporarily set renewal to say every 4min (*/4) in sudo crontab -e, to check operation by looking at letsencrypt log from time tio time to check renewal attempts: tail -n 100 /var/log/le-renew.log
+24) test configuration with: https://www.ssllabs.com/ssltest/analyze.html?d=monytaly.uk
+
+25) set up ufw as cover in case the digitalocean firewall goes down or is miss-set: sudo ufw reset, sudo ufw allow ssh, sudo ufw allow http, sudo ufw allow https ,sudo ufw enable, sudo ufw status verbose. (need to check there's no problem for restic backups to DigitalOcean Spaces as think it will use https)
+
+
+26) set php parameters for file uploads: sudo nano /etc/php/7.2/apache2/php.ini, post_max_size: 50M, upload_max_filesize: 5M, max_file_uploads: 50.
+
+27) set up restic as per https://www.digitalocean.com/community/tutorials/how-to-back-up-data-to-an-object-storage-service-with-the-restic-backup-client (spaces url must drop the https:// and prefix with s3: with /bucketname at end)
+
+28) create script in hidden dir to dump the castlemilk database (could be used for any database) (make executable)
+    /home/chris/.backupRestoreMonytaly/mariadbCccAccDump:
+        #!/bin/sh
+        ACC_CCC_USERNAME="xxxxx"
+        ACC_CCC_PASSWORD="yyyyy"
+        ACC_CCC_DATABASE="zzzzz"
+        /usr/bin/mysqldump -u $ACC_CCC_USERNAME -p$ACC_CCC_PASSWORD $ACC_CCC_DATABASE | /bin/gzip > /var/monytalyData/gz14Yj/mariadbBak/$(date +"%y-%m-%d-%I%M%S")-$ACC_CCC_DATABASE-mariadbBak.gz
+
+29) create script in hidden dir to restore the castlemilk database (could be used for any database) (make executable) path/name to compressed dumped database file is added as an argument! (e.g. if running from chris home dir: ~/.mariadbCccAccRestore /var/monytalyData/gz14Yj/mariadbBak/2018-05-24-1526-zzzCmilkfhr647h-mariadbBak.gz). If the database is completely destroyed (or restoring to another machine) an empty one will need to be recreated with appropriate permissions etc.
+    /home/chris/.backupRestoreMonytaly/mariadbCccAccRestore:
+        #!/bin/bash
+        ACC_CCC_USERNAME="xxxxx"
+        ACC_CCC_PASSWORD="yyyyy"
+        ACC_CCC_DATABASE="zzzzz"
+        file=$1
+        if [ -f "$file" ]
+        then
+	        gunzip < $file | /usr/bin/mysql -u $ACC_CCC_USERNAME -p$ACC_CCC_PASSWORD $ACC_CCC_DATABASE
+	        echo "Database Restored"
+        else
+	        echo "$file not found."
+        fi
+
+30) create script in hidden dir to backup all monytaly data from /var/monytalyData (includes all uploaded files and all database dumps - regardless of organisation) (make executable).
+    /home/chris/.backupRestoreMonytaly/resticMonytalyBackup
+        #!/bin/sh
+        export AWS_ACCESS_KEY_ID="wwwwwwwwww"
+        export AWS_SECRET_ACCESS_KEY="xxxxxxxxxx"
+        export RESTIC_REPOSITORY="s3:ams3.digitaloceanspaces.com/aaaaa-bbbbb"
+        export RESTIC_PASSWORD="yyyyyyyyyy"
+        /usr/local/bin/restic backup -q /var/monytalyData;
+
+40) create script in hidden dir to restore all monytaly data to /tmp (includes all uploaded files and all database dumps - regardless of organisation) (make executable).
+    restores to tmp dir first then after moving required dir/files to /var/monytalyData do sudo chown -R chris:www-data /var/monytalyData and chmod 774 -R /var/monytalyData to fix ownership and permissions recursively
+    /home/chris/.backupRestoreMonytaly/resticMonytalyRestore
+        #!/bin/sh
+        export AWS_ACCESS_KEY_ID="wwwwwwwwww"
+        export AWS_SECRET_ACCESS_KEY="xxxxxxxxxx"
+        export RESTIC_REPOSITORY="s3:ams3.digitaloceanspaces.com/aaaaa-bbbbb"
+        export RESTIC_PASSWORD="yyyyyyyyyy"
+        snapshotNum=$1
+        /usr/local/bin/restic restore -q $snapshotNum --target /tmp
+
+41) create script in hidden dir to list all monytaly data backup snapshot IDs (make executable).
+    /home/chris/.backupRestoreMonytaly/resticMonytalySnap
+        #!/bin/sh
+        export AWS_ACCESS_KEY_ID="wwwwwwwwww"
+        export AWS_SECRET_ACCESS_KEY="xxxxxxxxxx"
+        export RESTIC_REPOSITORY="s3:ams3.digitaloceanspaces.com/aaaaa-bbbbb"
+        export RESTIC_PASSWORD="yyyyyyyyyy"
+        restic snapshots
+
+42) crontab -e (from chris account) and create line to first dump the castlemilk database automatically at night, then when done backup the monytaly data (which includes uploads and the db dump). This is UTC time!! (at moment)
+        0 4 * * * /home/chris/.backupRestoreMonytaly/mariadbCccAccDump && /home/chris/.backupRestoreMonytaly/resticMonytalyBackup
+
+
+43) install postfix and hook up to new gmail acc:
+    sudo apto-get dist-upgrade
+    sudo apt-get dist-upgrade
+    sudo apt-get install libsasl2-modules postfix
+    sudo nano /etc/postfix/sasl/sasl_passwd (add line: [smtp.gmail.com]:587 username@gmail.com:password )
+    sudo postmap /etc/postfix/sasl/sasl_passwd
+    sudo chown root:root /etc/postfix/sasl/sasl_passwd /etc/postfix/sasl/sasl_passwd.db
+    sudo nano /etc/postfix/main.cf
+        Make necessary changes (roughly followed https://www.linode.com/docs/email/postfix/configure-postfix-to-send-mail-using-gmail-and-google-apps-on-debian-or-ubuntu/)
+    sudo systemctl restart postfix
+
+44) insert MAILTO=chris@thehardys.net at top of crontab file (under user chris) to enable emailing of errors.
+
+
+
+
+think about:
+php.ini
+   expose_php=Off
+   display_errors=Off
+
+httpd.conf
+   ServerSignature Off
+
+error_reporting(0); (in index page)
+
+
+
+to find a package's storage path: dpkg -L <packagename>
+also whereis ????
+
+
+
+
+
+

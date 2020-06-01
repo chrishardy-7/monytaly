@@ -1,0 +1,972 @@
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+    display: block;
+}
+body {
+    line-height: 1;
+}
+ol, ul {
+    list-style: none;
+}
+blockquote, q {
+    quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+    content: '';
+    content: none;
+}
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+} 
+
+/* end of reset section */
+
+
+body {
+	margin:3px;
+}
+
+
+input, textarea, select {
+  /*  -webkit-appearance: none; */
+   -moz-border-radius: 0px;
+    -webkit-border-radius: 0px;
+    border-radius: 0px;
+} 
+
+input, textarea { 
+    padding: 4px;
+    border: solid 1px #909090;
+    outline: 0;
+    font: normal 13px/100% Verdana, Tahoma, sans-serif;
+    width: 250px;
+    background: #FFFFFF url('bg_form.png') left top repeat-x;
+    background: -webkit-gradient(linear, left top, left 25, from(#FFFFFF), color-stop(4%, #EEEEEE), to(#FFFFFF));
+    background: -moz-linear-gradient(top, #FFFFFF, #EEEEEE 1px, #FFFFFF 25px);
+    box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+    -moz-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+    -webkit-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+    }
+
+select { 
+    padding: 4px;
+    border: solid 1px #909090;
+    outline: 0;
+    font: normal 13px/100% Verdana, Tahoma, sans-serif;
+    width: 350px;
+    background: #FFFFFF url('bg_form.png') left top repeat-x;
+    background: -webkit-gradient(linear, left top, left 25, from(#FFFFFF), color-stop(4%, #EEEEEE), to(#FFFFFF));
+    background: -moz-linear-gradient(top, #FFFFFF, #EEEEEE 1px, #FFFFFF 25px);
+    box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+    -moz-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+    -webkit-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+    }
+
+textarea { 
+    width: 400px;
+    max-width: 1000px; /* was set to 400 but increased it to 1000 as it ws messing up the expanding text area and limiting the display part to 400 */
+    height: 100px;
+    line-height: 150%;
+    } 
+
+input:hover, textarea:hover, select:hover,
+input:focus, textarea:focus, select:focus { 
+    border-color: #505050; 
+    -webkit-box-shadow: rgba(0, 0, 0, 0.15) 0px 0px 8px;
+    }
+
+
+
+.mainContainer {
+        border: 1px solid blue;
+        font:12px/150% Verdana, Tahoma, sans-serif; 
+}
+
+.allExceptIframe {  /* no sub-definitions in @media sections */
+        float:left;
+        background-color:#D0C8FF;
+}
+
+.docDisplayContainer {
+    display:flex;
+    flex-direction:column;
+    float:left;
+    background-color:#00FF00;
+}
+
+.headingsStrip {
+    border-bottom:1px solid #808080;
+    background-color:#FFFFFF;
+}
+
+.scrollableDisplayArea {
+    flex-grow:1;
+    background-color:#FFFFFF;
+    overflow:auto;
+}
+
+.totalsFooter {
+    border-top:1px solid #808080;
+    background-color:#FF6060;
+}
+
+.dateAndItemSelectRecnclDiv {
+    float:left;
+    display:none;
+}
+
+.bottomMenuContn {
+    clear:both;
+    background-color:#D0D0FF;
+    float:left;
+}
+
+.bottomMenuRHgroup {    /* no sub-definitions in @media sections */
+    float:right;
+}
+
+
+
+
+.btn {						 /* menu.php, selScansForUpload.php */
+    background-color: DodgerBlue;
+    color: white;
+    border: none; /* Remove standard borders */
+    cursor: pointer;
+}
+
+.btn:hover {
+    background-color: RoyalBlue;
+}
+
+.btnSelected {
+    background-color: White; 
+    color: DodgerBlue;
+    border: 1px solid blue;
+    cursor: pointer;
+}
+
+.monthBtn, .NameSelBtn, .calDaysOfMnthBut, .calMnthBut, .calYearBut {
+    border: 1px solid blue;
+    text-align:left;
+    color: #606060;
+    cursor: pointer;
+	background-color: white;
+}
+
+.monthBtn:hover, .NameSelBtn:hover {
+    background-color: #C0C0FF;
+}
+
+.monthBtnSelected, .NameSelBtnSelected, .calDaysOfMnthButSelected, .calMnthButSelected, .calYearButSelected {
+    border: 3px solid blue;
+    text-align:left;
+    color: black;
+    background-color: white;
+    cursor: pointer;
+    font-weight: bold;
+} 
+
+.monthBtnYearSelected {
+    border: none;
+    text-align:left;
+    color: blue;
+    background-color: white;
+    font-weight: bold;
+} 
+
+.monthBtnYearUpDown{
+    border: 1px solid blue;
+    text-align:middle;
+    color: blue;
+    background-color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.namesSelPanelAddBut {
+    border: 1px solid blue;
+    text-align:left;
+    color: #FFFFFF;
+    cursor: pointer;
+    background-color: #00E000;
+    font-weight: bold;
+}
+
+.namesSelPanelAddBut:hover {
+    background-color: #00C000;
+}
+
+.copyButSel, .copyBut {
+    background-color: #D0D0FF;
+    border: 1px solid #D0D0FF;
+    color: black;
+    cursor: pointer;
+    vertical-align: top;
+    text-align:left;
+}  
+
+.copyButSel {
+    background-color: #FFFF00;
+    color: blue;
+} 
+
+.copyBut {
+    background-color: #FFFFFF;
+}
+
+.subMenuBtn, .subMenuBtnSel {
+    border: 1px solid blue;
+    text-align:left;
+    color: black;
+    cursor: pointer;
+    background-color: white;
+}
+
+.subMenuBtn:hover {
+    background-color: #C0C0FF;
+}
+
+.subMenuBtnSel {
+    color: white;
+    background-color: blue;
+}
+
+.addTextBoxLabel {
+    font-weight: bold;
+    display:none;
+}
+
+.butPanelInnerScrlContainer {
+	overflow:auto;
+    background-color:#A0E0A0;
+    float:left;
+}
+
+.calContainer, .butPanelOuterContainer, .dummyCalBt {
+    float:left;
+    background-color:#A0E0A0;
+}
+
+.calMnthsDiv, .calYearsDiv, .calDaysOfMnthDiv {
+	overflow:hidden;
+    float:left;
+}
+
+.subMenuContainer {
+    clear:both;
+    background-color:#A0E0A0;
+    display:none;
+}
+
+
+
+
+
+/*
+##############################################      #######
+##############################################      #######
+##############################################      #######
+##############################################      #######
+##############################################      #######
+##############################################      #######
+##############################################      #######
+*/
+
+@media screen and (min-width:1910px) and (max-width:6000px) { /* 1920 x 1080 (HD laptop or monitor) with Firefox maximized */
+
+	.mainContainer {
+        width: 1912px;
+        height: 910px;
+        font:12px/200% Verdana, Tahoma, sans-serif;
+    }
+
+    .headingsStrip {
+        width:1020px;
+        margin-bottom:5px;
+        margin-left:5px;
+    }
+
+    .scrollableDisplayArea {
+        height:400px;
+        width:1020px;
+        margin-left:5px;
+        font-size:12px;
+    }
+
+    .totalsFooter {
+        width:1020px;
+        height:75px;
+        margin-top:5px;
+        margin-left:5px;
+    }
+
+    .bottomMenuContn {
+        width:1210px;
+        height:40px;
+    }
+
+
+
+
+
+
+    /* Top Menu        VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV*/
+
+    .menuBar { 	
+        width:1210px;
+        height:40px;
+        background-color: #FFFFFF;
+    }
+
+    .btn {                       /* also menu.php, addUser.php, */
+        padding: 8px 10px;
+        font-size: 14px;
+
+    }
+
+    .btnSelected {
+        padding: 7px 9px;
+        font-size: 14px;
+    }  
+
+
+
+
+
+    /* Month Side Bar  VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV*/
+
+    .mnthSelContainer {
+        height:830px;
+        width:60px;
+        background-color: white;
+        float:left;
+    }
+
+     .monthBtn, .monthBtnSelected, .monthBtnYearSelected, .monthBtnYearUpDown{
+        margin: 2px;
+        width:55px;
+        height:30px; 
+        padding: 3px 10px;
+        font-size: 15px;
+    }
+
+    
+
+
+	/* Login Form      VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV*/
+
+	/* also uses .btn  */
+
+	.message {
+	    padding-top:100px;
+	    font: normal 16px/100% Verdana, Tahoma, sans-serif;
+	}
+
+	.loginForm { 
+    padding-top:200px;
+    }
+
+    .loginTextBox {
+    height:35px;
+    margin-bottom:15px;
+    font: normal 16px/100% Verdana, Tahoma, sans-serif;
+    }
+
+
+    
+
+
+    /* changePassword, forcePasswordReset, addUser      VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV*/
+
+    .newUserPwContainer { 	 /* selScansForUpload.php */
+        width:1095px;
+        height:400px;
+        background-color: #FFA64D;
+    }
+
+    /* uses
+
+    .loginTextBox
+
+    .btn
+    
+    */
+
+    
+
+
+    /* editFlex      VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV*/
+
+    /* all classes for this are in expandText.css  */
+
+    
+
+
+    /* uploadScans      VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV*/
+
+    .scansForUpldContainer, .scansForUpldContainerSwapDoc { 	 /* selScansForUpload.php */
+        width:1150px;
+        height:250px;
+        padding-top:30px;
+        padding-left:60px;
+        background-color: #80CC80;
+    }
+
+    .scansForUpldContainerSwapDoc {     /* selScansForUpload.php */
+        background-color: #FF6060;
+    }
+
+    .scanListContainer {		 /* selScansForUpload.php */
+        width:1210px;
+        height:585px;
+        overflow:auto;
+        background-color: #80CC80;
+    }
+
+    .tableForFileUploadHeading {
+        color:black;
+        font-weight: bold;
+    }
+
+    .tableForFileUploadSuccess {
+        color:black;
+    }
+
+    .tableForFileUploadFail {
+        color:red;
+    }
+
+    /* uses
+
+    .loginTextBox
+
+    .btn
+
+	.docDisplayIframeRecsFullYr
+
+    */
+
+ 
+
+
+
+    /* addItems      VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV*/
+
+    .docEditContainer {	 /* captureDocDetails.php */
+        width:1095px;
+        height:830px;
+        overflow: auto;
+        //font:10px/150% Verdana, Tahoma, sans-serif;
+        background-color: White;
+    }
+
+    .addTextBoxNorm {
+        font: normal 16px/100% Verdana, Tahoma, sans-serif;
+        height:25px;
+        width:250px;
+        margin-top:40px;
+        margin-left:100px;
+    }
+
+    .addTextBoxNorm {
+	    background: #FFFFFF url('bg_form.png') left top repeat-x;
+	    background: -webkit-gradient(linear, left top, left 25, from(#FFFFFF), color-stop(4%, #EEEEEE), to(#FFFFFF));
+	    background: -moz-linear-gradient(top, #FFFFFF, #EEEEEE 1px, #FFFFFF 25px);
+	    box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+	    -moz-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+	    -webkit-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+	    /*font-weight: bold;*/
+	}
+
+	.addTextBoxLabel {
+        font: 16px/100% Verdana, Tahoma, sans-serif;
+        margin-left:20px;
+    }
+
+    .docDisplayIframe, .docDisplayIframeRecs {         
+	    float:left;
+	    background-color: #FFE0FF;
+	    border: 1px solid grey;
+	}  
+
+    /* uses
+
+    .subMenuBtn
+
+    */
+
+ 
+
+
+
+	/* showRecsForFullYr      VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV*/
+
+	.subMenuBtn, .subMenuBtnSel {
+        margin: 3px;
+        height:33px;        
+        padding: 3px 10px;
+        font-size: 15px;
+    }
+
+	.copyButSel, .copyBut {                   
+        width:98px;
+        min-height:30px;
+        margin-left: 7px;
+        margin-top: 5px;
+        padding: 1px 5px;
+        font-size: 14px;
+    }
+
+    .docDisplayContainer {
+        width:1023px;
+        height:830px;
+        font:10px/150% Verdana, Tahoma, sans-serif;
+    }   
+
+    .docDisplayIframeRecsFullYr {
+        width:693px;
+        height:908px;
+    }
+
+
+
+
+    
+
+    /*vvvvv CALENDAR CONTAINER AND BUTTONS vvvvv*/
+
+    .calContainer, .butPanelOuterContainer { /* .butPanelOuterContainer placed here for efficiancy  */
+		width:135px;
+        height:785px;
+	}
+
+    .dummyCalBt {           /* .dummyCalBt placed here for efficiancy  */
+        width:125px;
+        height:785px;
+        padding-left:10px;
+        color:#A0A0A0;
+        font:30px/150% Verdana, Tahoma, sans-serif;
+    }
+
+    .subMenuContainer {
+        width:135px;
+        height:44px; float:left;
+    }
+
+    .calDaysOfMnthDiv {
+        width:38px;
+        height:783px;
+        margin-left:2px;
+        background-color: #A0FFA0;
+    }
+
+	.calMnthsDiv {
+		width:38px;
+        height:783px;
+        background-color: #A0A0FF;
+    }
+
+    .calYearsDiv {
+        width:52px;
+        height:783px;
+        background-color: #FFA0A0;
+    }
+
+    .calDaysOfMnthBut {
+        margin: 2px;
+        width:33px;
+        padding: 0px 5px;
+        font-size: 14px;
+    }
+
+    .calDaysOfMnthButHidden {
+        margin: 0px;
+        width:10px;
+        padding: 0px 0px;
+        font-size: 6px;
+        border: none;
+        color:#A0FFA0;
+        cursor: none;
+        background-color:#A0FFA0;
+    }
+
+    .calDaysOfMnthButSelected {
+    	margin: 2px;
+        width:33px;
+        padding: 0px 5px;
+        font-size: 14px;
+    }
+
+    .calMnthBut {
+    	margin: 2px;
+        width:33px;
+        padding: 2px 5px;
+        font-size: 14px;
+    }
+
+    .calMnthButSelected {
+	    margin: 2px;
+	    width:33px;
+	    padding: 2px 5px;
+	    font-size: 14px;
+    }
+
+    .calYearBut {
+    	margin: 2px;
+        width:47px;
+        padding: 2px 5px;
+        font-size: 14px;
+    }
+
+    .calYearButSelected {
+        margin: 2px;
+        width:47px;
+        padding: 2px 5px;
+        font-size: 14px;
+    }
+
+
+
+
+
+     /* vvvvvvvvvv butPanelJSInteracStrOnly vvvvvvvvvvv */
+
+    .butPanelInnerScrlContainer { 
+        margin-top:15px;
+        width:135px;
+        height:660px;
+    }
+
+    .homeInDiv {
+        border: 1px solid blue;
+        text-align:left;
+        color: #606060;
+        width:93px;
+        height:22px;
+        padding: 3px 10px;
+        margin: 3px;
+        font-size: 14px;
+        cursor: text;
+        background-color: #FFFF80;
+    }
+
+    .NameSelBtn, .NameSelBtnSelected, .namesSelPanelAddBut {
+        margin: 3px;
+        width:115px;
+        min-height: 29px;
+        padding: 3px 10px;
+        font-size: 14px;
+    }
+
+    /* ^^^^^^^^^^^^ butPanelJSInteracStrOnly END ^^^^^^^^^^ */
+
+
+
+
+    
+    /*                                                                                                   ####    ####    ####    ####
+                                                                                                         ####    ####    ####    ####
+       ############### START - SECTION LIFTED FROM showRecsForFullYr.php TO CONTROL DIV DISPLAY CELLS    ####    ####    ####    ####   */
+
+
+    /*  Classes needed for main scrolling records display:
+    php js  displayCellStd                  white background, unselected - for most displayed cells
+    php js  displayCellMoney                white background, unselected - with content aligned right for money cells
+        js  displayCellRowSel               light grey background line-select - for most displayed cells
+        js  displayCellRowSelMoney          light grey background line-select - with content aligned right for money cells
+
+        js  displayCellMoneyWarn            amber warning that update not completed but with content aligned right for money cells
+    php js  displayCellFilt                 straw yellow background for all cells in column that has been filtered - for most displayed cells 
+    php js  displayMoneyCellFiltClass       straw yellow background for all cells in column that has been filtered - but with content aligned right for money cells 
+    
+    php js  displayCellRcnclBlank           white background and text - blanking for reconciled date cells where the date is default 2000-01-01 
+        js  displayCellLineSelRcnclBlank    light grey background with light grey text - blanking for reconciled date cells in selected lines where the date is default 2000-01-01 
+        js  displayCellSnglSelRcnclBlank    dark blue background with dark blue text - blanking for reconciled date cells, selected single cell where the date is default 2000-01-01 
+    php     displayCellRcnclEarly           orange background - for reconciled date cells where the date is accidentally set before the transaction date
+    php js  displayCellRcnclNot             red background - for reconciled date cells where the date is set after the end of the current display date period
+
+    
+        js  displayCellWarn                 amber background warning that update not completed - for most displayed cells
+        
+        js  displayCellSnglSel              dark blue background single-cell select - for most displayed cells
+        js  displayCellSnglSelMoney         dark blue background single-cell select - but with content aligned right for money cells
+         */
+
+
+    .recHeadingCell, .recHeadingCellFilt {
+        font-weight: bold;
+        width: 70px;
+        height: 27px;
+        margin: 5px;
+        border-style: solid;
+        border-width: 1px;
+        border-color: #C0C0C0;
+        padding: 3px;
+        background-color: #FFFFFF;
+        cursor: pointer;
+    }
+
+    .recHeadingCellFilt {
+        background-color: #FFFF80;
+    }
+
+    .recStickyCell {
+        width: 70px;
+        height: 20px;
+        margin: 5px;
+        border-style: solid;
+        border-width: 1px;
+        border-color: #C0C0C0;
+        padding: 3px;
+        background-color: #eaeafa;
+        cursor: pointer;
+    }
+
+    .recTotalsCell {
+        width: 70px;
+        height: 20px;
+        margin: 5px;
+        border-style: solid;
+        border-width: 1px;
+        border-color: #C0C0C0;
+        padding: 3px;
+        background-color: #FF80FF;
+        cursor: pointer;
+    }
+
+    .recTotalsCellGood {
+        width: 70px;
+        height: 20px;
+        margin: 5px;
+        border-style: solid;
+        border-width: 1px;
+        border-color: #C0C0C0;
+        padding: 3px;
+        background-color: #00FF00;
+        cursor: pointer;
+    }
+
+    .recTotalsCellBad {
+        width: 70px;
+        height: 20px;
+        margin: 5px;
+        border-style: solid;
+        border-width: 1px;
+        border-color: #C0C0C0;
+        padding: 3px;
+        color: #FFFFFF;
+        background-color: #FF0000;
+        cursor: pointer;
+    }
+
+    .recGroupIndicationCell {
+        width: 70px;
+        height: 10px;
+        margin: 5px;
+        border-style: solid;
+        border-width: 1px;
+        border-color: #C0C0C0;
+        padding: 3px;
+        background-color: #FFFFFF;
+        cursor: pointer;
+    }
+
+    .recGroupIndicationCellSel {
+        background-color: #000000;
+    }
+
+    .displayCellStd, .displayCellRowSel, .displayCellSnglSel, .displayCellSnglSelEditable, .displayCellSnglSelMoney, .displayCellWarn, .displayCellFilt, .displayMoneyCellFiltClass, .displayCellRcnclEarly, .displayCellRcnclNot, .displayCellSnglSelRcnclBlank, .displayCellLineSelRcnclBlank, .displayCellRcnclBlank, .displayCellMoney, .displayCellMoneyWarn, .displayCellRowSelMoney {
+        color: #000000;
+        font-size: 11px;
+        word-wrap: break-word;
+        width: 69px;
+    /*  height: 22px; 
+        margin: 5px; */
+        border-style: solid;
+        border-width: 1px;
+        border-color: #C0C0C0;
+        padding: 3px;
+        background-color: #FFFFFF;
+        cursor: pointer;
+        -webkit-user-select: none;  /* Chrome all / Safari all */
+        -moz-user-select: none;     /* Firefox all */
+        -ms-user-select: none;      /* IE 10+ */
+        user-select: none;          /* Likely future */  
+    }
+
+    .displayCellRcnclBlank {
+        color: #FFFFFF;
+        background-color: #FFFFFF;
+    }
+
+    .displayCellRowSel {
+        color: #000000;
+        background-color: #E0E0E0;
+    }
+
+    .displayCellRowSelMoney {
+        color: #000000;
+        background-color: #E0E0E0;
+        text-align:right;
+    }
+
+    .displayCellSnglSel {  /* used in JSforAccCcc.js */
+        color: #000000;
+        background-color: #9090FF;
+    }
+
+    .displayCellSnglSelEditable {
+        color: #000000;
+        background-color: #9090FF;
+        cursor: text;
+        -webkit-user-select: auto;  /* Chrome all / Safari all - allows text to be selected */
+        -moz-user-select: auto;     /* Firefox all */
+        -ms-user-select: auto;      /* IE 10+ */
+        user-select: auto;          /* Likely future */  
+    }
+
+    .displayCellSnglSelMoney {
+        color: #000000;
+        background-color: #9090FF;
+        text-align:right;
+        cursor: text;
+        -webkit-user-select: auto;  /* Chrome all / Safari all - allows text to be selected */
+        -moz-user-select: auto;     /* Firefox all */
+        -ms-user-select: auto;      /* IE 10+ */
+        user-select: auto;          /* Likely future */ 
+    }
+
+
+    .displayCellSnglSelRcnclBlank {
+        color: #9090FF;
+        background-color: #9090FF;
+    }
+
+    .displayCellWarn {
+        background-color: #FFD030;
+    }
+
+
+    .displayCellLineSelRcnclBlank {
+        color: #E0E0E0;
+        background-color: #E0E0E0;
+    }
+
+
+    .displayCellMoney {
+        text-align:right;
+    }
+
+    .displayCellMoneyWarn {
+        text-align:right;
+        background: rgba(255, 208, 48, 1.0);
+    }
+
+    .displayCellFilt {
+        background-color: #FFFF80;
+    }
+
+    .displayMoneyCellFiltClass {
+        text-align:right;
+        background-color: #FFFF80;
+    }
+
+    .displayCellRcnclEarly {
+        color: #FFFFFF;
+        background-color: #FFAA00;
+    }
+
+    .displayCellRcnclNot {
+        color: #FFFFFF;
+        background-color: #FF0000;
+    }
+
+    /*                                                                                                  ####    ####    ####    ####
+                                                                                                        ####    ####    ####    ####
+    /* ############### END - SECTION LIFTED FROM showRecsForFullYr.php TO CONTROL DIV DISPLAY CELLS     ####    ####    ####    ####   */
+
+}
+
+
+
+
+/*
+#################################      ####################
+#################################      ####################
+#################################      ####################
+#################################      ####################
+#################################      ####################
+#################################      ####################
+#################################      ####################
+*/
+
+@media screen and (min-width:1360px) and (max-width:1909px) { /* widescreen 1366 x 768 (#### ORDINARY LAPTOP ####) with Firefox or Chrome maximised */
+
+
+}
+    
+
+
+
+/*
+####################      #################################
+####################      #################################
+####################      #################################
+####################      #################################
+####################      #################################
+####################      #################################
+####################      #################################
+*/
+
+@media screen and (min-width:1023px) and (max-width:1359px) { /* iPad 4 landscape */
+
+
+}
+
+
+
+
+/*
+#####      ################################################
+#####      ################################################
+#####      ################################################
+#####      ################################################
+#####      ################################################
+#####      ################################################
+#####      ################################################
+*/
+
+@media screen and (max-width:1022px) { /* Nexus 6P landscape with Android navigation buttons still on screen (only displays full height with navigation bar at top pushed out of the way) */
+    
+}
+

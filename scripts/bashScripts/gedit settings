@@ -1,0 +1,4 @@
+#!/bin/bash
+
+sudo nautilus /usr/share/gtksourceview-3.0
+

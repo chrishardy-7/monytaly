@@ -1,0 +1,1267 @@
+/* http://meyerweb.com/eric/tools/css/reset/ 
+   v2.0 | 20110126
+   License: none (public domain)
+*/
+
+html, body, div, span, applet, object, iframe,
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, img, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+b, u, i, center,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td,
+article, aside, canvas, details, embed, 
+figure, figcaption, footer, header, hgroup, 
+menu, nav, output, ruby, section, summary,
+time, mark, audio, video {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    font: inherit;
+    vertical-align: baseline;
+}
+/* HTML5 display-role reset for older browsers */
+
+article, aside, details, figcaption, figure, 
+footer, header, hgroup, menu, nav, section {
+    display: block;
+}
+body {
+    line-height: 1;
+}
+ol, ul {
+    list-style: none;
+}
+blockquote, q {
+    quotes: none;
+}
+blockquote:before, blockquote:after,
+q:before, q:after {
+    content: '';
+    content: none;
+}
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+} 
+
+/* end of reset section */
+
+
+body {
+	margin:3px;
+}
+
+
+input, textarea, select {
+  /*  -webkit-appearance: none; */
+   -moz-border-radius: 0px;
+    -webkit-border-radius: 0px;
+    border-radius: 0px;
+} 
+
+input, textarea { 
+    padding: 4px;
+    border: solid 1px #909090;
+    outline: 0;
+    font: normal 13px/100% Verdana, Tahoma, sans-serif;
+    width: 250px;
+    background: #FFFFFF url('bg_form.png') left top repeat-x;
+    background: -webkit-gradient(linear, left top, left 25, from(#FFFFFF), color-stop(4%, #EEEEEE), to(#FFFFFF));
+    background: -moz-linear-gradient(top, #FFFFFF, #EEEEEE 1px, #FFFFFF 25px);
+    box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+    -moz-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+    -webkit-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+    }
+
+select { 
+    padding: 4px;
+    border: solid 1px #909090;
+    outline: 0;
+    font: normal 13px/100% Verdana, Tahoma, sans-serif;
+    width: 350px;
+    background: #FFFFFF url('bg_form.png') left top repeat-x;
+    background: -webkit-gradient(linear, left top, left 25, from(#FFFFFF), color-stop(4%, #EEEEEE), to(#FFFFFF));
+    background: -moz-linear-gradient(top, #FFFFFF, #EEEEEE 1px, #FFFFFF 25px);
+    box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+    -moz-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+    -webkit-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+    }
+
+textarea { 
+    width: 400px;
+    max-width: 1000px; /* was set to 400 but increased it to 1000 as it ws messing up the expanding text area and limiting the display part to 400 */
+    height: 100px;
+    line-height: 150%;
+    } 
+
+input:hover, textarea:hover, select:hover,
+input:focus, textarea:focus, select:focus { 
+    border-color: #505050; 
+    -webkit-box-shadow: rgba(0, 0, 0, 0.15) 0px 0px 8px;
+    }
+
+.mainContainer {
+        /*background-color: red;*/
+        border: 1px solid blue;
+        font:12px/150% Verdana, Tahoma, sans-serif;
+    }
+
+.message {
+    padding-top:100px;
+    font: normal 16px/100% Verdana, Tahoma, sans-serif;
+}
+
+.btn {						 /* menu.php, selScansForUpload.php */
+    background-color: DodgerBlue;
+    border: none; /* Remove standard borders */
+    color: white;
+    padding: 8px 10px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.btn:hover {
+    background-color: RoyalBlue;
+}
+
+.btnSelected {
+    background-color: White; 
+    border: none;
+    color: DodgerBlue;
+    border: 1px solid blue;
+    padding: 7px 9px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.monthBtn, .NameSelBtn, .namesSelPanelNewBut, .calDaysOfMnthBut, .calMnthBut, .calYearBut {
+    border: 1px solid blue;
+    text-align:left;
+    color: #606060;
+    cursor: pointer;
+	background-color: white;
+}
+
+.monthBtn:hover, .NameSelBtn:hover {
+    background-color: #C0C0FF;
+}
+
+.monthBtnSelected, .NameSelBtnSelected, .calDaysOfMnthButSelected, .calMnthButSelected, .calYearButSelected {
+    border: 3px solid blue;
+    text-align:left;
+    color: black;
+    background-color: white;
+    cursor: pointer;
+    font-weight: bold;
+} 
+
+.monthBtnYearSelected {
+    border: none;
+    text-align:left;
+    color: blue;
+    background-color: white;
+    font-weight: bold;
+} 
+
+.monthBtnYearUpDown{
+    border: 1px solid blue;
+    text-align:middle;
+    color: blue;
+    background-color: white;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.namesSelPanelAddBut {
+    border: 1px solid blue;
+    text-align:left;
+    color: #FFFFFF;
+    cursor: pointer;
+    background-color: #00E000;
+    font-weight: bold;
+}
+
+.namesSelPanelAddBut:hover {
+    background-color: #00C000;
+}
+
+.docBtnOneDiv {
+    float:left;
+}
+
+.docBtn, .tickBtn, .docBtnHeading, .docAmntHeading, .tickBtnHeading, .docBtnHeadingWide, .amountText, .refTextBox {
+    background-color: white;
+    border: 1px solid white;
+    color: black;
+    cursor: pointer;
+    vertical-align: top;
+    text-align:left;
+}
+
+.docBtnHeading, .docAmntHeading, .tickBtnHeading, .docBtnHeadingWide {
+    color: blue;
+    font-weight:bold;
+    border-left:1px solid #D0D0D0;
+}
+
+.docBtn:hover, .tickBtn:hover {
+    background-color: #E0E0FF;
+}    
+
+.docBtnSelected, .tickBtnSelected, .docBtnEdit, .copyButSel, .copyBut {
+    background-color: #D0D0FF;
+    border: 1px solid #D0D0FF;
+    color: black;
+    cursor: pointer;
+    vertical-align: top;
+    text-align:left;
+}  
+
+.docBtnFilter {
+    border: 1px solid royalblue;
+} 
+
+.docBtnEdit {
+    background-color: #A0FFA0;
+} 
+
+.copyButSel {
+    background-color: #FFFF00;
+    color: blue;
+} 
+
+.copyBut {
+    background-color: #FFFFFF;
+}
+
+.subMenuBtn, .subMenuBtnSel {
+    border: 1px solid blue;
+    text-align:left;
+    color: black;
+    cursor: pointer;
+    background-color: white;
+}
+
+.subMenuBtn:hover {
+    background-color: #C0C0FF;
+}
+
+.subMenuBtnSel {
+    color: white;
+    background-color: blue;
+}
+
+.namesSelPanelDiv, .namesDisplayPanelDiv, .namesAddPanelDiv, .varietySelPanelDiv, .tagSelPanelDiv {
+    overflow:auto;
+    background-color:#FFFFFF;
+    float:left;
+}
+
+.selInnerDivs {
+    background-color:#FFFFFF;
+    float:left;
+}
+
+.namesAddPanelDiv {
+        background-color: #EEEEEE;
+}
+
+.addTextBoxNorm {
+    background: #FFFFFF url('bg_form.png') left top repeat-x;
+    background: -webkit-gradient(linear, left top, left 25, from(#FFFFFF), color-stop(4%, #EEEEEE), to(#FFFFFF));
+    background: -moz-linear-gradient(top, #FFFFFF, #EEEEEE 1px, #FFFFFF 25px);
+    box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+    -moz-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+    -webkit-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+    /*font-weight: bold;*/
+}
+
+.addTextBoxHighlight {
+    border: 2px solid blue;
+    background:none;
+    box-shadow:none;
+    -moz-box-shadow:none;
+    -webkit-box-shadow:none;
+    background-color: #F89F05;
+    color: white;
+    font-weight: bold;
+}
+
+.addTextBoxLabel {
+    font-weight: bold;
+    display:none;
+}
+
+.calContainer, .butPanelInnerScrlContainer {
+	overflow:auto;
+    background-color:#A0E0A0;
+    float:left;
+}
+
+.calContainerWarning {
+	overflow:auto;
+    background-color:#FFD030;
+    float:left;
+}
+
+.calMnthsDiv, .calYearsDiv, .calDaysOfMnthDiv {
+	overflow:auto;
+    float:left;
+}
+
+.dateGrey {
+    color:#A0A0A0;
+}
+
+.dateBlackBold {
+    font-weight:bold;
+}
+
+.dateHidden {
+    display:none;
+}
+
+.docSelectContainer, .docDisplayContainerRecs {
+    float:left;
+    background-color: #F8F8F8;
+}
+
+.docDisplayIframe, .docDisplayIframeRecs {         
+    float:left;
+    background-color: #FFE0FF;
+    border: 1px solid grey;
+}  
+
+
+
+
+
+
+
+/*
+##############################################      #######
+##############################################      #######
+##############################################      #######
+##############################################      #######
+##############################################      #######
+##############################################      #######
+##############################################      #######
+*/
+
+@media screen and (min-width:1910px) and (max-width:6000px) { /* 1920 x 1080 (HD laptop or monitor) with Firefox maximized */
+
+	.mainContainer {
+        width: 1912px;
+        height: 910px;
+        font:12px/200% Verdana, Tahoma, sans-serif;
+    }
+
+
+    .loginForm { 
+    padding-top:200px;
+    }
+
+    .loginTextBox {
+    height:35px;
+    margin-bottom:15px;
+    font: normal 16px/100% Verdana, Tahoma, sans-serif;
+    }
+
+    .docBtnOneDiv {
+        width:116px;
+        margin-bottom:5px;
+    }
+
+
+    .docBtn, .docBtnSelected, .docBtnHeading, .docAmntHeading, .docBtnHeadingWide, .docBtnFilter, .amountText, .refTextBox, .docBtnEdit, .copyButSel, .copyBut {                   
+        width:98px;
+        min-height:30px;
+        margin-left: 7px;
+        margin-top: 5px;
+        padding: 1px 5px;
+        font-size: 14px;
+    }
+
+    .amountText {
+        cursor: text;
+        margin-top: 5px;
+        height:15px;
+        width:70px; 
+    }
+
+    .refTextBox {
+        cursor: text;
+        margin-top: 5px;
+        height:15px;
+        width:88px; 
+    }
+
+    .docBtnHeading {                   
+        width:100px;
+    }
+
+    .docAmntHeading {                   
+        width:80px;
+    }
+
+    .docBtnHeadingWide {                   
+        width:300px;
+    }
+
+    .tickBtn, .tickBtnHeading, .tickBtnSelected {                   
+        width:20px;
+        min-height:30px;
+        margin-left: 10px;
+        margin-top: 5px;
+        padding: 1px 5px;
+        font-size: 14px;
+    }
+
+    .btn {                       /* menu.php, selScansForUpload.php */
+        padding: 8px 10px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        background-color: RoyalBlue;
+    }
+
+    .btnSelected {
+        border: 1px solid blue;
+        padding: 7px 9px;
+        font-size: 14px;
+        cursor: pointer;
+    }  
+
+    .monthBtn, .monthBtnSelected, .monthBtnYearSelected, .monthBtnYearUpDown{
+        margin: 2px;
+        width:55px;
+        height:30px; 
+        padding: 3px 10px;
+        font-size: 15px;
+    }
+
+    .namesSelPanelDiv {
+        width:450px;
+        height:830px;
+    }
+
+    .namesDisplayPanelDiv {
+        width:444px;
+        height:200px;
+    }
+
+    .varietySelPanelDiv {
+        width:158px;
+        height:830px;
+    }
+
+    .tagSelPanelDiv {
+        width:158px;
+        height:785px;
+    }
+
+    .selInnerDivs { /* NOT USED NOW HORZ FLOW CHOSEN */
+        width:143px;
+    }
+
+    .namesAddPanelDiv {
+        width:1095px;
+        height:700px;
+    }
+
+    .docCheckBox {
+        width:30px;
+    }
+
+    .addTextBoxNorm {
+        font: normal 16px/100% Verdana, Tahoma, sans-serif;
+        height:25px;
+        width:250px;
+        margin-top:40px;
+        margin-left:100px;
+    }
+
+    .addTextBoxHighlight {
+        font: bold 16px/100% Verdana, Tahoma, sans-serif;
+        height:25px;
+        width:250px;
+        margin-top:40px;
+        margin-left:100px;
+    }
+
+    .addTextBoxLabel {
+        font: 16px/100% Verdana, Tahoma, sans-serif;
+        margin-left:20px;
+    }
+
+    .dateGrey, .dateBlackBold {
+        font-size:14px;
+    }
+
+    /*vvvvv CALENDAR CONTAINER AND BUTTONS vvvvv*/
+
+    .calContainer {
+		width:135px;
+        height:785px;
+	}
+
+    .calDaysOfMnthDiv {
+        width:38px;
+        height:783px;
+        margin-left:2px;
+        background-color: #A0FFA0;
+    }
+
+	.calMnthsDiv {
+		width:38px;
+        height:783px;
+        background-color: #A0A0FF;
+    }
+
+    .calYearsDiv {
+        width:52px;
+        height:783px;
+        background-color: #FFA0A0;
+    }
+
+    .calDaysOfMnthBut {
+		margin: 2px;
+	    width:33px;
+	    padding: 0px 5px;
+	    font-size: 14px;
+    }
+
+    .calDaysOfMnthButSelected {
+    	margin: 2px;
+        width:33px;
+        padding: 0px 5px;
+        font-size: 14px;
+    }
+
+    .calMnthBut {
+    	margin: 2px;
+        width:33px;
+        padding: 2px 5px;
+        font-size: 14px;
+    }
+
+    .calMnthButSelected {
+	    margin: 2px;
+	    width:33px;
+	    padding: 2px 5px;
+	    font-size: 14px;
+    }
+
+    .calYearBut {
+    	margin: 2px;
+        width:47px;
+        padding: 2px 5px;
+        font-size: 14px;
+    }
+
+    .calYearButSelected {
+        margin: 2px;
+        width:47px;
+        padding: 2px 5px;
+        font-size: 14px;
+    }
+
+
+    /*^^^^^ END CALENDAR CONTAINER AND BUTTONS ^^^^^*/
+
+
+
+
+     /* vvvvvvvvvv butPanelJSInteracStrOnly vvvvvvvvvvv */
+
+    
+    .butPanelOuterContainer {
+        width:135px;
+        height:780px;
+        float:left;
+        background-color:#A0E0A0;
+    }
+
+    .butPanelInnerScrlContainer {
+        margin-top:15px;
+        width:135px;
+        height:650px;
+    }
+
+    .homeInDiv {
+        border: 1px solid blue;
+        text-align:left;
+        color: #606060;
+        width:93px;
+        height:22px;
+        padding: 3px 10px;
+        margin: 3px;
+        font-size: 14px;
+        cursor: text;
+        background-color: #FFFF80;
+    }
+
+    .NameSelBtn, .NameSelBtnSelected, .namesSelPanelAddBut {
+        margin: 3px;
+        width:115px;
+        min-height: 29px;
+        padding: 3px 10px;
+        font-size: 14px;
+    }
+
+    /* ^^^^^^^^^^^^ butPanelJSInteracStrOnly END ^^^^^^^^^^ */
+
+
+
+
+    .subMenuBtn, .subMenuBtnSel {
+        margin: 3px;
+        height:33px;        
+        padding: 3px 10px;
+        font-size: 15px;
+    }
+
+
+    
+
+    .menuBar { 					 /* menu.php */
+        width:1090px;
+        height:40px;
+        background-color: #FFFFFF;
+    }
+
+    .mnthSelContainer {
+        height:830px;
+        width:60px;
+        background-color: white;
+        float:left;
+    }
+
+    .scansForUpldContainer { 	 /* selScansForUpload.php */
+        width:1095px;
+        height:200px;
+        background-color: #80CC80;
+    }
+
+    .scanListContainer {		 /* selScansForUpload.php */
+        width:1095px;
+        height:385px;
+        overflow:auto;
+        background-color: #80CC80;
+    }
+
+    .docSelectContainer {
+        width:1025px;
+        height:825px;
+        font:10px/150% Verdana, Tahoma, sans-serif;
+    }
+
+    .docDisplayContainerRecs {  
+        display:flex;
+        flex-direction:column;
+        width:1023px;
+        height:830px;
+        background-color:#00FF00;
+        font:10px/150% Verdana, Tahoma, sans-serif;
+    }
+
+    .docEditContainer {	 /* captureDocDetails.php */
+        width:1095px;
+        height:830px;
+        overflow: auto;
+        //font:10px/150% Verdana, Tahoma, sans-serif;
+        background-color: White;
+    }
+
+	.transCreateContainer {		 /* captureDocDetails.php */
+        width:1095px;
+        height:195px;
+        overflow:auto;
+        background-color: #FF7070;
+    }
+
+    .docDisplayIframe {			 /* selScansForUpload.php, captureDocDetails.php */
+        width:800px;
+        height:908px;
+    }
+
+    .docDisplayIframeRecs {
+        width:600px;
+        height:908px;
+    }
+
+    .docDisplayIframeRecsFullYr {
+        width:693px;
+        height:908px;
+    }
+
+
+    /*                                                                                                   ####    ####    ####    ####
+                                                                                                         ####    ####    ####    ####
+       ############### START - SECTION LIFTED FROM showRecsForFullYr.php TO CONTROL DIV DISPLAY CELLS    ####    ####    ####    ####   */
+
+
+    /*  Classes needed for main scrolling records display:
+    php js  displayCellStd                  white background, unselected - for most displayed cells
+    php js  displayCellMoney                white background, unselected - with content aligned right for money cells
+        js  displayCellRowSel               light grey background line-select - for most displayed cells
+        js  displayCellRowSelMoney          light grey background line-select - with content aligned right for money cells
+
+        js  displayCellMoneyWarn            amber warning that update not completed but with content aligned right for money cells
+    php js  displayCellFilt                 straw yellow background for all cells in column that has been filtered - for most displayed cells 
+    php js  displayMoneyCellFiltClass       straw yellow background for all cells in column that has been filtered - but with content aligned right for money cells 
+    
+    php js  displayCellRcnclBlank           white background and text - blanking for reconciled date cells where the date is default 2000-01-01 
+        js  displayCellLineSelRcnclBlank    light grey background with light grey text - blanking for reconciled date cells in selected lines where the date is default 2000-01-01 
+        js  displayCellSnglSelRcnclBlank    dark blue background with dark blue text - blanking for reconciled date cells, selected single cell where the date is default 2000-01-01 
+    php     displayCellRcnclEarly           orange background - for reconciled date cells where the date is accidentally set before the transaction date
+    php js  displayCellRcnclNot             red background - for reconciled date cells where the date is set after the end of the current display date period
+
+    
+        js  displayCellWarn                 amber background warning that update not completed - for most displayed cells
+        
+        js  displayCellSnglSel              dark blue background single-cell select - for most displayed cells
+        js  displayCellSnglSelMoney         dark blue background single-cell select - but with content aligned right for money cells
+         */
+
+
+    .recHeadingCell, .recHeadingCellFilt {
+        font-weight: bold;
+        width: 70px;
+        height: 27px;
+        margin: 5px;
+        border-style: solid;
+        border-width: 1px;
+        border-color: #C0C0C0;
+        padding: 3px;
+        background-color: #FFFFFF;
+        cursor: pointer;
+    }
+
+    .recHeadingCellFilt {
+        background-color: #FFFF80;
+    }
+
+    .recStickyCell {
+        width: 70px;
+        height: 20px;
+        margin: 5px;
+        border-style: solid;
+        border-width: 1px;
+        border-color: #C0C0C0;
+        padding: 3px;
+        background-color: #eaeafa;
+        cursor: pointer;
+    }
+
+    .recTotalsCell {
+        width: 70px;
+        height: 20px;
+        margin: 5px;
+        border-style: solid;
+        border-width: 1px;
+        border-color: #C0C0C0;
+        padding: 3px;
+        background-color: #FF80FF;
+        cursor: pointer;
+    }
+
+    .recTotalsCellGood {
+        width: 70px;
+        height: 20px;
+        margin: 5px;
+        border-style: solid;
+        border-width: 1px;
+        border-color: #C0C0C0;
+        padding: 3px;
+        background-color: #00FF00;
+        cursor: pointer;
+    }
+
+    .recTotalsCellBad {
+        width: 70px;
+        height: 20px;
+        margin: 5px;
+        border-style: solid;
+        border-width: 1px;
+        border-color: #C0C0C0;
+        padding: 3px;
+        color: #FFFFFF;
+        background-color: #FF0000;
+        cursor: pointer;
+    }
+
+    .recGroupIndicationCell {
+        width: 70px;
+        height: 10px;
+        margin: 5px;
+        border-style: solid;
+        border-width: 1px;
+        border-color: #C0C0C0;
+        padding: 3px;
+        background-color: #FFFFFF;
+        cursor: pointer;
+    }
+
+    .recGroupIndicationCellSel {
+        background-color: #000000;
+    }
+
+    .displayCellStd, .displayCellRowSel, .displayCellSnglSel, .displayCellSnglSelEditable, .displayCellSnglSelMoney, .displayCellWarn, .displayCellFilt, .displayMoneyCellFiltClass, .displayCellRcnclEarly, .displayCellRcnclNot, .displayCellSnglSelRcnclBlank, .displayCellLineSelRcnclBlank, .displayCellRcnclBlank, .displayCellMoney, .displayCellMoneyWarn, .displayCellRowSelMoney {
+        color: #000000;
+        font-size: 11px;
+        word-wrap: break-word;
+        width: 69px;
+    /*  height: 22px; 
+        margin: 5px; */
+        border-style: solid;
+        border-width: 1px;
+        border-color: #C0C0C0;
+        padding: 3px;
+        background-color: #FFFFFF;
+        cursor: pointer;
+        -webkit-user-select: none;  /* Chrome all / Safari all */
+        -moz-user-select: none;     /* Firefox all */
+        -ms-user-select: none;      /* IE 10+ */
+        user-select: none;          /* Likely future */  
+    }
+
+    .displayCellRcnclBlank {
+        color: #FFFFFF;
+        background-color: #FFFFFF;
+    }
+
+    .displayCellRowSel {
+        color: #000000;
+        background-color: #E0E0E0;
+    }
+
+    .displayCellRowSelMoney {
+        color: #000000;
+        background-color: #E0E0E0;
+        text-align:right;
+    }
+
+    .displayCellSnglSel {
+        color: #000000;
+        background-color: #9090FF;
+    }
+
+    .displayCellSnglSelEditable {
+        color: #000000;
+        background-color: #9090FF;
+        cursor: text;
+        -webkit-user-select: auto;  /* Chrome all / Safari all - allows text to be selected */
+        -moz-user-select: auto;     /* Firefox all */
+        -ms-user-select: auto;      /* IE 10+ */
+        user-select: auto;          /* Likely future */  
+    }
+
+    .displayCellSnglSelMoney {
+        color: #000000;
+        background-color: #9090FF;
+        text-align:right;
+        cursor: text;
+        -webkit-user-select: auto;  /* Chrome all / Safari all - allows text to be selected */
+        -moz-user-select: auto;     /* Firefox all */
+        -ms-user-select: auto;      /* IE 10+ */
+        user-select: auto;          /* Likely future */ 
+    }
+
+
+    .displayCellSnglSelRcnclBlank {
+        color: #9090FF;
+        background-color: #9090FF;
+    }
+
+    .displayCellWarn {
+        background-color: #FFD030;
+    }
+
+
+    .displayCellLineSelRcnclBlank {
+        color: #E0E0E0;
+        background-color: #E0E0E0;
+    }
+
+
+    .displayCellMoney {
+        text-align:right;
+    }
+
+    .displayCellMoneyWarn {
+        text-align:right;
+        background: rgba(255, 208, 48, 1.0);
+    }
+
+    .displayCellFilt {
+        background-color: #FFFF80;
+    }
+
+    .displayMoneyCellFiltClass {
+        text-align:right;
+        background-color: #FFFF80;
+    }
+
+    .displayCellRcnclEarly {
+        color: #FFFFFF;
+        background-color: #FFAA00;
+    }
+
+    .displayCellRcnclNot {
+        color: #FFFFFF;
+        background-color: #FF0000;
+    }
+
+    /*                                                                                                  ####    ####    ####    ####
+                                                                                                        ####    ####    ####    ####
+    /* ############### END - SECTION LIFTED FROM showRecsForFullYr.php TO CONTROL DIV DISPLAY CELLS     ####    ####    ####    ####   */
+
+}
+
+
+
+
+
+
+/*
+#################################      ####################
+#################################      ####################
+#################################      ####################
+#################################      ####################
+#################################      ####################
+#################################      ####################
+#################################      ####################
+*/
+
+@media screen and (min-width:1360px) and (max-width:1909px) { /* widescreen 1366 x 768 (#### ORDINARY LAPTOP ####) with Firefox or Chrome maximised */
+    
+	.mainContainer {
+        width: 1350px;
+        height: 625px;
+    }
+
+    .docBtn {                       /* menu.php, selScansForUpload.php */
+        background-color: #E0E0E0;
+        border: none; /* Remove standard borders */
+        color: Black;
+        padding: 2px 2px;
+        font-size: 11px;
+        cursor: pointer;
+    }
+
+    .docBtn:hover {
+        background-color: #A0A0A0;
+    }
+
+    .btn {                       /* menu.php, selScansForUpload.php */
+        background-color: DodgerBlue;
+        border: none; /* Remove standard borders */
+        color: white;
+        padding: 5px 5px;
+        font-size: 12px;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        background-color: RoyalBlue;
+    }
+
+    .btnSelected {
+        background-color: White; 
+        border: none;
+        color: DodgerBlue;
+        border: 1px solid blue;
+        padding: 4px 4px;
+        font-size: 12px;
+        cursor: pointer;
+    }
+
+    
+
+    .menuBar { 					 /* menu.php */
+        width:795px;
+        height:31px;
+        background-color: #FFFFFF;
+    }
+
+    .scansForUpldContainer { 	 /* selScansForUpload.php */
+        width:795px;
+        height:200px;
+        background-color: #FF7070;
+    }
+
+    .scanListContainer {		 /* selScansForUpload.php */
+        width:795px;
+        height:385px;
+        overflow:auto;
+        background-color: #FFAA70;
+    }
+
+    .docSelectionContainer {	 /* captureDocDetails.php */
+        width:795px;
+        height:350px;
+        overflow: auto;
+        font:10px/150% Verdana, Tahoma, sans-serif;
+        background-color: White;
+    }
+
+	.transCreateContainer {		 /* captureDocDetails.php */
+        width:795px;
+        height:195px;
+        overflow:auto;
+        background-color: #FF7070;
+    }
+
+    .docDisplayIframe {			 /* selScansForUpload.php, captureDocDetails.php */
+        width:550px;
+        height:620px;
+    }
+}
+
+
+
+
+
+
+
+/*
+####################      #################################
+####################      #################################
+####################      #################################
+####################      #################################
+####################      #################################
+####################      #################################
+####################      #################################
+*/
+
+@media screen and (min-width:1023px) and (max-width:1359px) { /* iPad 4 landscape */
+	.docBtn {                       /* menu.php, selScansForUpload.php */
+        background-color: #E0E0E0;
+        border: none; /* Remove standard borders */
+        color: white;
+        padding: 2px 2px;
+        font-size: 8px;
+        cursor: pointer;
+    }
+
+    .docBtn:hover {
+        background-color: #A0A0A0;
+    }
+
+    .btn {                       /* menu.php, selScansForUpload.php */
+        background-color: DodgerBlue;
+        border: none; /* Remove standard borders */
+        color: white;
+        padding: 4px 4px;
+        font-size: 9px;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        background-color: RoyalBlue;
+    }
+
+    .btnSelected {
+        background-color: White; 
+        border: none;
+        color: DodgerBlue;
+        border: 1px solid blue;
+        padding: 3px 3px;
+        font-size: 9px;
+        cursor: pointer;
+    }
+
+    .mainContainer {
+        width: 1010px;
+        height: 640px;
+    }
+
+    .menuBar {                   /* menu.php */
+        width:590px;
+        height:25px;
+        background-color: #FFFFFF;
+    }
+
+    .scansForUpldContainer {     /* selScansForUpload.php */
+        width:590px;
+        height:200px;
+        background-color: #FF7070;
+    }
+
+    .scanListContainer {         /* selScansForUpload.php */
+        width:590px;
+        height:385px;
+        overflow:auto;
+        background-color: #FFAA70;
+    }
+
+    .docSelectionContainer {     /* captureDocDetails.php */
+        width:590px;
+        height:350px;
+        overflow: auto;
+        font:10px/150% Verdana, Tahoma, sans-serif;
+        background-color: White;
+    }
+
+    .transCreateContainer {      /* captureDocDetails.php */
+        width:590px;
+        height:195px;
+        overflow:auto;
+        background-color: #FF7070;
+    }
+
+    .docDisplayIframe {          /* selScansForUpload.php, captureDocDetails.php */
+        width:417px;
+        height:635px;
+    }
+
+}
+
+
+
+
+
+
+/*
+#####      ################################################
+#####      ################################################
+#####      ################################################
+#####      ################################################
+#####      ################################################
+#####      ################################################
+#####      ################################################
+*/
+
+@media screen and (max-width:1022px) { /* Nexus 6P landscape with Android navigation buttons still on screen (only displays full height with navigation bar at top pushed out of the way) */
+    .btn {                       /* menu.php, selScansForUpload.php */
+        background-color: DodgerBlue;
+        border: none; /* Remove standard borders */
+        color: white;
+        padding: 4px 4px;
+        font-size: 7px;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        background-color: RoyalBlue;
+    }
+
+    .btnSelected {
+        background-color: White; 
+        border: none;
+        color: DodgerBlue;
+        border: 1px solid blue;
+        padding: 3px 3px;
+        font-size: 9px;
+        cursor: pointer;
+    }
+
+    .mainContainer {
+        width: 665px;
+        height: 370px;
+        font:12px/170% Verdana, Tahoma, sans-serif;
+    }
+
+
+    .menuBar {                   /* menu.php */
+        width:350px;
+        height:20px;
+        background-color: #FFFFFF;
+    }
+
+    .scansForUpldContainer {     /* selScansForUpload.php */
+        width:350px;
+        height:150px;
+        background-color: #FF7070;
+    }
+
+    .scanListContainer {         /* selScansForUpload.php */
+        width:350px;
+        height:150px;
+        overflow:auto;
+        background-color: #FFAA70;
+    }
+
+    .docSelectionContainer {     /* captureDocDetails.php */
+        width:350px;
+        height:150px;
+        overflow: auto;
+        font:10px/150% Verdana, Tahoma, sans-serif;
+        background-color: yellow;
+    }
+
+    .transCreateContainer {      /* captureDocDetails.php */
+        width:350px;
+        height:150px;
+        overflow:auto;
+        background-color: #FF7070;
+    }
+
+    .docDisplayIframe {          /* selScansForUpload.php, captureDocDetails.php */
+        width:300px;
+        height:370px;
+    }
+
+} 
+
+.butToggleOn {
+    cursor:pointer;
+    display: inline-block;
+    width: 135px;
+    height: 20px;
+    float:  left;
+    color: #444444;
+    background-color: #AADDAA;
+    font-size: 12px;
+    text-align: left;
+    padding-left: 5px;
+    padding-right: 0px;
+    padding-top: 1px;
+    padding-bottom: 2px;
+    text-decoration: none;
+    margin-left: 0px;
+    margin-top: 0px;
+    margin-bottom: 5px;
+  /*  border: 1px solid #aaaaaa;
+    border-radius: 5px; */
+    white-space: nowrap;
+}
+
+.butToggleOn:hover {
+    background-color: #AAF4AA;
+}
+
+.butToggleOff {
+    cursor:pointer;
+    display: inline-block;
+    width: 135px;
+    height: 20px;
+    float:  left;
+    color: #444444;
+    background-color: #CCCCCC;
+    font-size: 12px;
+    text-align: left;
+    padding-left: 5px;
+    padding-right: 0px;
+    padding-top: 1px;
+    padding-bottom: 2px;
+    text-decoration: none;
+    margin-left: 0px;
+    margin-top: 0px;
+    margin-bottom: 5px;
+  /*  border: 1px solid #aaaaaa;
+    border-radius: 5px; */
+    white-space: nowrap;
+}
+
+.butToggleOff:hover {
+    background-color: #EEEEEE;
+}
+
