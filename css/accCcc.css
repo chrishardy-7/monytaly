@@ -1,6 +1,6 @@
-/* http://meyerweb.com/eric/tools/css/reset/ 
+/* http: //meyerweb.com/eric/tools/css/reset/ 
    v2.0 | 20110126
-   License: none (public domain)
+   License:  none (public domain)
 */
 
 html, body, div, span, applet, object, iframe,
@@ -16,279 +16,298 @@ article, aside, canvas, details, embed,
 figure, figcaption, footer, header, hgroup, 
 menu, nav, output, ruby, section, summary,
 time, mark, audio, video {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    font-size: 100%;
-    font: inherit;
-    vertical-align: baseline;
+    margin:  0;
+    padding:  0;
+    border:  0;
+    font-size:  100%;
+    font:  inherit;
+    vertical-align:  baseline;
 }
 /* HTML5 display-role reset for older browsers */
 
 article, aside, details, figcaption, figure, 
 footer, header, hgroup, menu, nav, section {
-    display: block;
+    display:  block;
 }
 body {
-    line-height: 1;
+    line-height:  1;
 }
 ol, ul {
-    list-style: none;
+    list-style:  none;
 }
 blockquote, q {
-    quotes: none;
+    quotes:  none;
 }
-blockquote:before, blockquote:after,
-q:before, q:after {
-    content: '';
-    content: none;
+blockquote: before, blockquote: after,
+q: before, q: after {
+    content:  '';
+    content:  none;
 }
 table {
-    border-collapse: collapse;
-    border-spacing: 0;
+    border-collapse:  collapse;
+    border-spacing:  0;
 } 
 
 /* end of reset section */
 
 
 body {
-	margin:3px;
+	margin: 0.15624vw;
 }
 
 
 input, textarea, select {
-  /*  -webkit-appearance: none; */
-   -moz-border-radius: 0px;
-    -webkit-border-radius: 0px;
-    border-radius: 0px;
+  /*  -webkit-appearance:  none; */
+   -moz-border-radius:  0vw;
+    -webkit-border-radius:  0vw;
+    border-radius:  0vw;
 } 
 
 input, textarea { 
-    padding: 4px;
-    border: solid 1px #909090;
-    outline: 0;
-    font: normal 13px/100% Verdana, Tahoma, sans-serif;
-    width: 250px;
-    background: #FFFFFF url('bg_form.png') left top repeat-x;
-    background: -webkit-gradient(linear, left top, left 25, from(#FFFFFF), color-stop(4%, #EEEEEE), to(#FFFFFF));
-    background: -moz-linear-gradient(top, #FFFFFF, #EEEEEE 1px, #FFFFFF 25px);
-    box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
-    -moz-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
-    -webkit-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+    padding:  0.20832vw;
+    border:  solid 0.05208vw #909090;
+    outline:  0;
+    font:  normal 0.67704vw/100% Verdana, Tahoma, sans-serif;
+    width:  13.02vw;
+    background:  #FFFFFF url('bg_form.png') left top repeat-x;
+    background:  -webkit-gradient(linear, left top, left 25, from(#FFFFFF), color-stop(4%, #EEEEEE), to(#FFFFFF));
+    background:  -moz-linear-gradient(top, #FFFFFF, #EEEEEE 0.05208vw, #FFFFFF 1.302vw);
+    box-shadow:  rgba(0,0,0, 0.1) 0vw 0vw 0.41664vw;
+    -moz-box-shadow:  rgba(0,0,0, 0.1) 0vw 0vw 0.41664vw;
+    -webkit-box-shadow:  rgba(0,0,0, 0.1) 0vw 0vw 0.41664vw;
     }
 
 select { 
-    padding: 4px;
-    border: solid 1px #909090;
-    outline: 0;
-    font: normal 13px/100% Verdana, Tahoma, sans-serif;
-    width: 350px;
-    background: #FFFFFF url('bg_form.png') left top repeat-x;
-    background: -webkit-gradient(linear, left top, left 25, from(#FFFFFF), color-stop(4%, #EEEEEE), to(#FFFFFF));
-    background: -moz-linear-gradient(top, #FFFFFF, #EEEEEE 1px, #FFFFFF 25px);
-    box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
-    -moz-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
-    -webkit-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
+    padding:  0.20832vw;
+    border:  solid 0.05208vw #909090;
+    outline:  0;
+    font:  normal 0.67704vw/100% Verdana, Tahoma, sans-serif;
+    width:  18.228vw;
+    background:  #FFFFFF url('bg_form.png') left top repeat-x;
+    background:  -webkit-gradient(linear, left top, left 25, from(#FFFFFF), color-stop(4%, #EEEEEE), to(#FFFFFF));
+    background:  -moz-linear-gradient(top, #FFFFFF, #EEEEEE 0.05208vw, #FFFFFF 1.302vw);
+    box-shadow:  rgba(0,0,0, 0.1) 0vw 0vw 0.41664vw;
+    -moz-box-shadow:  rgba(0,0,0, 0.1) 0vw 0vw 0.41664vw;
+    -webkit-box-shadow:  rgba(0,0,0, 0.1) 0vw 0vw 0.41664vw;
     }
 
 textarea { 
-    width: 400px;
-    max-width: 1000px; /* was set to 400 but increased it to 1000 as it ws messing up the expanding text area and limiting the display part to 400 */
-    height: 100px;
-    line-height: 150%;
+    width:  20.832vw;
+    max-width:  52.08vw; /* was set to 400 but increased it to 1000 as it ws messing up the expanding text area and limiting the display part to 400 */
+    height:  5.208vw;
+    line-height:  150%;
     } 
 
-input:hover, textarea:hover, select:hover,
-input:focus, textarea:focus, select:focus { 
-    border-color: #505050; 
-    -webkit-box-shadow: rgba(0, 0, 0, 0.15) 0px 0px 8px;
+input: hover, textarea: hover, select: hover,
+input: focus, textarea: focus, select: focus { 
+    border-color:  #505050; 
+    -webkit-box-shadow:  rgba(0, 0, 0, 0.15) 0vw 0vw 0.41664vw;
     }
 
 
 
 .mainContainer {
-        border: 1px solid blue;
-        font:12px/150% Verdana, Tahoma, sans-serif; 
+        border:  0.05208vw solid blue;
+        font: 0.62496vw/150% Verdana, Tahoma, sans-serif; 
 }
 
 .allExceptIframe {  /* no sub-definitions in @media sections */
-        float:left;
-        background-color:#D0C8FF;
+        float: left;
+        background-color: #D0C8FF;
 }
 
-.docDisplayContainer {
-    display:flex;
-    flex-direction:column;
-    float:left;
-    background-color:#00FF00;
+.dataDisplayContainer, .dataDisplayContainerPivot {
+    display: flex;
+    flex-direction: column;
+    float: left;
+    background-color: #00FF00;
 }
 
 .headingsStrip {
-    border-bottom:1px solid #808080;
-    background-color:#FFFFFF;
+    display:  flex;
+    flex-direction:  column;
+    border-bottom: 0.05208vw solid #808080;
+    background-color: #FFFFFF;
 }
 
 .scrollableDisplayArea {
-    flex-grow:1;
-    background-color:#FFFFFF;
-    overflow:auto;
+    flex-grow: 1;
+    background-color: #FFFFFF;
+    overflow: auto;
 }
 
+.multiRowHeaderContainer{
+  /*  flex-grow: 50;
+    background-color: #C0FFC0;
+    overflow-x: auto;
+    overflow-y: hidden; */
+}
+
+.scrollableDisplayAreaPivot {
+    flex-grow: 1;
+    background-color: #FFFFFF;
+    overflow: auto;
+}
+
+
+
 .totalsFooter {
-    border-top:1px solid #808080;
-    background-color:#FF6060;
+    border-top: 0.05208vw solid #808080;
+    background-color: #FF6060;
 }
 
 .dateAndItemSelectRecnclDiv {
-    float:left;
-    display:none;
+    float: left;
+    display: none;
 }
 
 .bottomMenuContn {
-    clear:both;
-    background-color:#D0D0FF;
-    float:left;
+    clear: both;
+    background-color: #D0D0FF;
+    float: left;
 }
 
 .bottomMenuRHgroup {    /* no sub-definitions in @media sections */
-    float:right;
+    float: right;
 }
 
 
 
 
 .btn {						 /* menu.php, selScansForUpload.php */
-    background-color: DodgerBlue;
-    color: white;
-    border: none; /* Remove standard borders */
-    cursor: pointer;
+    background-color:  DodgerBlue;
+    color:  white;
+    border:  none; /* Remove standard borders */
+    cursor:  pointer;
 }
 
-.btn:hover {
-    background-color: RoyalBlue;
+.btn: hover {
+    background-color:  RoyalBlue;
 }
 
 .btnSelected {
-    background-color: White; 
-    color: DodgerBlue;
-    border: 1px solid blue;
-    cursor: pointer;
+    background-color:  White; 
+    color:  DodgerBlue;
+    border:  0.05208vw solid blue;
+    cursor:  pointer;
 }
 
 .monthBtn, .NameSelBtn, .calDaysOfMnthBut, .calMnthBut, .calYearBut {
-    border: 1px solid blue;
-    text-align:left;
-    color: #606060;
-    cursor: pointer;
-	background-color: white;
+    border:  0.05208vw solid blue;
+    text-align: left;
+    color:  #606060;
+    cursor:  pointer;
+	background-color:  white;
 }
 
-.monthBtn:hover, .NameSelBtn:hover {
-    background-color: #C0C0FF;
+.monthBtn: hover, .NameSelBtn: hover {
+    background-color:  #C0C0FF;
 }
 
 .monthBtnSelected, .NameSelBtnSelected, .calDaysOfMnthButSelected, .calMnthButSelected, .calYearButSelected {
-    border: 3px solid blue;
-    text-align:left;
-    color: black;
-    background-color: white;
-    cursor: pointer;
-    font-weight: bold;
+    border:  0.15624vw solid blue;
+    text-align: left;
+    color:  black;
+    background-color:  white;
+    cursor:  pointer;
+    font-weight:  bold;
 } 
 
 .monthBtnYearSelected {
-    border: none;
-    text-align:left;
-    color: blue;
-    background-color: white;
-    font-weight: bold;
+    border:  none;
+    text-align: left;
+    color:  blue;
+    background-color:  white;
+    font-weight:  bold;
 } 
 
 .monthBtnYearUpDown{
-    border: 1px solid blue;
-    text-align:middle;
-    color: blue;
-    background-color: white;
-    cursor: pointer;
-    font-weight: bold;
+    border:  0.05208vw solid blue;
+    text-align: middle;
+    color:  blue;
+    background-color:  white;
+    cursor:  pointer;
+    font-weight:  bold;
 }
 
 .namesSelPanelAddBut {
-    border: 1px solid blue;
-    text-align:left;
-    color: #FFFFFF;
-    cursor: pointer;
-    background-color: #00E000;
-    font-weight: bold;
+    border:  0.05208vw solid blue;
+    text-align: left;
+    color:  #FFFFFF;
+    cursor:  pointer;
+    background-color:  #00E000;
+    font-weight:  bold;
 }
 
-.namesSelPanelAddBut:hover {
-    background-color: #00C000;
+.namesSelPanelAddBut: hover {
+    background-color:  #00C000;
 }
 
 .copyButSel, .copyBut {
-    background-color: #D0D0FF;
-    border: 1px solid #D0D0FF;
-    color: black;
-    cursor: pointer;
-    vertical-align: top;
-    text-align:left;
+    background-color:  #D0D0FF;
+    border:  0.05208vw solid #D0D0FF;
+    color:  black;
+    cursor:  pointer;
+    vertical-align:  top;
+    text-align: left;
 }  
 
 .copyButSel {
-    background-color: #FFFF00;
-    color: blue;
+    background-color:  #FFFF00;
+    color:  blue;
 } 
 
 .copyBut {
-    background-color: #FFFFFF;
+    background-color:  #FFFFFF;
 }
 
 .subMenuBtn, .subMenuBtnSel {
-    border: 1px solid blue;
-    text-align:left;
-    color: black;
-    cursor: pointer;
-    background-color: white;
+    border:  0.05208vw solid blue;
+    text-align: left;
+    color:  black;
+    cursor:  pointer;
+    background-color:  white;
 }
 
-.subMenuBtn:hover {
-    background-color: #C0C0FF;
+.subMenuBtn: hover {
+    background-color:  #C0C0FF;
 }
 
 .subMenuBtnSel {
-    color: white;
-    background-color: blue;
+    color:  white;
+    background-color:  blue;
 }
 
 .addTextBoxLabel {
-    font-weight: bold;
-    display:none;
+    font-weight:  bold;
+    display: none;
 }
 
 .butPanelInnerScrlContainer {
-	overflow:auto;
-    background-color:#A0E0A0;
-    float:left;
+	overflow: auto;
+    background-color: #A0E0A0;
+    float: left;
 }
 
 .calContainer, .butPanelOuterContainer, .dummyCalBt {
-    float:left;
-    background-color:#A0E0A0;
+    float: left;
+    background-color: #A0E0A0;
 }
 
 .calMnthsDiv, .calYearsDiv, .calDaysOfMnthDiv {
-	overflow:hidden;
-    float:left;
+	overflow: hidden;
+    float: left;
 }
 
 .subMenuContainer {
-    clear:both;
-    background-color:#A0E0A0;
-    display:none;
+    clear: both;
+    background-color: #A0E0A0;
+    display: none;
 }
 
-
+.green {
+	background-color: #80FF80;
+}
 
 
 
@@ -301,38 +320,50 @@ input:focus, textarea:focus, select:focus {
 ##############################################      #######
 ##############################################      #######
 */
-
-@media screen and (min-width:1910px) and (max-width:6000px) { /* 1920 x 1080 (HD laptop or monitor) with Firefox maximized */
+/*
+@media screen and (min-width: 99.4728vw) and (max-width: 312.48vw) {*/ /* 1920 x 1080 (HD laptop or monitor) with Firefox maximized */
 
 	.mainContainer {
-        width: 1912px;
-        height: 910px;
-        font:12px/200% Verdana, Tahoma, sans-serif;
+        width:  99.57696vw;
+        height:  47.3928vw;
+        font: 0.62496vw/200% Verdana, Tahoma, sans-serif;
     }
 
     .headingsStrip {
-        width:1020px;
-        margin-bottom:5px;
-        margin-left:5px;
+        max-width: 53.1216vw;
+        margin-bottom: 0.2604vw;
+        margin-left: 0.2604vw;
+    }
+
+    .multiRowHeaderContainer {
+        width: 96.0876vw;
+        margin-left: 0.2604vw;
+        font-size: 0.62496vw;
+        background-color:  #FFFFFF;
+        border-bottom:  solid 0.15624vw #A0A0A0;
     }
 
     .scrollableDisplayArea {
-        height:400px;
-        width:1020px;
-        margin-left:5px;
-        font-size:12px;
+        width: 53.1216vw;
+        margin-left: 0.2604vw;
+        font-size: 0.62496vw;
+    }
+
+    .scrollableDisplayAreaPivot {
+        margin-left: 0.2604vw;
+        font-size: 0.62496vw;
     }
 
     .totalsFooter {
-        width:1020px;
-        height:75px;
-        margin-top:5px;
-        margin-left:5px;
+        width: 53.1216vw;
+        height: 3.906vw;
+        margin-top: 0.2604vw;
+        margin-left: 0.2604vw;
     }
 
     .bottomMenuContn {
-        width:1210px;
-        height:40px;
+        width: 63.0168vw;
+        height: 2.0832vw;
     }
 
 
@@ -343,20 +374,20 @@ input:focus, textarea:focus, select:focus {
     /* Top Menu        VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV*/
 
     .menuBar { 	
-        width:1210px;
-        height:40px;
-        background-color: #FFFFFF;
+        width: 63.0168vw;
+        height: 2.0832vw;
+        background-color:  #FFFFFF;
     }
 
     .btn {                       /* also menu.php, addUser.php, */
-        padding: 8px 10px;
-        font-size: 14px;
+        padding:  0.41664vw 0.5208vw;
+        font-size:  0.72912vw;
 
     }
 
     .btnSelected {
-        padding: 7px 9px;
-        font-size: 14px;
+        padding:  0.36456vw 0.46872vw;
+        font-size:  0.72912vw;
     }  
 
 
@@ -366,18 +397,18 @@ input:focus, textarea:focus, select:focus {
     /* Month Side Bar  VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV*/
 
     .mnthSelContainer {
-        height:830px;
-        width:60px;
-        background-color: white;
-        float:left;
+        height: 43.2264vw;
+        width: 3.1248vw;
+        background-color:  white;
+        float: left;
     }
 
      .monthBtn, .monthBtnSelected, .monthBtnYearSelected, .monthBtnYearUpDown{
-        margin: 2px;
-        width:55px;
-        height:30px; 
-        padding: 3px 10px;
-        font-size: 15px;
+        margin:  0.10416vw;
+        width: 2.8644vw;
+        height: 1.5624vw; 
+        padding:  0.15624vw 0.5208vw;
+        font-size:  0.7812vw;
     }
 
     
@@ -388,18 +419,18 @@ input:focus, textarea:focus, select:focus {
 	/* also uses .btn  */
 
 	.message {
-	    padding-top:100px;
-	    font: normal 16px/100% Verdana, Tahoma, sans-serif;
+	    padding-top: 5.208vw;
+	    font:  normal 0.83328vw/100% Verdana, Tahoma, sans-serif;
 	}
 
 	.loginForm { 
-    padding-top:200px;
+    padding-top: 10.416vw;
     }
 
     .loginTextBox {
-    height:35px;
-    margin-bottom:15px;
-    font: normal 16px/100% Verdana, Tahoma, sans-serif;
+    height: 1.8228vw;
+    margin-bottom: 0.7812vw;
+    font:  normal 0.83328vw/100% Verdana, Tahoma, sans-serif;
     }
 
 
@@ -409,9 +440,9 @@ input:focus, textarea:focus, select:focus {
     /* changePassword, forcePasswordReset, addUser      VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV*/
 
     .newUserPwContainer { 	 /* selScansForUpload.php */
-        width:1095px;
-        height:400px;
-        background-color: #FFA64D;
+        width: 57.0276vw;
+        height: 20.832vw;
+        background-color:  #FFA64D;
     }
 
     /* uses
@@ -435,35 +466,35 @@ input:focus, textarea:focus, select:focus {
     /* uploadScans      VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV*/
 
     .scansForUpldContainer, .scansForUpldContainerSwapDoc { 	 /* selScansForUpload.php */
-        width:1150px;
-        height:250px;
-        padding-top:30px;
-        padding-left:60px;
-        background-color: #80CC80;
+        width: 59.892vw;
+        height: 13.02vw;
+        padding-top: 1.5624vw;
+        padding-left: 3.1248vw;
+        background-color:  #80CC80;
     }
 
     .scansForUpldContainerSwapDoc {     /* selScansForUpload.php */
-        background-color: #FF6060;
+        background-color:  #FF6060;
     }
 
     .scanListContainer {		 /* selScansForUpload.php */
-        width:1210px;
-        height:585px;
-        overflow:auto;
-        background-color: #80CC80;
+        width: 63.0168vw;
+        height: 30.4668vw;
+        overflow: auto;
+        background-color:  #80CC80;
     }
 
     .tableForFileUploadHeading {
-        color:black;
-        font-weight: bold;
+        color: black;
+        font-weight:  bold;
     }
 
     .tableForFileUploadSuccess {
-        color:black;
+        color: black;
     }
 
     .tableForFileUploadFail {
-        color:red;
+        color: red;
     }
 
     /* uses
@@ -483,40 +514,40 @@ input:focus, textarea:focus, select:focus {
     /* addItems      VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV*/
 
     .docEditContainer {	 /* captureDocDetails.php */
-        width:1095px;
-        height:830px;
-        overflow: auto;
-        //font:10px/150% Verdana, Tahoma, sans-serif;
-        background-color: White;
+        width: 57.0276vw;
+        height: 43.2264vw;
+        overflow:  auto;
+        //font: 0.5208vw/150% Verdana, Tahoma, sans-serif;
+        background-color:  White;
     }
 
     .addTextBoxNorm {
-        font: normal 16px/100% Verdana, Tahoma, sans-serif;
-        height:25px;
-        width:250px;
-        margin-top:40px;
-        margin-left:100px;
+        font:  normal 0.83328vw/100% Verdana, Tahoma, sans-serif;
+        height: 1.302vw;
+        width: 13.02vw;
+        margin-top: 2.0832vw;
+        margin-left: 5.208vw;
     }
 
     .addTextBoxNorm {
-	    background: #FFFFFF url('bg_form.png') left top repeat-x;
-	    background: -webkit-gradient(linear, left top, left 25, from(#FFFFFF), color-stop(4%, #EEEEEE), to(#FFFFFF));
-	    background: -moz-linear-gradient(top, #FFFFFF, #EEEEEE 1px, #FFFFFF 25px);
-	    box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
-	    -moz-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
-	    -webkit-box-shadow: rgba(0,0,0, 0.1) 0px 0px 8px;
-	    /*font-weight: bold;*/
+	    background:  #FFFFFF url('bg_form.png') left top repeat-x;
+	    background:  -webkit-gradient(linear, left top, left 25, from(#FFFFFF), color-stop(4%, #EEEEEE), to(#FFFFFF));
+	    background:  -moz-linear-gradient(top, #FFFFFF, #EEEEEE 0.05208vw, #FFFFFF 1.302vw);
+	    box-shadow:  rgba(0,0,0, 0.1) 0vw 0vw 0.41664vw;
+	    -moz-box-shadow:  rgba(0,0,0, 0.1) 0vw 0vw 0.41664vw;
+	    -webkit-box-shadow:  rgba(0,0,0, 0.1) 0vw 0vw 0.41664vw;
+	    /*font-weight:  bold;*/
 	}
 
 	.addTextBoxLabel {
-        font: 16px/100% Verdana, Tahoma, sans-serif;
-        margin-left:20px;
+        font:  0.83328vw/100% Verdana, Tahoma, sans-serif;
+        margin-left: 1.0416vw;
     }
 
     .docDisplayIframe, .docDisplayIframeRecs {         
-	    float:left;
-	    background-color: #FFE0FF;
-	    border: 1px solid grey;
+	    float: left;
+	    background-color:  #FFE0FF;
+	    border:  0.05208vw solid grey;
 	}  
 
     /* uses
@@ -532,30 +563,39 @@ input:focus, textarea:focus, select:focus {
 	/* showRecsForFullYr      VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV*/
 
 	.subMenuBtn, .subMenuBtnSel {
-        margin: 3px;
-        height:33px;        
-        padding: 3px 10px;
-        font-size: 15px;
+        margin:  0.15624vw;
+        height: 1.71864vw;        
+        padding:  0.15624vw 0.5208vw;
+        font-size:  0.7812vw;
     }
 
 	.copyButSel, .copyBut {                   
-        width:98px;
-        min-height:30px;
-        margin-left: 7px;
-        margin-top: 5px;
-        padding: 1px 5px;
-        font-size: 14px;
+        width: 5.10384vw;
+        min-height: 1.5624vw;
+        margin-left:  0.36456vw;
+        margin-top:  0.2604vw;
+        padding:  0.05208vw 0.2604vw;
+        font-size:  0.72912vw;
     }
 
-    .docDisplayContainer {
-        width:1023px;
-        height:830px;
-        font:10px/150% Verdana, Tahoma, sans-serif;
-    }   
+    .dataDisplayContainer {
+        width: 53.27784vw;
+        height: 43.2264vw;
+        font: 0.5208vw/150% Verdana, Tahoma, sans-serif;
+    }
+
+    .dataDisplayContainerPivot {
+        width: 96.348vw;
+        height: 43.2264vw;
+        font: 0.5208vw/150% Verdana, Tahoma, sans-serif;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }  
 
     .docDisplayIframeRecsFullYr {
-        width:693px;
-        height:908px;
+        width: 36.09144vw;
+        height: 47.28864vw;
+        background-color:  #FFFFFF;
     }
 
 
@@ -566,93 +606,93 @@ input:focus, textarea:focus, select:focus {
     /*vvvvv CALENDAR CONTAINER AND BUTTONS vvvvv*/
 
     .calContainer, .butPanelOuterContainer { /* .butPanelOuterContainer placed here for efficiancy  */
-		width:135px;
-        height:785px;
+		width: 7.0308vw;
+        height: 40.8828vw;
 	}
 
     .dummyCalBt {           /* .dummyCalBt placed here for efficiancy  */
-        width:125px;
-        height:785px;
-        padding-left:10px;
-        color:#A0A0A0;
-        font:30px/150% Verdana, Tahoma, sans-serif;
+        width: 6.51vw;
+        height: 40.8828vw;
+        padding-left: 0.5208vw;
+        color: #A0A0A0;
+        font: 1.5624vw/150% Verdana, Tahoma, sans-serif;
     }
 
     .subMenuContainer {
-        width:135px;
-        height:44px; float:left;
+        width: 7.0308vw;
+        height: 2.29152vw; float: left;
     }
 
     .calDaysOfMnthDiv {
-        width:38px;
-        height:783px;
-        margin-left:2px;
-        background-color: #A0FFA0;
+        width: 1.97904vw;
+        height: 40.77864vw;
+        margin-left: 0.10416vw;
+        background-color:  #A0FFA0;
     }
 
 	.calMnthsDiv {
-		width:38px;
-        height:783px;
-        background-color: #A0A0FF;
+		width: 1.97904vw;
+        height: 40.77864vw;
+        background-color:  #A0A0FF;
     }
 
     .calYearsDiv {
-        width:52px;
-        height:783px;
-        background-color: #FFA0A0;
+        width: 2.70816vw;
+        height: 40.77864vw;
+        background-color:  #FFA0A0;
     }
 
     .calDaysOfMnthBut {
-        margin: 2px;
-        width:33px;
-        padding: 0px 5px;
-        font-size: 14px;
+        margin:  0.10416vw;
+        width: 1.71864vw;
+        padding:  0vw 0.2604vw;
+        font-size:  0.72912vw;
     }
 
     .calDaysOfMnthButHidden {
-        margin: 0px;
-        width:10px;
-        padding: 0px 0px;
-        font-size: 6px;
-        border: none;
-        color:#A0FFA0;
-        cursor: none;
-        background-color:#A0FFA0;
+        margin:  0vw;
+        width: 0.5208vw;
+        padding:  0vw 0vw;
+        font-size:  0.31248vw;
+        border:  none;
+        color: #A0FFA0;
+        cursor:  none;
+        background-color: #A0FFA0;
     }
 
     .calDaysOfMnthButSelected {
-    	margin: 2px;
-        width:33px;
-        padding: 0px 5px;
-        font-size: 14px;
+    	margin:  0.10416vw;
+        width: 1.71864vw;
+        padding:  0vw 0.2604vw;
+        font-size:  0.72912vw;
     }
 
     .calMnthBut {
-    	margin: 2px;
-        width:33px;
-        padding: 2px 5px;
-        font-size: 14px;
+    	margin:  0.10416vw;
+        width: 1.71864vw;
+        padding:  0.10416vw 0.2604vw;
+        font-size:  0.72912vw;
     }
 
     .calMnthButSelected {
-	    margin: 2px;
-	    width:33px;
-	    padding: 2px 5px;
-	    font-size: 14px;
+	    margin:  0.10416vw;
+	    width: 1.71864vw;
+	    padding:  0.10416vw 0.2604vw;
+	    font-size:  0.72912vw;
     }
 
     .calYearBut {
-    	margin: 2px;
-        width:47px;
-        padding: 2px 5px;
-        font-size: 14px;
+    	margin:  0.10416vw;
+        width: 2.44776vw;
+        padding:  0.10416vw 0.2604vw;
+        font-size:  0.72912vw;
     }
 
     .calYearButSelected {
-        margin: 2px;
-        width:47px;
-        padding: 2px 5px;
-        font-size: 14px;
+        margin:  0.10416vw;
+        width: 2.44776vw;
+        padding:  0.10416vw 0.2604vw;
+        font-size:  0.72912vw;
     }
 
 
@@ -662,30 +702,30 @@ input:focus, textarea:focus, select:focus {
      /* vvvvvvvvvv butPanelJSInteracStrOnly vvvvvvvvvvv */
 
     .butPanelInnerScrlContainer { 
-        margin-top:15px;
-        width:135px;
-        height:660px;
+        margin-top: 0.7812vw;
+        width: 7.0308vw;
+        height: 34.3728vw;
     }
 
     .homeInDiv {
-        border: 1px solid blue;
-        text-align:left;
-        color: #606060;
-        width:93px;
-        height:22px;
-        padding: 3px 10px;
-        margin: 3px;
-        font-size: 14px;
-        cursor: text;
-        background-color: #FFFF80;
+        border:  0.05208vw solid blue;
+        text-align: left;
+        color:  #606060;
+        width: 4.84344vw;
+        height: 1.14576vw;
+        padding:  0.15624vw 0.5208vw;
+        margin:  0.15624vw;
+        font-size:  0.72912vw;
+        cursor:  text;
+        background-color:  #FFFF80;
     }
 
     .NameSelBtn, .NameSelBtnSelected, .namesSelPanelAddBut {
-        margin: 3px;
-        width:115px;
-        min-height: 29px;
-        padding: 3px 10px;
-        font-size: 14px;
+        margin:  0.15624vw;
+        width: 5.9892vw;
+        min-height:  1.51032vw;
+        padding:  0.15624vw 0.5208vw;
+        font-size:  0.72912vw;
     }
 
     /* ^^^^^^^^^^^^ butPanelJSInteracStrOnly END ^^^^^^^^^^ */
@@ -699,8 +739,12 @@ input:focus, textarea:focus, select:focus {
        ############### START - SECTION LIFTED FROM showRecsForFullYr.php TO CONTROL DIV DISPLAY CELLS    ####    ####    ####    ####   */
 
 
-    /*  Classes needed for main scrolling records display:
+    /*  Classes needed for main scrolling records display: 
     php js  displayCellStd                  white background, unselected - for most displayed cells
+    php     pivotCellStd                    white background, with content aligned right for money cells
+    php     pivotCellRowName                white background, much wider fro the row names of pivot table
+    php     pivotCellRowNameRight           white background, much wider fro the row names of pivot table - text sits to the right
+    php     pivotCellRowNameRed             red background to indicate -ve value
     php js  displayCellMoney                white background, unselected - with content aligned right for money cells
         js  displayCellRowSel               light grey background line-select - for most displayed cells
         js  displayCellRowSelMoney          light grey background line-select - with content aligned right for money cells
@@ -724,198 +768,255 @@ input:focus, textarea:focus, select:focus {
 
 
     .recHeadingCell, .recHeadingCellFilt {
-        font-weight: bold;
-        width: 70px;
-        height: 27px;
-        margin: 5px;
-        border-style: solid;
-        border-width: 1px;
-        border-color: #C0C0C0;
-        padding: 3px;
-        background-color: #FFFFFF;
-        cursor: pointer;
+        font-weight:  bold;
+        width:  3.6456vw;
+        height:  1.40616vw;
+        margin:  0.2604vw;
+        border-style:  solid;
+        border-width:  0.05208vw;
+        border-color:  #C0C0C0;
+        padding:  0.15624vw;
+        background-color:  #FFFFFF;
+        cursor:  pointer;
     }
 
     .recHeadingCellFilt {
-        background-color: #FFFF80;
+        background-color:  #FFFF80;
     }
 
     .recStickyCell {
-        width: 70px;
-        height: 20px;
-        margin: 5px;
-        border-style: solid;
-        border-width: 1px;
-        border-color: #C0C0C0;
-        padding: 3px;
-        background-color: #eaeafa;
-        cursor: pointer;
+        width:  3.6456vw;
+        height:  1.0416vw;
+        margin:  0.2604vw;
+        border-style:  solid;
+        border-width:  0.05208vw;
+        border-color:  #C0C0C0;
+        padding:  0.15624vw;
+        background-color:  #eaeafa;
+        cursor:  pointer;
     }
 
     .recTotalsCell {
-        width: 70px;
-        height: 20px;
-        margin: 5px;
-        border-style: solid;
-        border-width: 1px;
-        border-color: #C0C0C0;
-        padding: 3px;
-        background-color: #FF80FF;
-        cursor: pointer;
+        width:  3.6456vw;
+        height:  1.0416vw;
+        margin:  0.2604vw;
+        border-style:  solid;
+        border-width:  0.05208vw;
+        border-color:  #C0C0C0;
+        padding:  0.15624vw;
+        background-color:  #FF80FF;
+        cursor:  pointer;
     }
 
     .recTotalsCellGood {
-        width: 70px;
-        height: 20px;
-        margin: 5px;
-        border-style: solid;
-        border-width: 1px;
-        border-color: #C0C0C0;
-        padding: 3px;
-        background-color: #00FF00;
-        cursor: pointer;
+        width:  3.6456vw;
+        height:  1.0416vw;
+        margin:  0.2604vw;
+        border-style:  solid;
+        border-width:  0.05208vw;
+        border-color:  #C0C0C0;
+        padding:  0.15624vw;
+        background-color:  #00FF00;
+        cursor:  pointer;
     }
 
     .recTotalsCellBad {
-        width: 70px;
-        height: 20px;
-        margin: 5px;
-        border-style: solid;
-        border-width: 1px;
-        border-color: #C0C0C0;
-        padding: 3px;
-        color: #FFFFFF;
-        background-color: #FF0000;
-        cursor: pointer;
+        width:  3.6456vw;
+        height:  1.0416vw;
+        margin:  0.2604vw;
+        border-style:  solid;
+        border-width:  0.05208vw;
+        border-color:  #C0C0C0;
+        padding:  0.15624vw;
+        color:  #FFFFFF;
+        background-color:  #FF0000;
+        cursor:  pointer;
     }
 
     .recGroupIndicationCell {
-        width: 70px;
-        height: 10px;
-        margin: 5px;
-        border-style: solid;
-        border-width: 1px;
-        border-color: #C0C0C0;
-        padding: 3px;
-        background-color: #FFFFFF;
-        cursor: pointer;
+        width:  3.6456vw;
+        height:  0.5208vw;
+        margin:  0.2604vw;
+        border-style:  solid;
+        border-width:  0.05208vw;
+        border-color:  #C0C0C0;
+        padding:  0.15624vw;
+        background-color:  #FFFFFF;
+        cursor:  pointer;
     }
 
     .recGroupIndicationCellSel {
-        background-color: #000000;
+        background-color:  #000000;
     }
 
     .displayCellStd, .displayCellRowSel, .displayCellSnglSel, .displayCellSnglSelEditable, .displayCellSnglSelMoney, .displayCellWarn, .displayCellFilt, .displayMoneyCellFiltClass, .displayCellRcnclEarly, .displayCellRcnclNot, .displayCellSnglSelRcnclBlank, .displayCellLineSelRcnclBlank, .displayCellRcnclBlank, .displayCellMoney, .displayCellMoneyWarn, .displayCellRowSelMoney {
-        color: #000000;
-        font-size: 11px;
-        word-wrap: break-word;
-        width: 69px;
-    /*  height: 22px; 
-        margin: 5px; */
-        border-style: solid;
-        border-width: 1px;
-        border-color: #C0C0C0;
-        padding: 3px;
-        background-color: #FFFFFF;
-        cursor: pointer;
-        -webkit-user-select: none;  /* Chrome all / Safari all */
-        -moz-user-select: none;     /* Firefox all */
-        -ms-user-select: none;      /* IE 10+ */
-        user-select: none;          /* Likely future */  
+        color:  #000000;
+        font-size:  0.57288vw;
+        word-wrap:  break-word;
+        width:  3.59352vw;
+    /*  height:  1.14576vw; 
+        margin:  0.2604vw; */
+        border-style:  solid;
+        border-width:  0.05208vw;
+        border-color:  #C0C0C0;
+        padding:  0.15624vw;
+      /*  background-color:  #FFFFFF; */
+        cursor:  pointer;
+        -webkit-user-select:  none;  /* Chrome all / Safari all */
+        -moz-user-select:  none;     /* Firefox all */
+        -ms-user-select:  none;      /* IE 10+ */
+        user-select:  none;          /* Likely future */  
+    }
+
+    .pivotCellStd, .pivotCellGreen, .pivotCellOrange, .pivotCellRed, .pivotCellRowName, .pivotCellRowNameRight {
+        color:  #000000;
+        font-size:  0.57288vw;
+        word-wrap:  break-word;
+        width:  3.59352vw;
+    /*  height:  1.14576vw; 
+        margin:  0.2604vw; */
+        border-style:  solid;
+        border-width:  0.05208vw;
+        border-color:  #C0C0C0;
+        padding:  0.15624vw;
+        background-color:  #FFFFFF;
+        cursor:  pointer;
+        -webkit-user-select:  none;  /* Chrome all / Safari all */
+        -moz-user-select:  none;     /* Firefox all */
+        -ms-user-select:  none;      /* IE 10+ */
+        user-select:  none;          /* Likely future */  
+    }
+
+    .displayCellStd {
+        /*display:  inline-block;*/
+    }
+
+    .pivotCellStd {
+        width:  3.22896vw;
+        text-align: right;
+    }
+
+    .pivotCellGreen {
+        width:  3.22896vw;
+        text-align: right;
+        background-color:  #00FF00;
+    }
+
+    .pivotCellOrange {
+        width:  3.22896vw;
+        text-align: right;
+        color:  #FFFFFF;
+        background-color:  #FFAA00;
+    }
+
+    .pivotCellRed {
+        width:  3.22896vw;
+        text-align: right;
+        color:  #FFFFFF;
+        background-color:  #FF0000;
+    }
+
+    .pivotCellRowName, .pivotCellRowNameRight {
+        width:  7.2912vw;
+        font-weight:  bold;
+    }
+
+    .pivotCellRowNameRight {
+        text-align: right;
     }
 
     .displayCellRcnclBlank {
-        color: #FFFFFF;
-        background-color: #FFFFFF;
+        color:  #FFFFFF;
+        background-color:  #FFFFFF;
     }
 
     .displayCellRowSel {
-        color: #000000;
-        background-color: #E0E0E0;
+        color:  #000000;
+        background-color:  #E0E0E0;
     }
 
     .displayCellRowSelMoney {
-        color: #000000;
-        background-color: #E0E0E0;
-        text-align:right;
+        color:  #000000;
+        background-color:  #E0E0E0;
+        text-align: right;
     }
 
     .displayCellSnglSel {  /* used in JSforAccCcc.js */
-        color: #000000;
-        background-color: #9090FF;
+        color:  #000000;
+        background-color:  #9090FF;
     }
 
     .displayCellSnglSelEditable {
-        color: #000000;
-        background-color: #9090FF;
-        cursor: text;
-        -webkit-user-select: auto;  /* Chrome all / Safari all - allows text to be selected */
-        -moz-user-select: auto;     /* Firefox all */
-        -ms-user-select: auto;      /* IE 10+ */
-        user-select: auto;          /* Likely future */  
+        color:  #000000;
+        background-color:  #9090FF;
+        cursor:  text;
+        -webkit-user-select:  auto;  /* Chrome all / Safari all - allows text to be selected */
+        -moz-user-select:  auto;     /* Firefox all */
+        -ms-user-select:  auto;      /* IE 10+ */
+        user-select:  auto;          /* Likely future */  
     }
 
     .displayCellSnglSelMoney {
-        color: #000000;
-        background-color: #9090FF;
-        text-align:right;
-        cursor: text;
-        -webkit-user-select: auto;  /* Chrome all / Safari all - allows text to be selected */
-        -moz-user-select: auto;     /* Firefox all */
-        -ms-user-select: auto;      /* IE 10+ */
-        user-select: auto;          /* Likely future */ 
+        color:  #000000;
+        background-color:  #9090FF;
+        text-align: right;
+        cursor:  text;
+        -webkit-user-select:  auto;  /* Chrome all / Safari all - allows text to be selected */
+        -moz-user-select:  auto;     /* Firefox all */
+        -ms-user-select:  auto;      /* IE 10+ */
+        user-select:  auto;          /* Likely future */ 
     }
 
 
     .displayCellSnglSelRcnclBlank {
-        color: #9090FF;
-        background-color: #9090FF;
+        color:  #9090FF;
+        background-color:  #9090FF;
     }
 
     .displayCellWarn {
-        background-color: #FFD030;
+        background-color:  #FFD030;
     }
 
 
     .displayCellLineSelRcnclBlank {
-        color: #E0E0E0;
-        background-color: #E0E0E0;
+        color:  #E0E0E0;
+        background-color:  #E0E0E0;
     }
 
 
     .displayCellMoney {
-        text-align:right;
+        text-align: right;
     }
 
     .displayCellMoneyWarn {
-        text-align:right;
-        background: rgba(255, 208, 48, 1.0);
+        text-align: right;
+        background:  rgba(255, 208, 48, 1.0);
     }
 
     .displayCellFilt {
-        background-color: #FFFF80;
+        background-color:  #FFFF80;
     }
 
     .displayMoneyCellFiltClass {
-        text-align:right;
-        background-color: #FFFF80;
+        text-align: right;
+        background-color:  #FFFF80;
     }
 
     .displayCellRcnclEarly {
-        color: #FFFFFF;
-        background-color: #FFAA00;
+        color:  #FFFFFF;
+        background-color:  #FFAA00;
     }
 
     .displayCellRcnclNot {
-        color: #FFFFFF;
-        background-color: #FF0000;
+        color:  #FFFFFF;
+        background-color:  #FF0000;
     }
 
     /*                                                                                                  ####    ####    ####    ####
                                                                                                         ####    ####    ####    ####
     /* ############### END - SECTION LIFTED FROM showRecsForFullYr.php TO CONTROL DIV DISPLAY CELLS     ####    ####    ####    ####   */
 
-}
+/*}*/
 
 
 
@@ -929,11 +1030,11 @@ input:focus, textarea:focus, select:focus {
 #################################      ####################
 #################################      ####################
 */
+/*
+@media screen and (min-width: 70.8288vw) and (max-width: 99.42072vw) {*/ /* widescreen 1366 x 768 (#### ORDINARY LAPTOP ####) with Firefox or Chrome maximised */
 
-@media screen and (min-width:1360px) and (max-width:1909px) { /* widescreen 1366 x 768 (#### ORDINARY LAPTOP ####) with Firefox or Chrome maximised */
 
-
-}
+/*}*/
     
 
 
@@ -947,11 +1048,11 @@ input:focus, textarea:focus, select:focus {
 ####################      #################################
 ####################      #################################
 */
+/*
+@media screen and (min-width: 53.27784vw) and (max-width: 70.77672vw) {*/ /* iPad 4 landscape */
 
-@media screen and (min-width:1023px) and (max-width:1359px) { /* iPad 4 landscape */
 
-
-}
+/*}*/
 
 
 
@@ -965,8 +1066,8 @@ input:focus, textarea:focus, select:focus {
 #####      ################################################
 #####      ################################################
 */
-
-@media screen and (max-width:1022px) { /* Nexus 6P landscape with Android navigation buttons still on screen (only displays full height with navigation bar at top pushed out of the way) */
+/*
+@media screen and (max-width: 53.22576vw) {*/ /* Nexus 6P landscape with Android navigation buttons still on screen (only displays full height with navigation bar at top pushed out of the way) */
     
-}
+/*}*/
 

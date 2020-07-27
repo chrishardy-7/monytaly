@@ -15,7 +15,9 @@ print_r("</br>");
 ?>
 <div style="background-color: #FFFFFF; float:left;">
 	<div class="newUserPwContainer">
+
 		<div style="width:550px; float:left; margin-left:20px ">
+			<p style="font-weight:bold; font-size: 17px; margin-top:25px">Please create a new Password known only to you</p>
 			<form id="passwordReset" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data"  onsubmit="">
 				</br>
 				<span><input class="loginTextBox" type="password" name="oldPassword" placeholder="Temporary Password" id="oldPassword" onkeydown="testForEnter();" /></span>
@@ -32,13 +34,14 @@ print_r("</br>");
 		</div>
 		<div style="width:500px; float:left;">
 			</br>
-			<p style="font-weight:bold">Passwords must have at least 8 characters and must have at least:</p>
+			<p style="font-weight:bold">Passwords must have at least:</p>
+			<li>8 characters</li>
 			<li>one UPPER case letter</li>
 			<li>one lower case letter</li>
 			<li>one non-alphanumeric character   #  {  $  % * &nbsp;&nbsp;&nbsp; etc.</li>
 			<li>one number 0 – 9</li>
 			</br>
-			<p>A monitor resolution of at least HD (1080 x 1920) will be needed.</p>
+			<p>A monitor resolution of at least <b style="font-weight:bold;">HD (1080 x 1920)</b> will be needed.</p>
 		</div>
 	</div>
 </div>

@@ -786,16 +786,36 @@ function getFilterStrAllBalData($inputArry, $outputArry, $filterStr, $familyChoi
         try {
             if ($validFieldForBalances) {
                 if ($familyChoice == "NoKids") {
-                	$stmtNorm = $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) AND ('.$fieldName.' = '.$matchValue.') '.$filterStr.' AND statusR = "Live"'); //use the normal record dates for calculating the amounts
-                    $stmtRec = $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE ((:recStartDate <= reconciledDate) AND (reconciledDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) AND ('.$fieldName.' = '.$matchValue.') '.$filterStr.' AND statusR = "Live"'); //use the reconciled dates for calculating the amounts
+                	
+                    $stmtNorm = $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) AND ('.$fieldName.' = '.$matchValue.') '.$filterStr.' AND statusR = "Live"'); //use the normal record dates for calculating the amounts
+
+                    $stmtRec =  $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE ((:recStartDate <= recordDate) AND (:recStartDate <= reconciledDate) AND (reconciledDate <= :recEndDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) AND ('.$fieldName.' = '.$matchValue.') '.$filterStr.' AND statusR = "Live"'); //use the reconciled dates for calculating the amounts
+
                 }
                 elseif ($familyChoice == "All") {
-                	$stmtNorm = $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE (((:recStartDate <= recordDate) AND (recordDate <= :recEndDate) AND (parent = 0)) OR ((:recStartDate <= parentDate) AND (parentDate <= :recEndDate))) AND  ('.$fieldName.' = '.$matchValue.') '.$filterStr.' AND statusR = "Live"');
-                    $stmtRec = $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE (((:recStartDate <= reconciledDate) AND (reconciledDate <= :recEndDate) AND (parent = 0)) OR ((:recStartDate <= parentDate) AND (parentDate <= :recEndDate))) AND  ('.$fieldName.' = '.$matchValue.') '.$filterStr.' AND statusR = "Live"');
+
+                	$stmtNorm = $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE (((:recStartDate <= recordDate) AND (recordDate <= :recEndDate) AND (parent = 0)) OR ((0 < parent) AND (:recStartDate <= parentDate) AND (parentDate <= :recEndDate))) AND  ('.$fieldName.' = '.$matchValue.') '.$filterStr.' AND statusR = "Live"');
+
+                    $stmtRec =  $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE
+                                                (
+                                                        (:recStartDate <= reconciledDate) AND (reconciledDate <= :recEndDate)               #reconciled date must be within the month for all cases
+                                                    AND                                                                                                             #AND
+                                                        (
+                                                        ((parent = 0) AND (:recStartDate <= recordDate) AND (recordDate <= :recEndDate))    #not a parent or child so record date must be within the month
+                                                    OR                                                                                                              #OR
+                                                        ((0 < parent) AND (:recStartDate <= parentDate) AND (parentDate <= :recEndDate))    #is a parent or child so parent date must be within the month
+                                                        ) 
+                                                ) 
+                                                AND  
+                                                    ('.$fieldName.' = '.$matchValue.') '.$filterStr.' AND statusR = "Live"');
+
                 }
                 else {
+
                 	$stmtNorm = $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE parent = '.$familyChoice.' AND  ('.$fieldName.' = '.$matchValue.') '.$filterStr.' AND statusR = "Live"');
-                    $stmtRec = $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE parent = '.$familyChoice.' AND  ('.$fieldName.' = '.$matchValue.') '.$filterStr.' AND statusR = "Live"');
+
+                    $stmtRec =  $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE parent = '.$familyChoice.' AND  ('.$fieldName.' = '.$matchValue.') '.$filterStr.' AND statusR = "Live"');
+                    
                 }
                 $stmtNorm->execute(array('recStartDate' => $recStartDate, 'recEndDate' => $recEndDate));  
                 $rowNorm = $stmtNorm->fetch(PDO::FETCH_ASSOC);
@@ -881,8 +901,9 @@ function getRecRefsAndDates() {
 }
 
 
-/* Need to write a description for this function - the while loop might need to be changed because perhaps record rows where a doc isn't allocated to a persOrg should be returned too. CHANGED TEMPORARILY! */
-function getMultDocDataAry($recStartDate, $recEndDate, $filterStr, $order, $familyChoice, $groupBy) {
+/* PROBABLY NOT MUCH DIFF FROM getMultDocDataAry() YET, BUT MAYBE IF IT IS EDITED A BIT! Need to write a description for this function - the while loop might need to be changed because perhaps record rows where a doc isn't allocated to a persOrg should be returned too. CHANGED TEMPORARILY! */
+//$familySetting can be one of 3 values: "NoKids", "All", 527. If the number is sent then only records with the parent value set to that number will be returned (which includes the parent and children)
+function getPivotTableAry($recStartDate, $recEndDate, $filterStr, $order, $familyChoice, $groupBy) {
     global $conn;
     try {
         $groupByStr = "";
@@ -891,7 +912,7 @@ function getMultDocDataAry($recStartDate, $recEndDate, $filterStr, $order, $fami
         }
         if ($familyChoice == "NoKids") { //only show family parents among other general records
             if ($groupBy) {
-                $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, SUM(amountWithdrawn) AS sumAmountWithdrawn, amountPaidIn, SUM(amountPaidIn) AS sumAmountPaidIn, statusR, recordNotes FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) '.$filterStr.' AND statusR = "Live"'.$groupByStr.' ORDER BY sumAmountWithdrawn DESC');
+                $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, SUM(amountWithdrawn) AS sumAmountWithdrawn, amountPaidIn, SUM(amountPaidIn) AS sumAmountPaidIn, statusR, recordNotes FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) '.$filterStr.' AND statusR = "Live"'.$groupByStr.' ORDER BY budget DESC');
             }
             else {
                 $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, amountPaidIn, statusR, recordNotes FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) '.$filterStr.' AND statusR = "Live" ORDER BY '.$order.' recordDate, fileName');
@@ -921,6 +942,75 @@ function getMultDocDataAry($recStartDate, $recEndDate, $filterStr, $order, $fami
                 $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, amountPaidIn, statusR, recordNotes FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate))   '.$filterStr.' AND statusR = "Live" ORDER BY '.$order.' recordDate, fileName');
             }
         }
+        $stmt->execute(array('recStartDate' => $recStartDate, 'recEndDate' => $recEndDate));    
+        $docsDetails = array();
+        //return multiple rows, one per persOrg - contains columns from allRecords that most probably will be used
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            if ($groupBy) { //if group by information is passed to this function copy the summed withdrawn and paidin data to the ordinary withdrawn and paidin array positions
+                $row["amountWithdrawn"] = $row["sumAmountWithdrawn"];
+                $row["amountPaidIn"] = $row["sumAmountPaidIn"];
+            }
+            //if ($row["personOrOrg"]) { //only accrue data if this row contains a persOrg (i.e. it incorporates persOrg data from allRecords and not just a 0 persOrg placeholder)
+            if (TRUE) { //accrue all data rows so if personOrg set to empty (0) it will not be lost from view! (eventually get rid of this if statement if happy with this)
+                $docsDetails[] = $row;
+            }
+        }
+    } catch(PDOException $e) {
+      echo 'ERROR: ' . $e->getMessage();
+      }
+      //pr($docsDetails);
+      return $docsDetails;
+}
+
+
+/* Need to write a description for this function - the while loop might need to be changed because perhaps record rows where a doc isn't allocated to a persOrg should be returned too. CHANGED TEMPORARILY! */
+//$familySetting can be one of 3 values: "NoKids", "All", 527. If the number is sent then only records with the parent value set to that number will be returned (which includes the parent and children)
+function getMultDocDataAry($recStartDate, $recEndDate, $filterStr, $order, $familyChoice, $groupBy) {
+    global $conn;
+    try {
+        $groupByStr = "";
+        if ($groupBy) { //if $groupBy contains a group info (i.e. 'transCatgry') create a GROUP BY term
+            $groupByStr = " GROUP BY ".$groupBy;
+        }
+
+        if ($familyChoice == "NoKids") { //only show family parents among other general records
+            if ($groupBy) {
+                $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, SUM(amountWithdrawn) AS sumAmountWithdrawn, amountPaidIn, SUM(amountPaidIn) AS sumAmountPaidIn, statusR, recordNotes FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) '.$filterStr.' AND statusR = "Live"'.$groupByStr.' ORDER BY sumAmountWithdrawn DESC');
+            }
+            else {
+                $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, amountPaidIn, statusR, recordNotes FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) '.$filterStr.' AND statusR = "Live" ORDER BY '.$order.' recordDate, fileName');
+            }
+        }
+        elseif ($familyChoice == "All") { //show all records including general, parents and children
+            if ($groupBy) {
+                $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, SUM(amountWithdrawn) AS sumAmountWithdrawn, amountPaidIn, SUM(amountPaidIn) AS sumAmountPaidIn, statusR, recordNotes FROM allRecords WHERE (((:recStartDate <= recordDate) AND (recordDate <= :recEndDate) AND (parent = 0)) OR ((:recStartDate <= parentDate) AND (parentDate <= :recEndDate))) '.$filterStr.' AND statusR = "Live"'.$groupByStr.' ORDER BY sumAmountWithdrawn DESC');
+            }
+            else {
+                $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, amountPaidIn, statusR, recordNotes FROM allRecords WHERE (((:recStartDate <= recordDate) AND (recordDate <= :recEndDate) AND (parent = 0)) OR ((:recStartDate <= parentDate) AND (parentDate <= :recEndDate))) '.$filterStr.' AND statusR = "Live" ORDER BY '.$order.' recordDate, fileName');
+            }
+        }
+        else { //show only parents and children of the family id passed as a numeric argument in $familyChoice
+            if ($groupBy) {
+                $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, SUM(amountWithdrawn) AS sumAmountWithdrawn, amountPaidIn, SUM(amountPaidIn) AS sumAmountPaidIn, statusR, recordNotes FROM allRecords WHERE parent = '.$familyChoice.' '.$filterStr.' AND statusR = "Live"'.$groupByStr.' ORDER BY sumAmountWithdrawn DESC'); //order by doc filename first so split docs don't occur - may mean docs appear in wierd order
+            }
+            else {
+                $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, amountPaidIn, statusR, recordNotes FROM allRecords WHERE parent = '.$familyChoice.' '.$filterStr.' AND statusR = "Live" ORDER BY '.$order.' fileName, recordDate'); //order by doc filename first so split docs don't occur - may mean docs appear in wierd order
+            }
+        }
+
+
+        /* WAS USED WITH SHOW EVERYTHING BUTTON TO VIEW RECORDS THAT HAD BECOME CORRUPTED - MAY NEED IT AT SOME POINT !
+        if ($familyChoice == "everything") { //only show everything in date order without regard for whether it's a child or parent or ordinary item
+            if ($groupBy) {
+                $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, SUM(amountWithdrawn) AS sumAmountWithdrawn, amountPaidIn, SUM(amountPaidIn) AS sumAmountPaidIn, statusR, recordNotes FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) '.$filterStr.' AND statusR = "Live"'.$groupByStr.' ORDER BY sumAmountWithdrawn DESC');
+            }
+            else {
+                $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, amountPaidIn, statusR, recordNotes FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate))   '.$filterStr.' AND statusR = "Live" ORDER BY '.$order.' recordDate, fileName');
+            }
+        }
+        */
+
+
         $stmt->execute(array('recStartDate' => $recStartDate, 'recEndDate' => $recEndDate));    
         $docsDetails = array();
         //return multiple rows, one per persOrg - contains columns from allRecords that most probably will be used

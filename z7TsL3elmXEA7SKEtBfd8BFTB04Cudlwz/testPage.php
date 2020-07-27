@@ -167,7 +167,7 @@ function homeInOnStr(selectStr, inputAry, alternativeAry, outputAryLength) {
 
 /* Drops down rows of values to choose from. The values displayed are determined by homeInOnStr(). Sets idCurDroppedDown to indicate which editDiv has focus. */
 function showDropDowns(event, maxDropdownRows) {
-	alert(event.target.id+" # "+event.target.parentElement.id+" # "+event.target.parentElement.parentElement.id+" # "+event.target.parentElement.parentElement.parentElement.id+" # "+event.target.parentElement.parentElement.parentElement.parentElement.id);
+	//alert(event.target.id+" # "+event.target.parentElement.id+" # "+event.target.parentElement.parentElement.id+" # "+event.target.parentElement.parentElement.parentElement.id+" # "+event.target.parentElement.parentElement.parentElement.parentElement.id);
 	event.stopPropagation(); //prevents clicks that are being handled by this div being propagated up to the containing div(s) and having unwanted consequencies
 	var id = event.target.id;
 	if (event.keyCode == 13) { //return pressed so click row below (defaults to top row if at bottom)

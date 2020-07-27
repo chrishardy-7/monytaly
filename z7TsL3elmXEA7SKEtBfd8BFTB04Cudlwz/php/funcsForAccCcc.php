@@ -2,6 +2,29 @@
 
 //$thisFileName = "funcsForAccCcc.php";
 
+// EXPERIMENTAL GREEN ADDITIVE CLASS IS IN createStndDisplData() BELOW THE SQUARE:
+
+
+//##############################
+//##############################
+//##############################
+//##############################
+//##############################
+//##############################
+//##############################
+//##############################
+//##############################
+//##############################
+//##############################
+//##############################
+
+
+
+
+
+
+
+
 /*
  * Where functions are used:
 
@@ -14,9 +37,320 @@
 
 // UPDATE THIS LIST OF USING FILES ABOVE, THE LAST FEW FUNCTIONS ARE NOT IN IT !!!
 
-// LOOK AT WHERE IDs ARE BEING USED FOR LABELS THAT ARE THE SAME AS MAIN ELEMENT IDs. THESE ARE PROBABLY BEING IGNORED BECAUSE JAVASCRIPT ONLY USES THE FIRST ID IT COMES TO IF IT IS TRYING TO CHANGE ANYTHING!
+
+/* 
+
+
+ */
+function createPivotDisplData(
+        $recordsDataArry,
+        $filtersColIdxAry,
+        $pivotCellClass,
+        $pivotCellRowNameClass,
+        $pivotCellRedClass,
+        $pivotCellGreenClass,
+        $pivotCellOrangeClass,
+        $pivotCellRowNameRightClass,
+        $blankRecncldClass,
+        $unRecncldClass,
+        $tooEarlyRecncld,
+        $endDate,
+        $download,
+        $allowEdit,
+        $allRecordsColNameRndAry,
+        $displayBankAcc
+                            ) {
+    global $orgPersonsListAry;
+    global $transCatListAry;
+    global $accountListAry;
+    global $budgetListAry;
+    global $umbrellaListAry;
+    global $docTypeListAry;
+    global $_filenameRandLength;
+
+    //settings that determine which columns are used for the pivot table (must match settings used for grouping in getPivotTableAry - $columnForHeadings then $columnForRows in group - MAY NOT MATTER!!)
+    $columnForHeadings = "budget";
+    $headingsListAry = $budgetListAry;
+    $columnForRows = "transCatgry";
+    $rowNamesListAry = $transCatListAry;
+    $spendColumnToSumKey = "amountWithdrawn";
+    $creditColumnToSumKey = "amountPaidIn";
+
+    $columnsExist = FALSE;
+    $rowsExist = FALSE;
+
+    $rowsAry = [];
+    $rowsClassesAry = [];
+    $headingsAry = [];
+    $spacerRowAry = [];
+    $rowsNameAry = [];
+
+    $headingsClassesAry = [];
+    $headingsTotalCreditSumClassesAry = [];
+    $headingsTotalSpendSumClassesAry = [];
+    $headingsbalanceClassesAry = [];
+    $headingsSpacerClassesAry = [];
+
+    $headingCellIdsAry = [];
+    $headsTotalCreditSumCellIdsAry = [];
+    $headsTotalSpendSumCellIdsAry = [];
+    $headsBalanceCellIdsAry = [];
+    $headsSpacerCellIdsAry = [];
+
+    foreach ($recordsDataArry as $singleRecArry) { //loop through all rows of supplied data
+        $headingVal =  aryValueOrZeroStr($headingsListAry, $singleRecArry[$columnForHeadings]); //create a heading from the column selected for headings at the current row iteration
+        if (!in_array($headingVal, $headingsAry)) { //if it's not in the array already append it
+            $headingsAry[] = $headingVal;  
+            $columnsExist = TRUE;          
+        }
+
+        $rowsNameVal =  aryValueOrZeroStr($rowNamesListAry, $singleRecArry[$columnForRows]); //create a row name from the column selected for row names at the  current row iteration
+        if (!in_array($rowsNameVal, $rowsNameAry)) { //if it's not in the array already append it
+            $rowsNameAry[] = $rowsNameVal;
+			$rowsExist = TRUE;
+        }
+        
+    }
+
+    if (!$columnsExist && !$rowsExist) { //terminate things here, nothing to display!
+    	$returnAry["headerAry"] = [];
+    	$returnAry["rowsAry"] = [];
+    	return $returnAry;
+    }
+
+    sort($headingsAry); //get things in alphabetical order
+    sort($rowsNameAry);
+
+    if ($headingsAry[0] == "") { //is first budget is "" this means unallocated 
+        $headingsAry[0] = "STILL TO ALLOCATE BUDGET!";
+    }
+
+    $headingsListFlippedAry = array_flip($headingsListAry);
+    $rowNamesListFlippedAry = array_flip($rowNamesListAry);
+
+    foreach ($headingsAry as $headingText) { //COLUMN LOOP create rows with same number of positions as there are headings to be populated with sums and classes to be set to default
+
+        $headingsClassesAry[] = $pivotCellClass;
+        $headingsTotalCreditSumClassesAry[] = $pivotCellClass;
+        $headingsTotalSpendSumClassesAry[] = $pivotCellClass;
+        $headingsbalanceClassesAry[] = $pivotCellClass;
+        $headingsSpacerClassesAry[] = $pivotCellClass;
+
+        $headingsTotalCreditSumAry[] = 0;
+        $headingsTotalSpendSumAry[] = 0;
+        $headingsbalanceAry[] = 0;
+        $spacerRowAry[] = "";
+
+        $headingCellIdsAry[] = "heading-piv-".aryKeyOrZeroNum($headingsListAry, $headingText); //create headings cell ids from column heading table index. Will facilitate click filtering
+        $headsTotalCreditSumCellIdsAry[] = "credit-piv-".aryKeyOrZeroNum($headingsListAry, $headingText); 
+        $headsTotalSpendSumCellIdsAry[] = "spend-piv-".aryKeyOrZeroNum($headingsListAry, $headingText); 
+        $headsBalanceCellIdsAry[] = "bal-piv-".aryKeyOrZeroNum($headingsListAry, $headingText); 
+        $headsSpacerCellIdsAry[] = "spacer-piv-".aryKeyOrZeroNum($headingsListAry, $headingText); 
+    }
+
+    array_unshift($headingCellIdsAry, "heading-piv-rowName");  //designates column with row names
+    $headingCellIdsAry[] = "heading-piv-rowTotal"; //designates column with row totals
+
+    array_unshift($headsTotalCreditSumCellIdsAry, "credit-piv-rowName");
+    $headsTotalCreditSumCellIdsAry[] = "credit-piv-rowTotal";
+
+    array_unshift($headsTotalSpendSumCellIdsAry, "spend-piv-rowName");
+    $headsTotalSpendSumCellIdsAry[] = "spend-piv-rowTotal";
+
+    array_unshift($headsBalanceCellIdsAry, "bal-piv-rowName");
+    $headsBalanceCellIdsAry[] = "bal-piv-rowTotal";
+
+    array_unshift($headsSpacerCellIdsAry, "spacer-piv-rowName");
+    $headsSpacerCellIdsAry[] = "spacer-piv-rowTotal";
+    
+    $headingsTotalCreditSum = 0.00;
+    $headingsTotalSpendSum = 0.00;
+
+    foreach ($rowsNameAry as $rowIdx => $rowName) { //ROW LOOP create and populate 2 dimensional array with summed spend data
+        $rowNameTableIdx = aryValueOrZeroNum($rowNamesListFlippedAry, $rowName); //gets table index of heading name. If name is "" (empty), 0 is returned in keeping with allRecords column data
+        $rowProtoAry = [$rowName]; //create row name at index 0
+        $rowsClassesProtoAry = [];
+        $rowCellIdsAry = [];
+        $rowTableId = aryKeyOrZeroNum($rowNamesListAry, $rowName);
+
+        $rowSum = 0;
+        foreach ($headingsAry as $headingIdx => $heading) { //COLUMN LOOP in this foreach() section sum all the spend data for the current pivot table row name and heading 
+        	$rowsClassesProtoAry[] = $pivotCellClass; //append a new cell class of pivot cell class
+        	$rowCellIdsAry[] = $rowTableId."-piv-".aryKeyOrZeroNum($headingsListAry, $heading); //create cell id from row name table index concatonated with "-piv-" and column heading table index. Will facilitate click filtering
+
+
+            $colSum = 0;
+            $headingTableIdx = aryValueOrZeroNum($headingsListFlippedAry, $heading); //gets table index of heading name. If name is "" (empty), 0 is returned in keeping with allRecords column data
+            foreach ($recordsDataArry as $singleRecArry) { //loops through all the rows of data in the selected records array
+                if ($singleRecArry[$columnForRows] == $rowNameTableIdx) { //if current records row has the pivot table row name in its row name selected column
+                    if ($singleRecArry[$columnForHeadings] == $headingTableIdx) { //if current records row has the pivot table heading in its headings selected column
+                        $colSum = $singleRecArry[$spendColumnToSumKey] + $colSum; //add to the value
+
+                        $headingsTotalCreditSumAry[$headingIdx] = 	fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey] 	+ $headingsTotalCreditSumAry[$headingIdx], TRUE); //accumulate RH sum
+                        $headingsTotalCreditSum = 					fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey] 	+ $headingsTotalCreditSum, TRUE);
+                        $headingsTotalSpendSumAry[$headingIdx] = 	fourThreeOrTwoDecimals($singleRecArry[$spendColumnToSumKey] 	+ $headingsTotalSpendSumAry[$headingIdx], TRUE);
+                        $headingsTotalSpendSum = 					fourThreeOrTwoDecimals($singleRecArry[$spendColumnToSumKey] 	+ $headingsTotalSpendSum, TRUE);
+                    }
+                }
+            }
+            $rowProtoAry[] = fourThreeOrTwoDecimals($colSum); //append sum to array - format both withdrawn and paidin to two decimal places with single leading zero for amounts < £1.00
+            $rowSum = $colSum + $rowSum;
+        }
+
+        $rowSumDecimalised = fourThreeOrTwoDecimals($rowSum, TRUE);
+        $rowProtoAry[] = $rowSumDecimalised; //append total to right end of current row
+        $rowsAry[$rowIdx]["displayRowsAry"] = $rowProtoAry;  //append newly populated row to $rowsAry
+        
+
+        array_unshift($rowsClassesProtoAry, $pivotCellRowNameClass); //insert cell class for first (row names) column at beginning of row of classes - left justified
+        $rowTotalClass = $pivotCellClass; //create default standard cell class for last (totals) column at end of row of classes
+        if ($rowSumDecimalised == 0) {
+        	$rowTotalClass = $pivotCellOrangeClass; //change class to orange for zero value (means no value assigned to row name)
+        }
+        $rowsClassesProtoAry[] = $rowTotalClass; //append modified cell class for last (totals) column at end of row of classes
+        $rowsAry[$rowIdx]["displayRowsClassesAry"] = $rowsClassesProtoAry; //append row ids 
+
+        array_unshift($rowCellIdsAry, $rowTableId."-piv-rowName");  //use "rowName" to designate column with row names
+        $rowCellIdsAry[] = $rowTableId."-piv-rowTotal"; //use -2 to designate column with row totals
+        $rowsAry[$rowIdx]["displayRowIdsAry"] = $rowCellIdsAry; //append standard row classes to show totals column
+    }
+
+
+    $headingsAry[] = "Totals"; //add rightmost heading to name totals column
+    $headingsTotalCreditSumAry[] = fourThreeOrTwoDecimals($headingsTotalCreditSum, TRUE); //add rightmost credit totals column
+    $headingsTotalSpendSumAry[] = fourThreeOrTwoDecimals($headingsTotalSpendSum, TRUE); //  "   "
+    $spacerRowAry[] = ""; //add additional rightmost cell to spacer column so it has the same number as all others
+
+    foreach ($headingsTotalCreditSumAry as $sumsIdx => $headingsTotalCreditSum) { //COLUMN LOOP run loop to do subtraction on each column total and create ballance array
+        $headingsbalanceAry[$sumsIdx] = fourThreeOrTwoDecimals($headingsTotalCreditSum - $headingsTotalSpendSumAry[$sumsIdx], TRUE);
+
+        if ($headingsTotalCreditSumAry[$sumsIdx] < 0) {
+        	$headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellRedClass; //set class to red for -ve value
+        }
+        if ($headingsTotalCreditSumAry[$sumsIdx] == 0) {
+        	$headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellOrangeClass; //set class to green for -zero value
+        }
+
+
+        if ($headingsbalanceAry[$sumsIdx] < 0) {
+        	$headingsbalanceClassesAry[$sumsIdx] = $pivotCellRedClass; //set class to red for -ve value
+        }
+        if ($headingsbalanceAry[$sumsIdx] == 0) {
+        	$headingsbalanceClassesAry[$sumsIdx] = $pivotCellGreenClass; //set class to orange for zero value
+        }
+    }
+
+    array_unshift($headingsAry, $columnForHeadings); //insert headings title at beginning of headingsAry to move headings over to the right and have "" as the heading for the column of row names
+    array_unshift($headingsTotalCreditSumAry, "Credit"); //insert "Credit" at beginning of headingsTotalCreditSumAry to move totals over to the right and align things
+    array_unshift($headingsTotalSpendSumAry, "Spend"); //insert "Spend" at beginning of headingsTotalSpendSumAry to move totals over to the right and align things
+    array_unshift($headingsbalanceAry, "Balance"); //insert "Spend" at beginning of headingsTotalSpendSumAry to move totals over to the right and align things
+    array_unshift($spacerRowAry, $columnForRows); //insert rows title at beginning of spacer row to move totals over to the right and align things
+
+    
+
+    array_unshift($headingsClassesAry, $pivotCellRowNameRightClass); //insert at beginning class for header names - right justified
+    array_unshift($headingsTotalCreditSumClassesAry, $pivotCellRowNameRightClass);
+    array_unshift($headingsTotalSpendSumClassesAry, $pivotCellRowNameRightClass);
+    array_unshift($headingsbalanceClassesAry, $pivotCellRowNameRightClass);
+    array_unshift($headingsSpacerClassesAry, $pivotCellRowNameClass); //insert at beginning class for column names title - left justified
+
+
+    $headingsClassesAry[] 				= $pivotCellClass; //insert cell class for last (totals) column at end of row of classes
+    $headingsTotalCreditSumClassesAry[] = $pivotCellClass;
+    $headingsTotalSpendSumClassesAry[]  = $pivotCellClass;
+    $headingsbalanceClassesAry[] 		= $pivotCellClass;
+    $headingsSpacerClassesAry[]         = $pivotCellClass;
+
+    $returnAry["rowAndHeadNames"] = $columnForRows."-".$columnForHeadings;
+    
+    //add headings, credit, spend, balance and spacer with classes arrays and cellIds arrays - append each to $returnAry["headerAry"]
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsAry,                "headerRowsClassesAry"=>$headingsClassesAry, 				"headerCellIdsAry"=>$headingCellIdsAry];
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalCreditSumAry,  "headerRowsClassesAry"=>$headingsTotalCreditSumClassesAry,	"headerCellIdsAry"=>$headsTotalCreditSumCellIdsAry];
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalSpendSumAry,   "headerRowsClassesAry"=>$headingsTotalSpendSumClassesAry, 	"headerCellIdsAry"=>$headsTotalSpendSumCellIdsAry];
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsbalanceAry,         "headerRowsClassesAry"=>$headingsbalanceClassesAry, 		"headerCellIdsAry"=>$headsBalanceCellIdsAry];
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $spacerRowAry,               "headerRowsClassesAry"=>$headingsSpacerClassesAry, 			"headerCellIdsAry"=>$headsSpacerCellIdsAry]; 
+
+    $returnAry["rowsAry"] = $rowsAry; //add row data
+    
+    return $returnAry;
+}
+
+
+
+/* ##########################          ##############          ##############          ##############          #############################
+   ##########################          ##############          ##############          ##############          #############################
+   ##########################          ##############          ##############          ##############          #############################
+   ##########################          ##############          ##############          ##############          #############################
+   ##########################          ##############          ##############          ##############          #############################
+   ##########################          ##############          ##############          ##############          ############################# */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* Uses data from allRecords transfered via $recordsDataArry to create an ordinary indexed array to be passed to the display routine that uses divs:
+
+
+Ideal object steered operations:
+
+
+$control = [
+"index" =>   [ 0,            1,          2,          3,          4,          5,          6,          7,              8,              9,          10,         11,         12,     13      ] 
+"colName" => ["TransDate",  "PersOrg",  "TransCat", "MoneyOut", "MoneyIn",  "Account",  "Budget",   "Reference",    "RcnclDate",    "Umbrella", "Umbrella", "DocType",  "Note", "Family" ] 
+
+
+
+]
+
+
+
+$classNest =    {
+                "TransDate":                                            //column
+                            {
+                            "checkRowStatus"                                //func name - func written to work on specific argument types
+                                                    {
+                                                    "clear":"displayCellStd",       //cell display status : class to use
+                                                    "lineSel":"displayCellRowSel",  //"
+                                                    "celSel":"displayCellSnglSel"   //"
+                                                    },
+                            }
+                "RcnclDate" {                                           //column
+                            "dateLess":             {                       //func name - func written to work on specific argument types
+                                                    "RcnclDate"                     //cell in same row
+                                                    "TransDate"                     //"
+                                                    "displayCellRcnclEarly"         //class to use
+                                                    },
+                            "dateBeyondMnthEnd":    {                       //func name
+                                                    "monthLastDay"                  //pointer to passed value
+                                                    "RcnclDate"                     //cell in same row
+                                                    "displayCellRcnclNot"           //class to use
+                                                    },
+
+                                    "clear":"displayCellStd",
+                                    "lineSel":"displayCellRowSel",
+                                    "celSel":"displayCellSnglSel"
+                            }
+                }
+    
+
+
+
+
+
+
+
 
 THESE ARRAYS NO LONGER COMPLETELY REFLECT WHAT IS BEING GENERATED BY THE FUNCTION - NEED TO PRODUCE A NEW OUTPUT ARRAY AND COPY TO HERE !!!
 
@@ -254,7 +588,7 @@ function createStndDisplData(
         $allowEdit,
         $allRecordsColNameRndAry,
         $displayBankAcc
-                            ) {
+        ) {
     global $orgPersonsListAry;
     global $transCatListAry;
     global $accountListAry;
@@ -263,6 +597,9 @@ function createStndDisplData(
     global $docTypeListAry;
     global $_filenameRandLength;
 
+$greenBase = "green";
+$green = " ".$greenBase;
+$newClass = $standardCellClass." ".$green;
 
     $index = 0;
     $rowsAry = array();
@@ -326,19 +663,19 @@ function createStndDisplData(
     $subButPanelControlAry[] = "None";
     $subButPanelControlAry[] = "None";
 
-    $headingsAry[] = "Date";
-    $headingsAry[] = "Pers / Org";
-    $headingsAry[] = "Trans Cat";
-    $headingsAry[] = "Withdrawn";
-    $headingsAry[] = "PaidIn";
-    $headingsAry[] = "Account";
-    $headingsAry[] = "Budget";
-    $headingsAry[] = "Reference";
-    $headingsAry[] = "Reconciled";
-    $headingsAry[] = "Umbrella";
-    $headingsAry[] = "Doc Type";
-    $headingsAry[] = "Note";
-    $headingsAry[] = "Family";
+    $headingsAry["headerRowsAry"][] = "Date";
+    $headingsAry["headerRowsAry"][] = "Pers / Org";
+    $headingsAry["headerRowsAry"][] = "Trans Cat";
+    $headingsAry["headerRowsAry"][] = "Withdrawn";
+    $headingsAry["headerRowsAry"][] = "PaidIn";
+    $headingsAry["headerRowsAry"][] = "Account";
+    $headingsAry["headerRowsAry"][] = "Budget";
+    $headingsAry["headerRowsAry"][] = "Reference";
+    $headingsAry["headerRowsAry"][] = "Reconciled";
+    $headingsAry["headerRowsAry"][] = "Umbrella";
+    $headingsAry["headerRowsAry"][] = "Doc Type";
+    $headingsAry["headerRowsAry"][] = "Note";
+    $headingsAry["headerRowsAry"][] = "Family";
 
     if ($allowEdit) { //set content editable for those cells that are to have direct data entry such as withdrawn, paidin, reference etc.
         $displayCellCntrlStrAry[] = '';
@@ -406,12 +743,31 @@ function createStndDisplData(
         $displayRowsAry = array();
         $displayRowsClassesAry = array();
 
+
+
+
+//##############################
+//##############################
+//##############################
+//##############################
+//##############################
+//##############################
+//##############################
+//##############################
+//##############################
+//##############################
+//##############################
+//##############################
+
+
+//green experimental settings are near top of function
+
         $displayRowsClassesAry[] = $standardCellClass;
-        $displayRowsClassesAry[] = $standardCellClass;
+        $displayRowsClassesAry[] = $standardCellClass; 
         $displayRowsClassesAry[] = $standardCellClass;
         $displayRowsClassesAry[] = $moneyCellClass;
         $displayRowsClassesAry[] = $moneyCellClass;
-        $displayRowsClassesAry[] = $standardCellClass;
+        $displayRowsClassesAry[] = $standardCellClass;  //.$green;
         $displayRowsClassesAry[] = $standardCellClass;
         $displayRowsClassesAry[] = $standardCellClass;
 
@@ -437,6 +793,8 @@ function createStndDisplData(
         $displayRowsClassesAry[] = $standardCellClass;
         $displayRowsClassesAry[] = $standardCellClass;
 
+        
+
         foreach ($filtersColIdxAry as $colIdx) { //set filter class for those columns that have been filtered - shouldn't (don't know if it is explicitly prevented) be used for reconciled date column
             if (($displayCellDescrpAry[$colIdx] == "MoneyOut") || ($displayCellDescrpAry[$colIdx] == "MoneyIn")) { //needs right alignment because withdrawn or paidin cell
                 $displayRowsClassesAry[$colIdx] = $filtMoneyCellClass;
@@ -445,6 +803,7 @@ function createStndDisplData(
                 $displayRowsClassesAry[$colIdx] = $filtCellClass;
             }
         }
+
         
         //load data for current row starting at the left column (0)
         $recDateAry = explode("-", $singleRecArry["recordDate"]); 
@@ -521,8 +880,10 @@ function createStndDisplData(
     }
 
     //CONSIDER REMOVING THESE INDIVIDUAL ARRAYS AND LEAVING JUST THE STATIC ONES - NEED TO CHEQUE THE REST OF THE CODE TO ENSURE THEY ARE NO LONGER NEEDED !
+
+    //BUT NOT THE HEADER ONE AS IT IS NOW USED!
     $returnAry["displayCellDescrpAry"] = $displayCellDescrpAry;
-    $returnAry["headingsAry"] = $headingsAry;
+    $returnAry["headerAry"][] = $headingsAry;
     $returnAry["allRecordsColNameRndAry"] = $allRecordsColNameRndAry;
     $returnAry["displayCellCntrlStrAry"] = $displayCellCntrlStrAry;
     $returnAry["displayStndClassesAry"] = $displayStndClassesAry;
@@ -567,21 +928,163 @@ function createStndDisplData(
 
 
 
-function download($displayData) {
-    $downloadHeadingCsv = implode(",", $displayData["headingsAry"]); //create header csv line for file download
-    foreach ($displayData["rowsAry"] as $downloadRow) { //read a record row at a time
-        $downloadHeadingCsv .= PHP_EOL; //concatonate and of line character
-        $downloadRowAry = array(); //create empty array to contain next row
-        foreach ($downloadRow["displayRowsAry"] as $colForDownld) { //go through a row one column at a time
-            $downloadRowAry[] = $colForDownld; //create array using the column data
-        }
-        $downloadHeadingCsv .= implode(",", $downloadRowAry); //concatonate next row as csv string
-    }
-    $todaysDateTime = date("Y-m-d-Hi"); //in 2015-11-23-1425 format
-    $fileName = 'FurnProj-'.$todaysDateTime.'.csv';
-    $content = $downloadHeadingCsv;
-    $length = strlen($content) + 2;
 
+
+
+
+
+/* Iterates through the characters in $sourceStr substituting $replacementStr for every occurence of $targetStr returning the result. If target empty or not found source is returned unchanged. */
+function replaceTargetStr($sourceStr, $targetStr, $replacementStr) {
+	if ($targetStr == "") { //if target is empty return source without processing
+		$outputStr = $sourceStr;
+	}
+	else {
+		$outputStr = "";
+		$strAry = explode($targetStr, $sourceStr);
+		$numOfSegments = count($strAry);
+		$segIdx = 0;
+		while ($segIdx < ($numOfSegments - 1)) { //
+			$outputStr = $outputStr.$strAry[$segIdx].$replacementStr;
+			$segIdx++;
+		}
+		$outputStr = $outputStr.$strAry[$segIdx];
+	}
+	return $outputStr;
+}
+
+
+/* Splits $sourceStr into segments separated by $targetStr and returns as an indexed array of segments which don't contain $targetStr. If target empty or not found source is returned as single item array. */
+function splitOnTargetStr($sourceStr, $targetStr) {
+	if ($targetStr == "") { //if target is empty return source without processing
+		$outputAry[] = $sourceStr;
+	}
+	else {
+		$outputAry = explode($targetStr, $sourceStr);
+	}
+	return $outputAry;
+}
+
+
+/* Splits $sourceStr into 2 segments the first is everything up to the last occurance of $targetStr (so will inlude instances of $targetStr if they exist in the first segment), the second is everything after $targetStr. The result is returned in a 2 item array but if target is $targetStr or not found, the source is returned as single item array. e.g. $sourceStr = "The quick brown fox", $targetStr = "", result = array([0] => "The quick brown", [1] => "fox" ) */
+function splitInTwoOnLastTargetStr($sourceStr, $targetStr) {
+	if ($targetStr == "") { //if target is empty return source without processing
+		$outputAry[] = $sourceStr;
+	}
+	else {
+		$firstSegStr = "";
+		$strAry = explode($targetStr, $sourceStr);
+		$numOfSegments = count($strAry);
+		$segIdx = 0;
+		while ($segIdx < ($numOfSegments - 1)) { //loop for all except last segment (will not loop if $strAry has only 1 segment stored in it)
+			if ($segIdx < ($numOfSegments - 2)) {
+				$firstSegStr = $firstSegStr.$strAry[$segIdx].$targetStr;
+			}
+			else {
+				$firstSegStr = $firstSegStr.$strAry[$segIdx];
+			}
+			$segIdx++;
+		}
+		if (0 < $segIdx) { //if the loop did run create a 0 index item for the concatonated segments that occured before the last $targetStr
+			$outputAry[] = $firstSegStr;
+		}
+		$outputAry[] = $strAry[$segIdx]; //either creates a 1 index for the everything after $targetStr, OR, if there was only 1 segment in the array this becomes stored as 0 index
+	}
+	return $outputAry;
+}
+
+
+
+/* Originally for parsing a css file by changing px to vw and applying a multiplier to the px values.  */
+function parseFile($inputFileNameWithPath, $outputFileNameWithPath) {
+	//pr(getcwd()." ");
+	$fileOutput = fopen($outputFileNameWithPath,"w") or die("Unable to open file!");
+	$fileInput = fopen($inputFileNameWithPath,"r");
+	while(! feof($fileInput)) {
+		$line = fgets($fileInput); //PROCESS ONE LINE AT A TIME!
+		$lineWithAddedSpaceAfterColons = replaceTargetStr($line, ":", ": ");
+		$outputStr = "";
+		$separatedByPx = splitOnTargetStr($lineWithAddedSpaceAfterColons, "px");
+		$numOfSegments = count($separatedByPx);
+		$segIdx = 0;
+		while ($segIdx < ($numOfSegments - 1)) { //
+			$twoSegs = splitInTwoOnLastTargetStr($separatedByPx[$segIdx], " ");
+			$stuffBeforeLastSpace = $twoSegs[0];
+			$numAfterLastSpace = $twoSegs[1];
+			$outputStr = $outputStr.$stuffBeforeLastSpace." ".($numAfterLastSpace * 0.05208)."vw";
+			$segIdx++;
+		}
+		$outputStr = $outputStr.$separatedByPx[$segIdx];
+		fwrite($fileOutput, $outputStr);
+	}
+	fclose($fileInput);
+	fclose($fileOutput);
+}
+
+function getFieldName($key) {
+    global $_fieldNameAry;
+    return $_fieldNameAry[$key];
+}
+
+function getColIndex($value) {
+    global $_fieldNameAry;
+    return array_search($value, $_fieldNameAry);
+}
+
+function getMenuRandomsArray($key) {
+	global $menuRandomsArray;
+	return $menuRandomsArray[$key];
+}
+
+function getGenrlAryRndms($key) {
+	global $genrlAryRndms;
+	return $genrlAryRndms[$key];
+}
+
+function getNonVolAryItem($key) {
+	global $nonVolatileArray;
+	return $nonVolatileArray[$key];
+}
+
+function ifNonVolAryKeyExists($key) {
+	global $nonVolatileArray;
+	return array_key_exists ($key, $nonVolatileArray);
+}
+
+function setNonVolAryItem($key, $value) {
+	global $nonVolatileArray;
+	$nonVolatileArray[$key] = $value;
+}
+
+function getPlainFromSubCmnd() {
+	global $subCommand;
+	return getPlain($subCommand);
+}
+
+function destroyNonVolAryItem($key) {
+    global $nonVolatileArray;
+    unset($nonVolatileArray[$key]);
+}
+
+
+
+function download($displayData) {
+    $firstRowOfHeaderDone = FALSE;
+    $downloadContent = "";
+    foreach ($displayData["headerAry"] as $downloadRow) { //read a header row row at a time
+        if ($firstRowOfHeaderDone) {  //miss EOL char if this is the first row fed to the o/p file      
+            $downloadContent .= PHP_EOL; //concatonate an end of line character in readiness for adding next row
+        }
+        else {
+            $firstRowOfHeaderDone = TRUE;
+        }
+        $downloadContent .= implode(",", $downloadRow["headerRowsAry"]); //concatonate another row as csv string from the next row array (which is a simple indexed one)
+    }
+    foreach ($displayData["rowsAry"] as $downloadRow) { //read a record row at a time
+        $downloadContent .= PHP_EOL; //concatonate an end of line character in readiness for adding next row
+        $downloadContent .= implode(",", $downloadRow["displayRowsAry"]); //concatonate another row as csv string from the next row array (which is a simple indexed one)
+    }
+    $fileName = 'FurnProj-'.date("Y-m-d-Hi").'.csv'; //create filename by concatonating Title and Date-Time
+    $length = strlen($downloadContent) + 2;
     ob_clean(); //empties output buffer in case anything random (like new lines, spaces rubbish etc.) are in it that would be pre-pended to the downloaded file
     header('Content-Description: File Transfer');
     header('Content-Type: text/plain');
@@ -591,9 +1094,10 @@ function download($displayData) {
     header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
     header('Expires: 0');
     header('Pragma: public');
-    echo $content;
-    exit; //exits this file here after download - so no saveSession.php is included and any changes to menuRandoms etc. are not saved. Also no display of data, just the download
+    echo $downloadContent;
+    //an exit statement should be placed after this function call - so no saveSession.php is included and any changes to menuRandoms etc. are not saved. Also no display of data, just the download!
 }
+
 
 function aryCons($arrayToDisplay) { //displays a php array in the console in a hierarchical layout - for indexed portions of the array indexes [0] [1]... are not shown! NOT PROVEN TO WORK PROPERLY !!
     ?>
@@ -652,14 +1156,14 @@ function postData($url, $dataAry) {
 /* Holds a value in a hidden textbox that can be changed by javascript and will be submitted with the form. The initial value is set to $initialValue and the id and name are the same and are set by $idAndName.  */
 function formValHolder($idAndName, $initialValue = "") {
     ?>
-    <input style="display:none;" id="<?php echo $idAndName; ?>" type="text" name="<?php echo $idAndName;?>" value="<?php echo $initialValue;?>"> </input>
+    <input style="display:none;" type="text" name="<?php echo $idAndName;?>" value="<?php echo $initialValue;?>" id="<?php echo $idAndName; ?>" > </input>
     <?php
 }
 
 /* Holds a value identified by name in a hidden textbox that can be changed by javascript and will be submitted with the form. The initial value is set to $initialValue and the name is set by $name. */
 function namedValHolder($name, $initialValue = "") {
     ?>
-    <input style="display:none;" type="text" name="<?php echo $name;?>" value="<?php echo $initialValue;?>"> </input>
+    <input style="display:none;" type="text" name="<?php echo $name;?>"      value="<?php echo $initialValue;?>"> </input>
     <?php
 }
 
@@ -677,6 +1181,26 @@ function aryValueOrZeroStr($array, $key) {
     }
     else {
         return "";
+    }
+}
+
+/* If key exists in array the corresponding value is returned - otherwise 0 is returned. */
+function aryValueOrZeroNum($array, $key) {
+    if (array_key_exists($key, $array)) {
+        return $array[$key];
+    }
+    else {
+        return 0;
+    }
+}
+
+/* If key exists in array the corresponding value is returned - otherwise 0 is returned. */
+function aryKeyOrZeroNum($array, $value) {
+    if (in_array($value, $array)) {
+        return array_search($value, $array);
+    }
+    else {
+        return 0;
     }
 }
 
@@ -1281,7 +1805,7 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
     $mnthTextBoxName = $uniqueId."month";
     $mnthTextBoxId = $mnthUniqueId.'textBx';
     //-----
-    $yrsAllAry = array("2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020");
+    $yrsAllAry = array("2000", "2001", "2002", "2003", "2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021");
     $baseYr = $yrsAllAry[0];
     $yrMaxId = sizeof($yrsAllAry) -1;
     $yrUniqueId = $uniqueId."-yr";
@@ -1635,7 +2159,8 @@ function butPanelJSInteracStrOnly(
     $addField,          //the name of the table field (probably a random number equivelent) to which the new item will be inserted
     $cellClassWarn,
     $cellClassEdit,
-    $recoveredSessionAryCommitRnd)
+    $recoveredSessionAryCommitRnd,
+    $presetVal = "")
     {
     global $pathToPhpFiles;
     $homeInDivId = $uniqueId."homeIn"; //id of div where letters can be typed to home in on buttons for particular name or entity
@@ -1707,10 +2232,18 @@ function butPanelJSInteracStrOnly(
     </div>
     <input hidden id="<?php echo $itemCellUniqueId;?>" type="text"></input>
     <script>
+    var <?php echo $uniqueId;?>presetValNotUsedYet = true; //flag to show whether preset value has been loaded at initialisation or not
+    var <?php echo $uniqueId;?>presetVal = <?php echo json_encode($presetVal);?>; //value passed as argument that if other than "" will be used to a home in on buttons at panel initialisation. Could select a single button.
     function <?php echo $uniqueId;?>homeInOnButtons(event) { //button filtering function - only shows those buttons whose first few characters matched what is typed in the 'home-in div' box
         var idxMax = <?php echo $index - 1;?>; //maximum panel button id (they start at 0)     
         var idPrefix = '<?php echo $itemUniqueId;?>'; //unique prefix (derived in php code above) to be used to distinguish these buttons from those in other instances of button panel
-        var charsToMatch = document.getElementById(event.target.id).innerText.trim(); //the text in the cell that initiated the call to this button panel
+        if (<?php echo $uniqueId;?>presetValNotUsedYet) {  //if presetVal passed in argument has not yet been used to preselect a button - will only happen at page load when this php function is run, and initialised at first click on column - thereafter everything will act normally with no reference to the presetVal
+            var charsToMatch = <?php echo $uniqueId;?>presetVal //set charsToMatch to passed presetVal argument 
+        }
+        else { //operate normally with no reference to the presetVal
+            var charsToMatch = document.getElementById(event.target.id).innerText.trim(); //the text in the cell that initiated the call to this button panel
+        }
+        //charsToMatch = "Reserves";
         for (i = 1; i <= idxMax; i++) { //loop through all the panel button ids
             var butStr = inrGet(idPrefix+i).trim(); //for each iteration of the loop get the text from the relevant button
             //console.log("butStr = "+butStr);
@@ -1744,6 +2277,10 @@ function butPanelJSInteracStrOnly(
                 document.getElementById(idPrefix+i).className = '<?php echo $btnClass;?>';
             }
         } 
+        if (<?php echo $uniqueId;?>presetValNotUsedYet && (<?php echo $uniqueId;?>presetVal != "")) { //if presetVal has not been used since this php function was run at page load, and argument is not empty
+            <?php echo $uniqueId;?>homeInOnButtons(); //run the homeInOnButtons() function where presetVal will be used to select a button
+        }
+        <?php echo $uniqueId;?>presetValNotUsedYet = false; //set to false so from here on the button function will operate normally with no reference to the presetVal
     }
     function <?php echo $uniqueId;?>clickPanelButs(event) { //uses clicked button id to get inner text and compare it with each panel button text to set the matching one to 'selected' and others to 'not selected'. Then calls ajaxRecordsItemAndCellUpdate() to update table record on server with clicked button value and eventually from data echoed back from the server update the cell that has activated this button panel
         var selButId = event.target.id;
@@ -2013,13 +2550,22 @@ function getIdFromSingleSeltdAry ($identityKeyAry) {
 }
 
 
+function displayHiddenChars($line) {
+    $line = str_replace(" ", "<span style='background-color:#E0E0E0; color:#FFFFFF;' >S</span>", $line);
+    $line = str_replace("\r", "<span style='background-color:#A0C0FF; color:#FFFFFF;' >CR</span>", $line);
+    $line = str_replace("\n", "<span style='background-color:#80E080; color:#FFFFFF;' >LF</span>", $line);
+    $line = str_replace("\t", "<span style='background-color:#E0E0E0; color:#FFFFFF;' >TAB</span>", $line);
+    return $line;
+}
+
+
 /* Prints an array in a hierarchical display using shifts to the right and newlines to help readability. Uses this function recursively! (difficult to explain how it all works)  */
 function ary($maybeAry, $outerKey = "", $tab = "") {
     
     if (is_array($maybeAry)) {
         print($tab);
         if (($outerKey) || ($outerKey === 0)) {
-            print_r("[".$outerKey."] => ");
+            print_r("[".displayHiddenChars($outerKey)."] => ");
         }
         print_r("array (");
         print_r("</br>");
@@ -2034,7 +2580,7 @@ function ary($maybeAry, $outerKey = "", $tab = "") {
     }
     else {
         print($tab);
-        print_r("[".$outerKey."] => ".$maybeAry);
+        print_r("[".displayHiddenChars($outerKey)."] => ".displayHiddenChars($maybeAry));
         print_r("</br>");
     }
 }
@@ -2059,7 +2605,7 @@ function pr($input) {
         print_r("!TRUE!");
     }
     else {
-        print_r($input);
+        print_r(displayHiddenChars($input));
     }
 
 }
@@ -2393,14 +2939,18 @@ function mergePdfs($fileUploadReportSinglePdfs, $uploadsDir) {
             $subDirOfUpload = subDirNameFromDate($fileUploadReportSinglePdfs[0][2]); //create year-month i.e. 2018-03 for use as subfolder name from the first listed filename in the upload report
             $destinationPath = $uploadsDir."/".$subDirOfUpload."/"; //path where the existing pdfs are and where the resultant multi one is to go (permissions must allow server php to write to this path)
             $pdfMergr = "PDFMerger"; //do this in an effort to avoid deprecation error of calling an instance the same name as the class (apparently! - according to a forum)
-            $multiPdf = new $pdfMergr();
             $nextUnusedFileNum = getNextFileSufixNumFromUploadDate($fileUploadReportSinglePdfs[0][2], $uploadsDir); //used to create the file number that comes after the the last one that is used in the current upload - to temporarily store multi file
+            $tempMultiFilename = dateFromFilenameNumDotPdf($fileUploadReportSinglePdfs[0][2])."-".$nextUnusedFileNum.".pdf"; //create a temporary file name using the original file nameDate and the next free file number
+
+            //pdfMerger SECTION THAT MERGES ALL THE SELECTED EXISTING PDFS INTO ONE FILE
+            $multiPdf = new $pdfMergr();            
             foreach ($fileUploadReportSinglePdfs as $indvidualPdfDetails) { //process all uploaded converted files one at a time
                 $filename = $indvidualPdfDetails[2]; //get filename i.e. 2018-02-07-5.pdf
                 $multiPdf->addPDF($destinationPath.$filename, 'all');
             }
-            $tempMultiFilename = dateFromFilenameNumDotPdf($fileUploadReportSinglePdfs[0][2])."-".$nextUnusedFileNum.".pdf"; //create a temporary file name using the original file nameDate and the next free file number
             $multiPdf->merge('file', $destinationPath.$tempMultiFilename); //MAIN COMMAND THAT MERGES THE UPLOADED PDF FILES INTO ONE FILE !
+
+
             foreach ($fileUploadReportSinglePdfs as $indvidualPdfDetails) { //goes through all uploaded filenames and deletes them
                 $filenameToDelete = $indvidualPdfDetails[2]; //extract filename i.e. 2018-02-07-5.pdf
                 unlink($destinationPath.$filenameToDelete); //delete file
@@ -2536,7 +3086,7 @@ function uploadJpgFilesToSnglPdfs($filesToBeUploaded, $maxSize, $uploadsDir, $pd
 
 /* Uses multidimensional array $filesToBeUploaded to get a list of file names and details that are to be uploaded. Attempts to convert files to pdfs and move them (they will have already been uploaded from the client and given temporary names) to a subdirectory $subDirForThisUpload (i.e. 2018-03) of $uploadsDir (i.e. "../uploads", which must be in correct relationship to the directory in which this script is run). The pdf filenames will follow the regime given in $pdfDateName and $pdfFileNum which give the date name of the file (i.e. 2018-02-11) and the number of the file for that date name if more than one file will exist for that date name i.e. 2018-05-14-12.pdf . File numbers will be automatically incremented where more than one file is to be created. Uploaded jpg files can be either one or more individual files that will be converted into individual pdfs, or several files making up a multipage document that will be converted into one pdf. If $createMultiPagePdf is TRUE the upload will be treated as a multipage doument. Files will only be converted and moved as long as each individual one meets the constraints placed on it:
 	allowed file extensions  "jpg", "JPG", "jpeg", "JPEG".
-    $maxSize - max allowed upload size for each file in bytes.   
+    $maxSize - max allowed upload size for each file in bytes.
     $allowedTypes - allowed file upload mime types passed as an array, e.g. array("text/plain", "application/pdf", "image/jpeg") etc.
 If the subdirectory doesn't exist one will be created with write permissions for the php installation on the server as long as there are error free files to copy (must be all error free for multipage pdf).
 A fileUploadReport array that records details of files that have been successfully uploaded or have failed will be returned. Its structure is:

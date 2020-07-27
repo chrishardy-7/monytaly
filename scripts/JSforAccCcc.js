@@ -2,6 +2,9 @@
  * 
  */
 
+
+ // EXPERIMENTAL GREEN ADDITIVE CLASS IS IN selectTableRowsForDoc() !!
+
 //flags and control variables - self explanatory
 var atomicAjaxCallCompleted = true;
 var allowSetSticky = true;
@@ -17,10 +20,31 @@ function clickField(event) {
 	}
 	fromClickCellCmnd = false;
 	var id = event.target.id;
+	//alert(id);
 	console.log("Clicked Id = "+id);
+
+	if (id.split("-")[1] == "piv") {
+		document.getElementById("pivCellId").value = id;
+		document.getElementById("pivCellVal").value = document.getElementById(id).innerText;
+		document.getElementById("m88vof5A73").submit(); //calls showRecsForFullYr.php with filter info from clicked pivot display
+		return "function exited";
+	}
+
+	if (id.split("-")[0] == "sticky") { //a cell in the sticky row has been clicked, cancel sticky function
+		inrSet(id, ""); //clear the clicked sticky cell 
+		valSet("stickyActive-"+id.split("-")[1], "no"); //clears value holder flag to indicate that the sticky value has been cleared
+		return "function exited";
+	}
+
+	if (id.split("-")[0] == "heading") { //a cell in the heading row has been clicked clicked
+		groupSet(id);
+		return "function exited";
+	}
+
 	if (id.split("-").length != 2) { //if the mouse is clicked anywhere other than on a valid cell and id is a word instead of (e.g.) 23-74 exit this function to prevent later errors (fixes lock-up problem)
 		return;
 	}
+
 	var ctrlKeyPressed = false;
 	if (event.ctrlKey) {
 		ctrlKeyPressed = true;
@@ -29,6 +53,7 @@ function clickField(event) {
 	if (event.shiftKey) {
 		shiftKeyPressed = true;
 	}
+
 	doEverything(id, ctrlKeyPressed, shiftKeyPressed, currentKey);
 }
 
@@ -54,7 +79,6 @@ function doEverything(id, ctrlKeyPressed, shiftKeyPressed, heldKey) {
     	return "function exited";
 	}
 
-
 	allowSetSticky = true; //enable sticky again in case it had been inhibited by 
     valSet("mouseClickPreviousTime", msTime);
     // ########################### LOCAL JAVASCRIPT STUFF - END ###################
@@ -70,7 +94,7 @@ function doEverything(id, ctrlKeyPressed, shiftKeyPressed, heldKey) {
 		return "function exited";
 	}
 	if (id.split("-")[1] == 12) { //if family column has been clicked call toggle display of family and exit this clickField() function so no other server calls are made
-		if (valGet("editFamilies") == "Yes") {
+		if ((valGet("editFamilies") == "Yes") || (valGet("showFamilies") == "Yes")) { //prevents family column click from propogating to new page load and change in family id if Family Edit or Show Families has been selected
 
 		}
 		else{
@@ -105,7 +129,7 @@ function doEverything(id, ctrlKeyPressed, shiftKeyPressed, heldKey) {
 	}
 
 
-	if ((id.split("-")[1] == "12") && (valGet("editFamilies") == "Yes") && ((heldKey == 112) || (heldKey == 80))) { //if a cell in the family column has been clicked, Edit Families is selected and p or P is held down (creat new parent) clear any sticky setting so there is no confusing operations and only the simple creation of a new parent proceeds
+	if ((id.split("-")[1] == "12") && (valGet("editFamilies") == "Yes") && ((heldKey == 112) || (heldKey == 80))) { //if a cell in the family column has been clicked, Edit Families is selected, and p or P is held down (creat new parent) clear any sticky setting so there is no confusing operations and only the simple creation of a new parent proceeds
 		inrSet("sticky-"+id.split("-")[1], ""); //clear the sticky cell header
 		valSet("stickyActive-"+id.split("-")[1], "no"); //clears value holder flag to indicate that the sticky value has been cleared
 		createParent = "yes"; //set create parent flag to indicate to following functions that commands to create parent have been detected and any family sticky operations have been cancelled
@@ -154,7 +178,11 @@ function atomicAjaxCall(
 	headingAry,
 	bankAccNameAry
 	) {
+	console.log("HERE ##################################### atomicAjaxCall()");
 	if (atomicAjaxCallCompleted) { //prevents new calls to server before existing one has completed - NOT SURE IF THIS IS THE OPTIMUM PLACE FOR THIS (BUT COULD BE IF ALL SERVER CALLS COME THROUGH HERE!)
+
+console.log("HERE ##################################### atomicAjaxCall()   PRE-AJAX SENDS");
+
 		var random = (new Date).getTime(); //random number to add as GET variable to php calls to prevent xmlHttpReq caching (not used by php script).
 		var xmlhttp;
 		if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
@@ -192,7 +220,6 @@ function atomicAjaxCall(
 			
 		});
 		
-
 		arry = createParentAjaxSend(arry, cellId, createParent, cellWarnClass); //only executes internally if createParent = "yes" (if this is so stickyAjaxSend() will have already been disabled for families)
 		arry = stickyAjaxSend(arry, itemStr, cellId, shiftKeyPressed, idrArry, cellWarnClass, displayCellDescrpAry); //only executes internally if sticky item for this column has been set (i.e. isn't "")
 		arry = withdrawnPaidinAjaxSend(arry, editableCellIdValHldr, moneyCellWarnClass, displayCellDescrpAry, headingAry, bankAccNameAry); //only executes internally if editableCellIdValHldr value is != 0 (i.e. a withdrawn/paidin value has been changed)
@@ -233,7 +260,7 @@ function atomicAjaxCall(
 		xmlhttp.open("POST", pathToPhpFile, true);
 		xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 		xmlhttp.send("command="+fileRndm+"&arryJsonStr="+JSON.stringify(arry)+"&random="+random);
-		atomicAjaxCallCompleted = false;
+		atomicAjaxCallCompleted = false; //set to false to prevent other attempts at sending ajax data until the current one has completed and this flag hasbeen set to true by return from server above
 		//alert("End Of atomicAjaxCall");
 	}
 }
@@ -267,6 +294,7 @@ function createParentAjaxReceive(arry, arryBackFromPhp, cellId) {
 }
 
 function stickyAjaxSend(arry, itemStr, cellId, shiftKeyPressed, idrArry, cellWarnClass, displayCellDescrpAry) {
+	console.log("HERE ##################################### stickyAjaxSend()");
 	var colId = cellId.split("-")[1];
 	var dispCellDscrp = displayCellDescrpAry[colId];
 	if ((dispCellDscrp == 'PersOrg') || (dispCellDscrp == 'TransCat') || (dispCellDscrp == 'Account') || (dispCellDscrp == 'Budget') || (dispCellDscrp == 'Reference') || (dispCellDscrp == 'Umbrella') || (dispCellDscrp == 'DocType') || (dispCellDscrp == 'Note')) {
@@ -621,10 +649,10 @@ function detectShiftBut(event, id) {
 	}
 }
 
-/* Deals with clicks on the header section */
-function clickHeader(event) {
+/* Deals with clicks on the header section ACTIONS HAVE BEEN MOVED TO clickField() */
+function clickHeaderDEPRECATED(event) {
 	var id = event.target.id
-	if (id.split("-")[0] == "sticky") { //a cell in the sticky row has been clicked clicked
+	if (id.split("-")[0] == "sticky") { //a cell in the sticky row has been clicked
 		inrSet(id, ""); //clear the clicked sticky cell 
 		valSet("stickyActive-"+id.split("-")[1], "no"); //clears value holder flag to indicate that the sticky value has been cleared
 
@@ -716,13 +744,16 @@ function selectTableRowsForDoc(
 	docLineCountDispId,
 	from
 	) {
+var greenBase = "green";
+var green = " "+greenBase;
+
 	var columnAry = columnCsv.split(",");
 	var currentDocRnd = document.getElementById(elementId.split("-")[0]+"-docRnd").name; //get the random that is associated with the current doc
 	var recsAry = document.getElementsByName(currentDocRnd); //get an array of all the elements that have the name attribute set to the same random as the current doc 
 	var recsIdsAry = "";
 	for(idx = 0; idx < recsAry.length; idx++) { //loop through all records that have the same doc random
 		var rowId = recsAry[idx].id.split("-")[0]; //get the id of the current element and extract the first integer - the bit before the '-' which is the row id
-		startTimeout();
+		//startTimeout();
 		for(i = 0; i <= maxColIdx; i++) { //loop through all the columns in the row
 		    rowColIdx = rowId+"-"+i; //reconstruct the element id for each element the loop addresses
 		    if (-1 < columnAry.indexOf(i.toString())) { //if column is found in columnAry (derived from columnCsv) it is a filtered column
@@ -734,7 +765,7 @@ function selectTableRowsForDoc(
 		    	}
 		    }
 		    else {
-		    	document.getElementById(rowColIdx).className = chosenClassAry[i]; //set to selected color
+		    	document.getElementById(rowColIdx).className = chosenClassAry[i]; //+green; //set to selected color
 		    }
 		    if (displayCellDescrpAry[i] == "RcnclDate") { //process if loop is at appropriate column ######EVERYTHING IN THIS IF STATEMENT IS FOR THE RECONCILE COLUMN!! #######
 		    	var endDateObj = new Date(endDate); //create date object from end date string
@@ -758,7 +789,7 @@ function selectTableRowsForDoc(
 		    	}
 		    }
 		}
-		checkTimeout("selectTableRowsForDoc("+from+") col Loop", 0);
+		//checkTimeout("selectTableRowsForDoc("+from+") col Loop", 0);
 	}
 	if (docLineCountDispId != "") { //"" is used if clearing a document selection with this function, the id of the doc line count display cell will only have a valid value during doc selection
 		document.getElementById(docLineCountDispId).innerText = idx; //display number of transactions associated with the selected document document
@@ -822,7 +853,7 @@ function selectButPanel(displayCellDescrpAry, butPanelControlAry, elementId, pre
 		document.getElementById(noEditButPanelId).style.display = 'inline'; //make visible the empty no edit button panel - no prefix required for this as it is incorporated into noEditButPanelId
 		eval(noEditButPanelId+'initButPanel')(elementId); //target the initialisation function in the selected button panel using eval to assemble the name of the function which has been dynamically created in each button panel
 	}
-	checkTimeout("selectButPanel", 0);
+	//checkTimeout("selectButPanel", 0);
 }
 
 

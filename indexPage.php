@@ -10,6 +10,8 @@ mb_language('uni');
 mb_regex_encoding('UTF-8');
 ob_start('mb_output_handler');
 
+header("Cache-Control: private, must-revalidate, max-age=0, no-store, no-cache, post-check=0, pre-check=0");
+
 /* !! IMPORTANT NOTES !!
 	1) Remember to remove time(TRUE) from ....JSforAccCcc.js?version=<?php echo (string)time(TRUE); ?>.... in head.php before copying to monytaly.uk
 	2) Remember to write obfuscating system for call to updateTableFromJS.php AND ALL OTHER BITS THAT NEED OBFUSCATING !!!
@@ -38,6 +40,7 @@ $sdir = $dir.$subdir;
 $pathToPhpFiles = "./".$sdir."php/";
 
 include_once("./".$sdir."php/funcsForAccCcc.php");
+include_once("./".$sdir."php/classesForAccCcc.php");
 include_once("./".$sdir."php/funcsToRdWrTblesForAccCcc.php");
 
 //changePwAndClrFlag(1, "r");

@@ -29,6 +29,10 @@ input.addEventListener("keyup", function(event) {
 
   }
 });
+
+//$( window ).on( "load", function() {alert("Browser Display Width = "+$(window).width()+" Pixels");})
+
+
 </script>
 
 <?php
