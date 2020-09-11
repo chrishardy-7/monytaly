@@ -406,7 +406,7 @@ input: focus, textarea: focus, select: focus {
      .monthBtn, .monthBtnSelected, .monthBtnYearSelected, .monthBtnYearUpDown{
         margin:  0.10416vw;
         width: 2.8644vw;
-        height: 1.5624vw; 
+        height: 1.51vw; 
         padding:  0.15624vw 0.5208vw;
         font-size:  0.7812vw;
     }

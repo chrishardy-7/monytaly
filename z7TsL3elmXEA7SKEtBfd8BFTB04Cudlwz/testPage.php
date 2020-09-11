@@ -17,10 +17,16 @@ print_r($message); //USING TEST MESSAGE TEMPORARILY EVEN THOUGH THIS IS NOT AN E
 $numOfRows = 10;
 $maxDropdownRows = 8;
 
-$OrgOrPersAry = [];
+$orgOrPersAry = [];
 $OrgOrPersons = getOrgOrPersonsList();
 foreach ($OrgOrPersons as $OrgOrPers) {
-	$OrgOrPersAry[] = $OrgOrPers;
+	$orgOrPersAry[] = $OrgOrPers;
+}
+
+$reasonAry = [];
+$reasonsListAry = getorgPerCategories();
+foreach ($reasonsListAry as $reason) {
+	$reasonAry[] = $reason;
 }
 
 
@@ -28,8 +34,8 @@ foreach ($OrgOrPersons as $OrgOrPers) {
 
 <style>
 	.pageDiv {
-		flex-grow:1;
-    	overflow:auto;
+		/*flex-grow:1;
+    	overflow:auto;*/
 		width: 1200px;
 		height: 750px;
 		padding-top:30px;
@@ -90,25 +96,56 @@ foreach ($OrgOrPersons as $OrgOrPers) {
 
     }
 
-    .wordChoiceShow {
+    .wordChoiceFromTableShow, .wordChoiceFromPrevChoicesShow, .wordChoiceFromTableShowFirst, .wordChoiceFromPrevChoicesShowFirst {
         color: #000000;
         font-size: 14px;
+        line-height: 100%;
         word-wrap: break-word;
         width: 170px;
 		min-height: 20px;
         border: none;
-        padding: 3px;
-        background-color: #E0E0E0;
+        padding-left: 3px;
+        padding-right: 3px;
+        padding-bottom: 3px;
         cursor:default;
 
     }
+
+    .wordChoiceFromTableShowFirst {
+        text-align: left;
+        background-color: #E0E0E0;
+    }
+
+    .wordChoiceFromPrevChoicesShowFirst {
+        text-align: right;
+        background-color: #A0FFA0;
+    }
+
+    .wordChoiceFromTableShow {
+        text-align: left;
+        background-color: #E0E0E0;
+    }
+
+    .wordChoiceFromPrevChoicesShow {
+        text-align: right;
+        background-color: #A0FFA0;
+    }
+
+    .paddingTopNormal {
+    	padding-top: 3px;
+    }
+
+    .paddingTopMore {
+    	padding-top: 10px;
+    }
+
 
 </style>
 <div class="pageDiv" id="pageDiv" onclick="hideDropDown(maxDropdownRows, 'pageDiv')">
 	<div style="display:flex; flex-direction:row; align-items: stretch;">
 		<div class="heading">Person</div>
-		<div class="heading">Amount</div>
 		<div class="heading">Reason</div>
+		<div class="heading">Amount</div>
 	</div>
 	<?php
 	for ($row = 0; $row < $numOfRows; $row++) {
@@ -116,8 +153,8 @@ foreach ($OrgOrPersons as $OrgOrPers) {
 	<div id="rowContainer<?=$row?>" style="display:flex; flex-direction:row; align-items: stretch;">
 		<?php
 		inputDivWithDropdown("wrapDiv", "editCell", "wordChoiceHide", $row, "Person", $maxDropdownRows);
-		inputDivWithDropdown("wrapDiv", "editCell", "wordChoiceHide", $row, "Amount", $maxDropdownRows);
-		inputDivWithDropdown("wrapDiv", "editCell", "wordChoiceHide", $row, "Reason", $maxDropdownRows);		
+		inputDivWithDropdown("wrapDiv", "editCell", "wordChoiceHide", $row, "Reason", $maxDropdownRows);
+		inputDivWithDropdown("wrapDiv", "editCell", "wordChoiceHide", $row, "Amount", $maxDropdownRows);		
 		?>
 	</div>
 	<?php
@@ -128,39 +165,52 @@ foreach ($OrgOrPersons as $OrgOrPers) {
 
 <script>
 
-var OrgOrPersAry = <?=json_encode($OrgOrPersAry)?>;
-var masterChoiceAry = {"Person":OrgOrPersAry, "Amount":[],  "Reason":[]};
-var masterShiftAry = {"Person":[], "Amount":[],  "Reason":["Van Crew Exp", "Bus Fare"]};
+//var dropDownRow '<div class="<?=$dropdownDivsClass?>" id="<?=$rowNum?>-<?=$columnName?>-<?=$dropdownNum?>" onclick="copySelectedDropdown(event)"></div>'
+
+var orgOrPersAry = <?=json_encode($orgOrPersAry)?>;
+var reasonAry = <?=json_encode($reasonAry)?>;
+var masterChoiceAry = {"Person":orgOrPersAry, "Amount":[],  "Reason":reasonAry};
+var masterShiftAry = {"Person":[], "Amount":[],  "Reason":[]};
 var numOfRows = <?=$numOfRows?>;
 var maxDropdownRows = <?=$maxDropdownRows?>;
 var idCurDroppedDown = "";
+var dropDownShowClass = ""; //set by homeInOnStr() to set the class to either left aligned for original table values or right aligned for list of values already chosen
 
-//consoleAry(homeInOnStr("a", OrgOrPersAry, 6));
+//consoleAry(homeInOnStr("a", orgOrPersAry, 6));
 
 
 /* Array filtering function - returns an array of those items from inputAry whose first few characters match selectStr. The output arrays max length is determined by outputAryLength. If selectStr = "" alternativeAry is returned. alternativeAry is also returned if inputAry is empty (so that alternative array can be used for things like numbers entry using shift arrays). The max length of the reurned is determined by outputAryLength. */
 function homeInOnStr(selectStr, inputAry, alternativeAry, outputAryLength) { 
 	var outputAry = [];
 	var outputAryCounter = 0;
-	if (((0 < selectStr.trim().length) || (alternativeAry.length == 0)) && (0 < inputAry.length)) { //don't run if selectStr is empty (no characters have been keyed in to match against) - trim is needed because otherwise invisible chars (suspect " " after backspace). DO run though if alternative array is empty as there will be nothing to accumulate in the 'else' statement below. if inputAry is empty the default is not to run! (so that alternative array can be used for things like numbers entry using shift arrays)
-	    var idxMax = inputAry.length - 1; //maximum inputAry index (it starts at 0)     
-	    for (i = 0; i <= idxMax; i++) { //loop through all the panel button ids
-	        var value = inputAry[i].trim(); //for each iteration of the loop get the corresponding value from the input array
-	        if (  charsMatchStringStart(selectStr.trim(), value)  ) { //if the characters to match match the beginning of the name of the current array value copy to output array
-	            if (outputAryCounter < outputAryLength) { //as long as the output array hasn't already grown too big
-	            	outputAry.push(value);
-	            }
-	            outputAryCounter++;
-	        }
+	if (selectStr.trim() != "*") { //as long as wild card has not been entered
+		if (((0 < selectStr.trim().length) || (alternativeAry.length == 0)) && (0 < inputAry.length)) { //don't run if selectStr is empty (no characters have been keyed in to match against) - trim is needed because otherwise invisible chars (suspect " " after backspace). DO run though if alternative array is empty as there will be nothing to accumulate in the 'else' statement below. if inputAry is empty the default is not to run! (so that alternative array can be used for things like numbers entry using shift arrays)
+		    var idxMax = inputAry.length - 1; //maximum inputAry index (it starts at 0)     
+		    for (i = 0; i <= idxMax; i++) { //loop through all the inputAry indexes
+		        var value = inputAry[i].trim(); //for each iteration of the loop get the corresponding value from the input array
+		        if (  charsMatchStringStart(selectStr.trim(), value) && (0 < selectStr.trim().length)  ) { //if the characters to match are greater than just "" and match the beginning of the name of the current array value copy to output array
+		            if (outputAryCounter < outputAryLength) { //as long as the output array hasn't already grown too big
+		            	outputAry.push(value);
+		            }
+		            outputAryCounter++;
+		        }
+			}
+			dropDownShowClass = "wordChoiceFromTableShow";
+		}
+	    else { //selector string for doing match/home in is empty so use alternative array instead (probably latest choices that were made) 
+	    	var idxMax = alternativeAry.length - 1; //maximum inputAry index (it starts at 0)     
+		    for (i = 0; i <= idxMax; i++) { //loop through all the panel button ids
+		    	outputAry.push(alternativeAry[i].trim());
+		    	outputAryCounter++;
+		    }
+		    dropDownShowClass = "wordChoiceFromPrevChoicesShow";
 		}
 	}
-    else { //selector string for doing match/home in is empty so use alternative array instead (probably latest choices that were made) 
-    	var idxMax = alternativeAry.length - 1; //maximum inputAry index (it starts at 0)     
-	    for (i = 0; i <= idxMax; i++) { //loop through all the panel button ids
-	    	outputAry.push(alternativeAry[i].trim());
-	    	outputAryCounter++;
-	    }
+	else { //wildcard has been entered so simply copy whole of inputAry to outputAry
+		outputAry = inputAry;
+		dropDownShowClass = "wordChoiceFromTableShow";
 	}
+
     return outputAry;
 }
 
@@ -190,18 +240,31 @@ function showDropDowns(event, maxDropdownRows) {
 	var selectStr = document.getElementById(id).innerText;
 	var selectedAry = homeInOnStr(selectStr, masterChoiceAry[colName.toString()], masterShiftAry[colName.toString()], maxDropdownRows); //CREATE FUNCTION TO ARRANGE masterShiftAry ALPHABETICALLY/NUMERICALLY
 	selectedAry.sort();
-	var dropdownRows = Math.min(maxDropdownRows, selectedAry.length);
+	if (selectStr.trim() == "*") { //wildcard entered so lift max dropdown rows - they will scroll if selectedAry is larger than maxDropdownRows
+		var dropdownRows = selectedAry.length;
+	}
+	else { //limit max dropdown rows to whichever is the least of maxDropdownRows and selectedAry.length
+		var dropdownRows = Math.min(maxDropdownRows, selectedAry.length);
+	}
 	var dropdownNum;
-
-	var test = "puppy";
-
-	for (dropdownNum = 0; dropdownNum < dropdownRows; dropdownNum++) {
-		document.getElementById(rowId+"-"+colName+"-"+dropdownNum).innerText = selectedAry[dropdownNum];
-		document.getElementById(rowId+"-"+colName+"-"+dropdownNum).className = "wordChoiceShow";
+	for (dropdownNum = 0; dropdownNum < dropdownRows; dropdownNum++) { //section that loops to display the dropdown choices
+		appendDiv("dropDownDiv"+rowId+"-"+colName,   dropDownShowClass,   rowId+'-'+colName+'-'+dropdownNum,   selectedAry[dropdownNum],  "copySelectedDropdown(event)"); //create div with text in it
+		if (dropdownNum == 0) { //concatonate classes to give extra padding at top of first row of dropdown - for clearance below the text box
+			document.getElementById(rowId+'-'+colName+'-'+dropdownNum).className = dropDownShowClass+" paddingTopMore";
+		}
+		else { //normal padding at top
+			document.getElementById(rowId+'-'+colName+'-'+dropdownNum).className = dropDownShowClass+" paddingTopNormal";
+		}
 	}
 	if (id != "pageDiv") {
 		idCurDroppedDown = id;
 	}
+}
+
+
+/* Uses jQuery to append a new div to existing elements in the container designated by containerId. The properties of the new div are determined by divClass, divId and displayedTxt. If a click response is required onClickStr must contain an appropriate string, e.g. "copySelectedDropdown(event)" to create this functionality. If onClickStr = "" or is omitted there will be no click functionality.  */
+function appendDiv(containerId, divClass, divId, displayedTxt, onClickStr = "") {
+	$("#"+containerId).append('<div class='+divClass+' id='+divId+'  onclick='+onClickStr+'  >'+displayedTxt+'</div>');
 }
 
 
@@ -227,7 +290,8 @@ function hideDropDown(maxDropdownRows, calledFrom) {
 		var colName = idCurDroppedDown.split("-")[1];
 		var dropdownNum;
 		for (dropdownNum = 0; dropdownNum < maxDropdownRows; dropdownNum++) {
-			document.getElementById(rowId+"-"+colName+"-"+dropdownNum).className = "wordChoiceHide";
+			$("#dropDownDiv"+rowId+"-"+colName).empty();
+			//document.getElementById(rowId+"-"+colName+"-"+dropdownNum).className = "wordChoiceHide";
 		}
 		if ((calledFrom == "pageDiv") || (calledFrom == "Diff Div")) {
 			checkForValidity(idCurDroppedDown);
@@ -279,8 +343,8 @@ function copySelectedDropdown(event) {
 	colName = id.split("-")[1];
 	var newStr = document.getElementById(event.target.id).innerText;
 	document.getElementById(rowId+"-"+colName).innerText = newStr;
-	hideDropDown(maxDropdownRows, "copySelectedDropdown()");
 	masterShiftAryIn(id, masterShiftAry, maxDropdownRows, "copySelectedDropdown()");
+	hideDropDown(maxDropdownRows, "copySelectedDropdown()");
 }
 
 
@@ -306,18 +370,13 @@ function masterShiftAryIn(id, masterShiftAry, maxShiftLength, from) {
 <?php
 
 
-/* Creates an wrapper div with an internal visible edititable div for entering data and a column of hidden divs below it, to show word choices. The hidden divs are populated with text and displayed by showDropDowns() when the editable div is clicked. When one of the dropdown divs is clicked copySelectedDropdown() copies its text into the editable div and hides all the dropdown divs again.  */
+/* Creates a wrapper div with an internal visible edititable div for entering data and a column of hidden divs below it, to show word choices. The hidden divs are populated with text and displayed by showDropDowns() when the editable div is clicked. When one of the dropdown divs is clicked copySelectedDropdown() copies its text into the editable div and hides all the dropdown divs again.  */
 function inputDivWithDropdown($wrapperDivClass, $inputDivClass, $dropdownDivsClass, $rowNum, $columnName, $maxDropdownRows) {
 ?>
 	<div class="<?=$wrapperDivClass?>" id="<?=$rowNum.$columnName.'wrapper'?>">
 		<div class="<?=$inputDivClass?>" id="<?=$rowNum?>-<?=$columnName?>" contentEditable="true" onclick="showDropDowns(event, <?=$maxDropdownRows?>)" onKeyup="showDropDowns(event, <?=$maxDropdownRows?>)"></div>
-		<?php
-		for ($dropdownNum = 0; $dropdownNum < $maxDropdownRows; $dropdownNum++) {
-			?>
-			<div class="<?=$dropdownDivsClass?>" id="<?=$rowNum?>-<?=$columnName?>-<?=$dropdownNum?>" onclick="copySelectedDropdown(event)"></div>
-			<?php
-		}
-		?>
+		<div id="dropDownDiv<?=$rowNum?>-<?=$columnName?>" style="max-height:220px; overflow-y:auto; overflow-x:hidden">
+		</div>
 	</div>
 
 <?php

@@ -13,7 +13,8 @@ if (empty($_calledFromIndexPage)) { //prevents someone trying to open this page 
 $showFamBut = new toggleBut("Show Families", "fas fa-plus-square", "subMenuBtn", "subMenuBtnSel", ($subCommand == "FromMainMenu"));
 $editFamBut = new toggleBut("Family Edit", "fas fa-users", "subMenuBtn", "subMenuBtnSel", ($subCommand == "FromMainMenu"));
 $famId = new persistVar("famId", 0); //holds the 2 possible states derived from the family column - "" or an id number for the family that has been clicked
-$genFilter = new filterColumns("genFilter"); //filter from showRecsForFullYr.php for column filtering
+$tables = new dataBaseTables(); //used by custom buttons to get filter keys from string values
+$genFilter = new filterColumns("genFilter", $tables); //filter from showRecsForFullYr.php for column filtering
 $familyCmnd = new persistVar("familyCmnd"); //from showRecsForFullYr.php, holds family settings - "NoKids", "All" or the family id for the displayed family (e.g. 325)
 
 
@@ -21,6 +22,8 @@ $inputArry = json_decode(htmlspecialchars_decode(sanPost("arryJsonStr")), TRUE);
 $outputArry = array();
 $outputArry["NAME"] = "arryBackFromPhp";
 
+
+saveMessage("In ajaxAtomic!");
 
 $outputArry = createNewParent($inputArry, $outputArry, $allowedToEdit);
 

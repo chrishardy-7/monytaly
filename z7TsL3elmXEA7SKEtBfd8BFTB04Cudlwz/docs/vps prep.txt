@@ -178,7 +178,7 @@ IMPORTANT NOTES:
 
 44) insert MAILTO=chris@thehardys.net at top of crontab file (under user chris) to enable emailing of errors.
 
-
+45) install pdftk for merging pdf files using linux shell under php control: sudo snap install pdftk, sudo ln -s /snap/pdftk/current/usr/bin/pdftk /usr/bin/pdftk (as per https://wilransz.com/pdftk-on-ubuntu-18-04/)
 
 
 think about:

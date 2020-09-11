@@ -71,7 +71,7 @@ include_once("./".$sdir."php/funcsToRdWrTblesForAccCcc.php");
 
 /* Global section for setting various constants */
 //$_masterYear = date("Y"); //set to current year (i.e. 2019)
-$_masterYear = "2020"; //set to 2019 for current year
+$_masterYear = "2021"; //set to current year
 $_startMonth = "04"; // sets start month in previous year
 $_endMonth = "03"; // sets end month in current year
 $_calledFromIndexPage = TRUE; //used as a test in the included pages to stop them being called directly from a browser
@@ -88,6 +88,7 @@ $_filenameRandLength = 5;
 $_ImagickExceptionVisibility = TRUE;
 $_fieldNameAry = array("recordDate", "personOrOrg", "transCatgry", "amountWithdrawn", "amountPaidIn", "accWorkedOn", "budget", "referenceInfo", "reconciledDate", "umbrella", "docType", "recordNotes", "parent"); //fieldNames for column ids (0 - 11), the array would need to be changed if the column order (and therefore the cell ids) on the display page changes!!
 $_commitLoopCountMax = 30;
+$_saveMessageEnabled = FALSE;
 
 /* End of global section for setting various constants */
 
@@ -105,11 +106,11 @@ $genrlAryRndms = createKeysAndRandomsArray($genrlAry, $_cmndRndmLngth, $uniqnsCh
 
 /* End of initialisation of global variables  */
 
-if(isset($_COOKIE[$_cookieName])) {  //if the specifically named cookie has been received from client the value is placed in $clientSessCookie, otherwise the value is 0
+if(isset($_COOKIE[$_cookieName])) {  //if the specifically named cookie has been received from client the value is placed in $clientSessCookie, otherwise the value remains at its default ""
     $clientSessCookie = $_COOKIE[$_cookieName];
 }
 
-//SECTION DEALING WITH NO COOKIE FROM CLIENT (This 'if' section always terminates internally with an exit(""). During a sucessful login it will present the Welcome Page)
+//SECTION DEALING WITH NO COOKIE FROM CLIENT (This 'if' section always terminates internally with an exit(""). During a successful login it will present the Welcome Page)
 if (!$clientSessCookie) { //no session cookie
 	$monthsSelRndArray = array(); //initialise session arrays at this initial login stage - this will not happen again as this section of code will always be bypassed as long as cookie exists on client
 	$menuRandomsArray = array();
@@ -153,6 +154,8 @@ if (!$clientSessCookie) { //no session cookie
 	exit("");
 }
 
+
+
 //SECTION DEALING WITH COOKIE FROM CLIENT
 $userId = getUserIdfromCookie($clientSessCookie); //uses cookie to get user id from personSession table, 0 returned if no match is found
 if (!$userId) {  //if user id doesn't exist go to login page
@@ -163,40 +166,12 @@ if (!$userId) {  //if user id doesn't exist go to login page
 	}
 
 //FROM HERE ON THE USER IS IDENTIFIED BY THE COOKIE AND ALL SESSION STUFF CAN BE USED
- 
 $userData = getUserData($userId); //determine if user is a superuser
 $superUser = $userData["superuser"];
+$userName = $userData["personName"];
 $allowedToEdit = $superUser; //at the moment only allow super users editing rights
 
 $recoveredSessionArrays = recoveredmenuRandomsArray($userId); //get session array of arrays from personSession table
-
-/*
-// THIS SECTION THAT CHECKS THE COMMIT RANDOM TO ENSURE SESSION ARRAYS ARE CURRENT MAY BE REMED OUT IF IT IS PREVENTING SOME FEATURES FROM WORKING - IT MAY NOT BE NEEDED!
-$sessionAryCommitRnd = sanPost('sessionCommitRnd','47dw847-NoPOSTedRAndom!'); //get POSTed session commit random for comparison with the one from the recovered from the personSession table (below). Default to random random so no likely match can occur unless real recovered random exists (probably not needed!)
-$recoveredSessionAryCommitRnd = "";
-if (array_key_exists ("sessionCommitRnd", $recoveredSessionArrays)) { //recover nonVolatileArray string that is session commit random used to check session arrays for currency
-	$recoveredSessionAryCommitRnd = $recoveredSessionArrays["sessionCommitRnd"]; //get the recovered session commit random for comparison with POSTed one
-}
-$commitLoopCount = 0;
-while (($recoveredSessionAryCommitRnd) && ($recoveredSessionAryCommitRnd != $sessionAryCommitRnd) && ($commitLoopCount <= $_commitLoopCountMax)) { //as long as a random has been recovered and they are not equal (max $_commitLoopCountMax shots)
-	usleep(50000); //50ms delay to allow any other php script that was updating session arrays to complete
-	$recoveredSessionArrays = recoveredmenuRandomsArray($userId); //get session array of arrays again from personSession table
-	if (array_key_exists ("sessionCommitRnd", $recoveredSessionArrays)) { //recover nonVolatileArray string that is session commit random used to check session arrays for currency
-		$recoveredSessionAryCommitRnd = $recoveredSessionArrays["sessionCommitRnd"];
-	}
-	$commitLoopCount++;
-}
-if ($_commitLoopCountMax < $commitLoopCount) { //looped for 0 - $_commitLoopCountMax but no current commitRnd materialised so end session
-	$message = "Logged Out -  No current commitRnd materialised ";
-	clearSession($userId, "", "if ($_commitLoopCountMax < $commitLoopCount) in indexPage.php - recovrdRand = ".$recoveredSessionAryCommitRnd." POSTedRandom = ".$sessionAryCommitRnd.", time = ".microtime(true));
-	include_once("./".$sdir."login.php");
-	exit("");
-}
-else {
-	saveMessage("Successful sessionAryCommit Match - loop count = ".$commitLoopCount.", time = ".microtime(true));
-}
-*/
-
 
 
 
@@ -304,7 +279,6 @@ if (!$command) { //if NOT called from command random
 	include_once("./".$sdir."login.php");
 	exit("");
 }
-
 $menuBtnPlusSubCmndArray = explode('-', $command); //splits command into a two item array of menu-subCommand
 $menuBtn = $menuBtnPlusSubCmndArray[0]; //return the menuBtn random from the array and assigns it to $menuBtn so the program can continue
 $subCommand = "";
@@ -323,8 +297,15 @@ if (!in_array($menuBtn, $menuRandomsArray)) { //if the random alphanumeric repre
 	include_once("./".$sdir."login.php");
 	exit("");
 }
+
+$mainMenu = new buttonSet("mainMenu", "btn", "btnSelected", FALSE);
+//pr($mainMenu->getButLegend());
+
 $menuRandomsArrayArrayFlipped = array_flip($menuRandomsArray); //flip the array so the random alphanumerics become the keys and the file description the values - allows next line to get the file description
+//$menuBtnStr = $menuRandomsArrayArrayFlipped[$menuBtn];
 $menuBtnStr = $menuRandomsArrayArrayFlipped[$menuBtn];
+
+saveMessage($menuBtnStr);
 
 if ($menuBtnStr == "Submit New Password") { //call from 'new password page' do password change routine
 	resetActivTime($userId);
@@ -346,11 +327,14 @@ if ($menuBtnStr == "Submit New Password") { //call from 'new password page' do p
 }
 
 if ($menuBtnStr == "Ajax Atomic") {
+	saveMessage("About to include ajaxAtomic");
 	include_once("./".$sdir."php/ajaxAtomic.php");
 	exit("");
 }
 
-saveMessage($menuBtnStr.", time = ".microtime(true));
+//saveMessage("TEST from indexPage.php line 331");
+
+//saveMessage($menuBtnStr.", time = ".microtime(true));
 
 $callingPage = array_search($subCommand, $prevMenuRandomsArray); //saves name of calling page if it has been used
 include_once("./".$sdir."createMenuRndms.php"); //create new menu randoms for next set of menu buttons

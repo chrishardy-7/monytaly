@@ -4,6 +4,8 @@ if (empty($_calledFromIndexPage)) { //prevents someone trying to open this page 
 	exit("");
 }
 
+showMessages();
+
 $showToolTip = FALSE;
 
 $nameOfThisPage = "Show Records For Full Year";
@@ -31,6 +33,9 @@ $nonVolatileArray["docNameNumStr"] = ""; //NOT SURE IF THIS IS THE RIGHT PLACE F
 $showFamBut = new toggleBut("Show Families", "fas fa-plus-square", "subMenuBtn", "subMenuBtnSel", ($subCommand == "FromMainMenu"));
 $editFamBut = new toggleBut("Family Edit", "fas fa-users", "subMenuBtn", "subMenuBtnSel", ($subCommand == "FromMainMenu"));
 
+$tables = new dataBaseTables(); //used by custom buttons to get filter keys from string values
+
+//pr($tables->getKey("accWorkedOn", "Church Cash"));
 
 //THIS SECTION NEEDS REDESCRIBING!!
 $orgPersonsListAry = getOrgOrPersonsList(); //gets array of all possible orgsOrPersons in alphabetical order ie: array([1] => RBS [8] => Robertson Tr [17] => Scottish Pwr [22] => Susan)
@@ -52,16 +57,6 @@ function isClicked($butPlainTextStr) {
 	}
 	return $butClicked;
 }
-
-if (isClicked("nextStatement")) {
-	$newRowId = getAdjacentBankStmnt(sanPost("behindBankStatementIdR"), "Forward");
-}
-
-if (isClicked("prevStatement")) {
-	$newRowId = getAdjacentBankStmnt(sanPost("aheadBankStatementIdR"), "Back");
-}
-
-
 
 
 
@@ -88,6 +83,9 @@ function toggleButFunc(&$nonVolArry, $genrlAryRndmsKey, $butPlainTextStr, $subCm
 toggleButFunc($nonVolatileArray, "genrlAryRndms", "editFamButClicked", $subCommand, "editFamilies"); //toggle "editFamilies"
 
 
+
+
+//DEALS WITH ENABLING OF AND CLICKING THROUGH BANK STATEMENT RECONCILIATION PAGES
 $bankStatementButPressed = toggleButFunc($nonVolatileArray, "genrlAryRndms", "toggleBankAccDisplay", $subCommand, "displayBankAcc"); //toggle bank account display
 if ($bankStatementButPressed) { //if bank statement display button has been pressed (selected or deselected) set current row to the last statement used
 	$newRowId = sanPost("bankStatementIdR");
@@ -97,14 +95,42 @@ if ($nonVolatileArray["displayBankAcc"]) {
 	$displayBankAcc = TRUE;
 }
 
+if (isClicked("nextStatement")) {
+	if ($displayBankAcc) {
+		$newRowId = getAdjacentBankStmnt(sanPost("behindBankStatementIdR"), "Forward");
+	}
+	else {
+		$newRowId = sanPost("behindBankStatementIdR");
+		$nonVolatileArray["displayBankAcc"] = TRUE; //forces display of bank account reconciliation page in case the "nextStatement" button is clicked without first clicking the "displayBankAcc" button
+		$displayBankAcc = TRUE;
+	}
+}
+
+if (isClicked("prevStatement")) {
+	if ($displayBankAcc) {
+		$newRowId = getAdjacentBankStmnt(sanPost("aheadBankStatementIdR"), "Back");
+	}
+	else {
+		$newRowId = sanPost("aheadBankStatementIdR");
+		$nonVolatileArray["displayBankAcc"] = TRUE; //forces display of bank account reconciliation page in case the "nextStatement" button is clicked without first clicking the "displayBankAcc" button
+		$displayBankAcc = TRUE;
+	}
+}
+
+
 
 
 //COLUMN FILTER SECTION
-$genFilter = new filterColumns("genFilter", ($subCommand == "FromMainMenu")); //create new filter with $nonVolatileArray key of "genFilter" and reset all filters if this page called from main menu
-$filterCellId = sanPost("filterRecordIdR", "No Filter Clicked"); //filter term from this page if a cntrl click is performed on a cell, default to "No Filter Clicked" by virtue of being initialised to 0
-if ($filterCellId != "No Filter Clicked") { //only do this if a filter term has been POSTed
-	$genFilter->setFilter($filterCellId);
+$genFilter = new filterColumns("genFilter", $tables, ($subCommand == "FromMainMenu")); //create new filter with $nonVolatileArray key of "genFilter" and reset all filters if this page called from main menu
+if (sanPost("IncludeFiltIdr")) { //only do this if a filter term has been POSTed
+	$genFilter->setIncludeFilterUsingCellId(sanPost("IncludeFiltIdr"));
 }
+
+if (sanPost("ExcludeFiltIdr")) { //only do this if a filter term has been POSTed
+	$genFilter->setExcludeFilterUsingCellId(sanPost("ExcludeFiltIdr"));
+}
+//pr($nonVolatileArray);
+
 
 
 
@@ -135,8 +161,8 @@ else {
 							//#################################################         ##########         ##########         #########
 							//#################################################         ##########         ##########         #########
 							//#################################################         ##########         ##########         #########
-					//THIS GROUP SELECTOR FEATURE IS NOT CURRENTLY WORKING BUT IF IT IS RESURRECTED $genFilter->getColIdxsAry() WILL NOT REFLECT THE INHIBIT COMMAND THAT IS APPLIED LATER IN THE CODE !!!
-	if (in_array($nonVolatileArray["headingIdForGroupSel"], $genFilter->getColIdxsAry())) { //if the column desired for group display matches one set for filter, cancel the group display
+					//THIS GROUP SELECTOR FEATURE IS NOT CURRENTLY WORKING BUT IF IT IS RESURRECTED $genFilter->getInclColIdxsAry() WILL NOT REFLECT THE INHIBIT COMMAND THAT IS APPLIED LATER IN THE CODE !!!
+	if (in_array($nonVolatileArray["headingIdForGroupSel"], $genFilter->getInclColIdxsAry())) { //if the column desired for group display matches one set for filter, cancel the group display
 		$nonVolatileArray["headingIdForGroupSel"] = 0;
 		$groupColSelector = "";
 	}
@@ -154,6 +180,7 @@ else {
 
 /* Use the pivot table clicked cell id (e.g. row,col "251-piv-45") and the pivot table row and head names (e.g. "transCatgry-budget") to generate a filter array (e.g. array ([transCatgry] => 16,  [budget] => 15)  ) based on pivot table click rules defined in this function. $_fieldNameAry is also passed as it is used to generate the ids of the filtered columns from the pivot table row and headings names. (this is quite a hard concept to explain as the words used - and by derivation the variable names - to describe the different names used in the standard display and the pivot table are subject to overlap and confusion!) */
 function getFiltersAryFromPivotCell($rowFiltId, $colFiltId, $rowAndHeadNames, $pivotCellEmpty) {
+	$onlyRowsWhereThisFieldNotZero = ""; //default value for selector that is used to indicate when only rows with none zero values in either amountWithdrawn or amountPaidIn are required
 
 	$rowFiltIdIsNum = is_numeric($rowFiltId); //set to TRUE if $rowFiltId is a number (e,g, 251) but FALSE if it is a string (e.g. "rowName")
 	$colFiltIdIsNum = is_numeric($colFiltId); //set to TRUE if $colFiltId is a number (e,g, 45) but FALSE if it is a string (e.g. "credit")
@@ -164,8 +191,22 @@ function getFiltersAryFromPivotCell($rowFiltId, $colFiltId, $rowAndHeadNames, $p
 
 	
 
-	if (!$colFiltIdIsNum && !$rowFiltIdIsNum) { //header section, 5 rows in either far LH column or far RH column - DO NOTHING, JUST NOW
-		$filtersAry = 	[];
+	if (!$colFiltIdIsNum && !$rowFiltIdIsNum) { //header section, 6 rows in either far LH column or far RH column
+		if ($rowFiltId == "brtfwd") {			//header section, brought fwd row name - show all brought fwd values
+			$filtersAry = 	[];
+			$onlyRowsWhereThisFieldNotZero = "amountPaidIn";
+		}
+		elseif ($rowFiltId == "credit") {			//header section, credit row name - show all credits (receipts)
+			$filtersAry = 	[];
+			$onlyRowsWhereThisFieldNotZero = "amountPaidIn";
+		}
+		elseif ($rowFiltId == "spend") {			//header section, spend row name - show all spends (payments)
+			$filtersAry = 	[];
+			$onlyRowsWhereThisFieldNotZero = "amountWithdrawn";
+		}
+		else {
+			$filtersAry = 	[];
+		}
 	}
 	else {										//in an area that has ids of some sort
 		if ($colFiltId == "rowName") {				//main display area, far LH rowName column - ids from the column in the standard display that became rows in the pivot display
@@ -177,10 +218,19 @@ function getFiltersAryFromPivotCell($rowFiltId, $colFiltId, $rowAndHeadNames, $p
 		elseif ($rowFiltId == "heading") {			//header section, heading row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
 			$filtersAry = 	[$colFieldName => $colFiltId]; //filter for only transactions for that colName (e.g. 'FiSCAF Apr20')
 		}
+		elseif ($rowFiltId == "brtfwd") {			//header section, credit row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
+			$filtersAry = 	[$colFieldName => $colFiltId];
+			$onlyRowsWhereThisFieldNotZero = "amountPaidIn";
+		}
 		elseif ($rowFiltId == "credit") {			//header section, credit row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
-			$filtersAry = 	[];
+			$filtersAry = 	[$colFieldName => $colFiltId];
+			$onlyRowsWhereThisFieldNotZero = "amountPaidIn";
 		}
 		elseif ($rowFiltId == "spend") {			//header section, spend row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
+			$filtersAry = 	[$colFieldName => $colFiltId];
+			$onlyRowsWhereThisFieldNotZero = "amountWithdrawn";
+		}
+		elseif ($rowFiltId == "surplus") {			//header section, surplus row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
 			$filtersAry = 	[];
 		}
 		elseif ($rowFiltId == "bal") {				//header section, bal row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
@@ -202,18 +252,22 @@ function getFiltersAryFromPivotCell($rowFiltId, $colFiltId, $rowAndHeadNames, $p
 	}
 
 	//pr($filtersAry);
-	return $filtersAry;
+	return [$filtersAry, $onlyRowsWhereThisFieldNotZero];
 }
 
 
 
 $buttonPanelPresetVal = ""; //DEFAULT FOR presetVal. THIS IS USED ONLY FOR BUDGETS COLUMN JUST NOW - QUICK FIX - BUT NEEDS TO SORTED SO IT WORKS WITH ANY COLUMN (DERIVED FROM createPivotDisplData() OUTPUT)
+$onlyRowsWhereThisFieldNotZero = ""; //default value for selector that is used to indicate when only rows with none zero values in either amountWithdrawn or amountPaidIn are required
 if (getPlain($subSubCommand) == "Filters From Pivot") { //this if section runs when a pivot table cell is clicked and sets up appropriate filters to display data according to a set of rules	
 	$rowAndHeadIdSplit = explode("-", sanPost("pivCellId")); //split - as in "251-piv-45" becomes $rowFiltId = 251, $colFiltId = 45 (in some cases either could be a string, like "rowName" instead of a number)
 	$rowFiltId = $rowAndHeadIdSplit[0];
 	$colFiltId = $rowAndHeadIdSplit[2];
 	$pivotCellEmpty = (sanPost("pivCellVal") === "");
-	$genFilter->mergeAryToFilt(getFiltersAryFromPivotCell($rowFiltId, $colFiltId, sanPost("rowAndHeadNames"), $pivotCellEmpty)); //use the pivot table clicked cell id (e.g. row,col "251-piv-45") and the pivot table row and head names (e.g. "transCatgry-budget") to replace any existing column filter with new one(s) e.g: array ([transCatgry] => 16,  [budget] => 15) based on pivot table click rules
+	$filtersAryFromPivotCell = getFiltersAryFromPivotCell($rowFiltId, $colFiltId, sanPost("rowAndHeadNames"), $pivotCellEmpty); //use the pivot table clicked cell id (e.g. row,col "251-piv-45") and the pivot table row and head names (e.g. "transCatgry-budget") to replace any existing column filter with new one(s) e.g: array ([transCatgry] => 16,  [budget] => 15) based on pivot table click rules
+//pr($filtersAryFromPivotCell[0]);
+	$genFilter->mergeAryToIncludeFiltAry( $filtersAryFromPivotCell[0] ); //gets data as subarry at index 0 of main array - this is so index 1 can be used to indicate whether only rows with none zero values in either amountWithdrawn or amountPaidIn are required (for showing just income from grants or just expenditure of budgets)
+	$onlyRowsWhereThisFieldNotZero = $filtersAryFromPivotCell[1];
 	if ($pivotCellEmpty) {
 		//THIS IS USED ONLY FOR BUDGETS COLUMN JUST NOW - QUICK FIX - BUT NEEDS TO SORTED SO IT WORKS WITH ANY COLUMN (DERIVED FROM createPivotDisplData() OUTPUT)
 		$buttonPanelPresetVal = $budgetListAry[$colFiltId];
@@ -230,7 +284,9 @@ if (getPlain($subSubCommand) == "Filters From Pivot") { //this if section runs w
 $pivotBut = new toggleBut("Pivot", "fas fa-table", "subMenuBtn", "subMenuBtnSel", ($subCommand == "FromMainMenu"));
 
 if ($subSubCommand == "Eileen1920") { //sets up pivot table for all of 2019-20 filtered for furniture project and show families selected
-	$genFilter->replaceFilt(["umbrella" => 1]);
+	$genFilter->replaceIncludeFiltStrValAry(["umbrella" => "Furniture Project"]);
+	$genFilter->replaceExcludeFiltStrValAry(["budget" => "Church Main"]);
+	$nonVolatileArray["AllDates"] = FALSE;
 	$nonVolatileArray["masterYear"] = "2020";
 	$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
 	$nonVolatileArray["endYearOffsetPlusMnth"] = "103";
@@ -239,7 +295,9 @@ if ($subSubCommand == "Eileen1920") { //sets up pivot table for all of 2019-20 f
 }
 
 if ($subSubCommand == "Eileen2021") { //same as 2019-20 but for 2020-21 - a lot of duplication!
-	$genFilter->replaceFilt(["umbrella" => 1]);
+	$genFilter->replaceIncludeFiltStrValAry(["umbrella" => "Furniture Project"]);
+	$genFilter->replaceExcludeFiltStrValAry(["budget" => "Church Main"]);
+	$nonVolatileArray["AllDates"] = FALSE;
 	$nonVolatileArray["masterYear"] = "2021";
 	$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
 	$nonVolatileArray["endYearOffsetPlusMnth"] = "103";
@@ -249,10 +307,24 @@ if ($subSubCommand == "Eileen2021") { //same as 2019-20 but for 2020-21 - a lot 
 
 
 
+if ($subSubCommand == "Unrestricted1920") { //sets up pivot table for all of 2019-20 filtered for furniture project and show families selected
+	$genFilter->replaceIncludeFiltStrValAry(["budget" => "Church Main"]);
+	$nonVolatileArray["AllDates"] = FALSE;
+	$nonVolatileArray["masterYear"] = "2020";
+	$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
+	$nonVolatileArray["endYearOffsetPlusMnth"] = "103";
+	$showFamBut->set();
+	$pivotBut->set();
+}
 
-//pr($nonVolatileArray);
 
-
+if ($subSubCommand == "Bank1920") { //sets up pivot table for all of 2019-20 filtered for furniture project and show families selected
+	$genFilter->replaceIncludeFiltStrValAry(["umbrella" => "Bank"]);
+	$nonVolatileArray["AllDates"] = FALSE;
+	$nonVolatileArray["masterYear"] = "2020";
+	$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
+	$nonVolatileArray["endYearOffsetPlusMnth"] = "103";
+}
 
 
 $famId = new persistVar("famId", 0); //holds the 2 possible states derived from the family column - "" or an id number for the family that has been clicked
@@ -271,7 +343,6 @@ if (sanPost("idRforFamily")) {
 	}
 }
 
-
 //SETS "NoKids" OR FAMILY ID (THAT WILL HAVE ALREADY BEEN SET/UNSET ABOVE)
 $familyCmnd = new persistVar("familyCmnd");
 $familyCmnd->set("NoKids"); //default
@@ -284,18 +355,20 @@ if ($editFamBut->isSet() || $showFamBut->isSet()) {
 	$familyCmnd->set("All");
 }
 
-
 if (($famId->get() != 0) && !$showFamBut->isSet() && !$editFamBut->isSet()) { //detects when single family is being displayed and turns off the normal filter so whole of family can be seen
 	$genFilter->inhibit(); //inhibit general filter
 }
 
 
+
+
 if ($subSubCommand == "EileenReclaim") { //
+	$nonVolatileArray["AllDates"] = FALSE;
 	$nonVolatileArray["masterYear"] = "2021";
 	$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
 	$nonVolatileArray["endYearOffsetPlusMnth"] = "103";
-	$nonVolatileArray["famId"] = "5292";
-	$nonVolatileArray["familyCmnd"] = "5292";
+	$nonVolatileArray["famId"] = 5408;
+	$nonVolatileArray["familyCmnd"] = 5408;
 }
 
 
@@ -349,52 +422,6 @@ $targetPageRandom = $menuRandomsArray[$nameOfThisPage]; //get the menu random fo
 
 
 
-/*
-$copyButStickyValues = getCopyButStickyValues();
-
-$copyDivVis = "none";
-
-//section to set org/pers category copy button state from that saved in all Records table
-$catCopyButkey = 0;
-$catCopyButStr = "";
-$catCopyButClass = "copyBut";
-$catCopyButName = "notSet";
-if ($copyButStickyValues['persOrgCategory']) {
-	$catCopyButkey = $copyButStickyValues['persOrgCategory'];
-	$catCopyButStr = $transCatListAry[$copyButStickyValues['persOrgCategory']];
-	$catCopyButClass = "copyButSel";
-	$catCopyButName = "set";
-	$copyDivVis = "inline";
-}
-
-//section to set account copy button state from that saved in all Records table
-$accCopyButkey = 0;
-$accCopyButStr = "";
-$accCopyButClass = "copyBut";
-$accCopyButName = "notSet";
-if ($copyButStickyValues['accWorkedOn']) {
-	$accCopyButkey = $copyButStickyValues['accWorkedOn'];
-	$accCopyButStr = $accountListAry[$copyButStickyValues['accWorkedOn']];
-	$accCopyButClass = "copyButSel";
-	$accCopyButName = "set";
-	$copyDivVis = "inline";
-}
-
-//section to set budget copy button state from that saved in all Records table
-$budgCopyButkey = 0;
-$budgCopyButStr = "";
-$budgCopyButClass = "copyBut";
-$budgCopyButName = "notSet";
-if ($copyButStickyValues['linkedAccOrBudg']) {
-	$budgCopyButkey = $copyButStickyValues['linkedAccOrBudg'];
-	$budgCopyButStr = $budgetListAry[$copyButStickyValues['linkedAccOrBudg']];
-	$budgCopyButClass = "copyButSel";
-	$budgCopyButName = "set";
-	$copyDivVis = "inline";
-}
-*/
-
-
 
 //#################     ################     ###################
 //#################     ################     ###################
@@ -402,22 +429,20 @@ if ($copyButStickyValues['linkedAccOrBudg']) {
 //#################     ################     ###################
 //#################     ################     ###################
 //#################     ################     ###################
-
+//pr($genFilter->getFiltStr());
 
 //GETS RECORD DATA FROM allRecords TABLE !!
 if ($displayBankAcc) {
 	$recordsDataArry = getReconciledDataAry($newRowId); //$newRowId has been set with sanPost("bankStatementIdR") when button was pressed and page reloaded
 }
 else {
-
-	/*if (($famId->get() != 0) && !$showFamBut->isSet() && !$editFamBut->isSet()) { //a specific family has been chosen to display and neither Show Families or Family Edit have been selected so remove all column filters so family can be displayed complete
-		$recordsDataArry = getMultDocDataAry($startDate, $endDate, "", "", $familyCmnd->get(), $groupColSelector);
+	if ($pivotBut->isSet()) {
+		$recordsPivotArry = getPivotTableAry($startDate, $endDate, $genFilter->getFiltStr(), "", $familyCmnd->get(), "budget, transCatgry"); //for pivot table filters need to be applied as normal
+		//pr($recordsPivotArry);
 	}
-	else { *///apply normal filtering
-		$recordsDataArry = getMultDocDataAry($startDate, $endDate, $genFilter->getFiltStr(), "", $familyCmnd->get(), $groupColSelector);
-	//}
-
-	$recordsPivotArry = getPivotTableAry($startDate, $endDate, $genFilter->getFiltStr(), "", $familyCmnd->get(), "budget, transCatgry"); //for pivot table filters need to be applied as normal
+	else {
+		$recordsDataArry = getMultDocDataAry($startDate, $endDate, $genFilter->getFiltStr(), "", $familyCmnd->get(), $groupColSelector, $onlyRowsWhereThisFieldNotZero);
+	}
 }
 
 
@@ -434,7 +459,7 @@ if (0 < $nonVolatileArray["headingIdForGroupSel"]) { //a column has been set to 
 	$partOfGroupOrFilter = array();
 	$partOfGroupOrFilter[0] = FALSE; //set date display to off
 	for ($grpFilIndex = 1; $grpFilIndex <= 12; $grpFilIndex++) {
-		if (($grpFilIndex == $nonVolatileArray["headingIdForGroupSel"]) || in_array($grpFilIndex, $genFilter->getColIdxsAry()) || ($grpFilIndex == 3) || ($grpFilIndex == 4)) { //if index matches either a column selected to display grouped data or columns that are filtered (and therefore showing only one category), or filter or index = 3 or 4 (withdrawn and paid in columns that should always be displayed)
+		if (($grpFilIndex == $nonVolatileArray["headingIdForGroupSel"]) || in_array($grpFilIndex, $genFilter->getInclColIdxsAry()) || ($grpFilIndex == 3) || ($grpFilIndex == 4)) { //if index matches either a column selected to display grouped data or columns that are filtered (and therefore showing only one category), or filter or index = 3 or 4 (withdrawn and paid in columns that should always be displayed)
 			$partOfGroupOrFilter[$grpFilIndex] = TRUE; //group or filter column so set to TRUE (later used to enable display of that column)
 		}
 		else {
@@ -640,10 +665,10 @@ else { //loop through all records that have been retrieved from the allRecords t
 
 
 	if ($pivotBut->isSet()) {
-		$displayData = createPivotDisplData( $recordsPivotArry, $genFilter->getColIdxsAry(), "pivotCellStd", "pivotCellRowName", "pivotCellRed", "pivotCellGreen", "pivotCellOrange", "pivotCellRowNameRight", "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", $endDate, $download, $allowedToEdit, $allRecordsColNameRndAry, $displayBankAcc); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scro;;able display area
+		$displayData = createPivotDisplData($recordsPivotArry, "pivotCellStd", "pivotCellRowName", "pivotCellRed", "pivotCellGreen", "pivotCellOrange", "pivotCellRowNameRight", "budget", "transCatgry", "transCatgry", "Budget Fwd"); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scro;;able display area
 	}
 	else {
-			$displayData = createStndDisplData($recordsDataArry, $genFilter->getColIdxsAry(), "displayCellStd", "displayCellRowSel", "displayCellRowSelMoney", "displayCellFilt", "displayMoneyCellFiltClass", "displayCellMoney", "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", $endDate, $download, $allowedToEdit, $allRecordsColNameRndAry, $displayBankAcc); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scro;;able display area
+			$displayData = createStndDisplData($recordsDataArry, $genFilter->getInclColIdxsAry(), "displayCellStd", "displayCellRowSel", "displayCellRowSelMoney", "displayCellFilt", "displayMoneyCellFiltClass", "displayCellMoney", "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", $endDate, $download, $allowedToEdit, $allRecordsColNameRndAry, $displayBankAcc); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scro;;able display area
 	}
 
 	$idrArry = $displayData["idrArry"]; //simple indexed array of idRs
@@ -673,7 +698,9 @@ if (0 < $newRowId) { //sets initially selected row to the one of interest for th
 }
 
 
+
 include_once("./".$sdir."head.php");
+
 
 if ($allowedToEdit) {
 	formValHolder("allowedToEdit", "Yes");
@@ -749,6 +776,9 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 	include_once("./".$sdir."menu.php"); //top main menu
 	include_once("./".$sdir."monthSelSideBar.php"); //months select sidebar (usually on left of display)
 	//$nonVolatileArray["genrlAryRndms"] = $genrlAryRndms;
+
+//pr("<br>");
+//pr($nonVolatileArray);
 	?>
 
 
@@ -801,7 +831,7 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 					for ($colIdxAryIdx = 0; $colIdxAryIdx <= 12; $colIdxAryIdx++) { 
 
 
-						if (FALSE === array_search($colIdxAryIdx, $genFilter->getColIdxsAry())) {
+						if (FALSE === array_search($colIdxAryIdx, $genFilter->getInclColIdxsAry())) {
 							$headingClass[] = "recHeadingCell";
 							$displayCellStd[] = "displayCellStd";
 						}
@@ -1026,10 +1056,10 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 					        tableCell("recTotalsCell", $headingWidth, "",         	TRUE, 	'filtPaidInTotalsId');
 					        tableCell("recTotalsCell", $headingWidth, "",         	TRUE, 	'filtBalId');
 					        tableCell("recTotalsCell", $headingWidth, "",         	TRUE);
-				        	tableCell("recTotalsCell", $headingWidth, "",         	TRUE);
-				        	tableCell("recTotalsCell", $headingWidth, "",         	TRUE);
-				        	tableCell("recTotalsCell", $headingWidth, "",         	TRUE);
-				        	tableCell("recTotalsCell", $headingWidth, "",         	TRUE);
+				        	tableCell("recTotalsCell", $headingWidth, "*** MAY",         	TRUE);
+				        	tableCell("recTotalsCell", $headingWidth, "INCLUDE",         	TRUE);
+				        	tableCell("recTotalsCell", $headingWidth, "UNDISPLAYED",         	TRUE);
+				        	tableCell("recTotalsCell", $headingWidth, "LINES !!",         	TRUE);
 					        tableCell("recTotalsCell", $headingWidth, "Total Lines", TRUE);
 					        tableCell("recTotalsCell", $headingWidth, $displayData["transCount"],   TRUE);
 					    tableEndRow(TRUE);
@@ -1107,7 +1137,7 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 	<div class="bottomMenuContn">  <!-- outer container for bottom menu  -->
 		<form id="docEdit" class="form" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data">
 			<?php
-			formValHolder("filteredColsCsv", implode(",", $genFilter->getColIdxsAry())); //placeholder for 
+			formValHolder("filteredColsCsv", implode(",", $genFilter->getInclColIdxsAry())); //placeholder for 
 			formValHolder("previousDocRnd", "x"); //placeholder for previous doc random - used to check if there has been a change of document when a new record is clicked on
 			formValHolder("mouseClickPreviousTime", 100); //a small number so the difference between the current timeand it, for first mouse click, will always be larger than the double click limit
 			formValHolder("storeSelectedRowIdx", 0);
@@ -1212,6 +1242,7 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 </div> <!-- end of  enclosing div for everything except the iFrame - it is contained within the .mainContainer div that defines the display screen extents -->
 
 
+
 	<form id="xPKThZPMNO8" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data">
     <?php
     	//this form is submited by javascript 'document.getElementById("xPKThZPMNO8").submit()' which is implemented by 'previous bank statement' key
@@ -1239,9 +1270,16 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
     <form id="fn445dya48d" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data">
     <?php
     	//this form is submited by javascript 'document.getElementById("fn445dya48d").submit();'' which is implemented by 'if (event.ctrlKey)' in 'function clickField(event)' it passes filter settings
-    	namedValHolder("sessionCommitRnd", $recoveredSessionAryCommitRnd); //used to verify currency of session array
         formValHolder("command", $menuRandomsArray["Show Records For Full Year"]); //this page!
-        formValHolder("filterRecordIdR", 0); //this value is set in 'clickField(event)' whenever a cell is clicked on'
+        formValHolder("IncludeFiltIdr", 0); //this value is set in 'clickField(event)' whenever a cell is clicked on'
+    ?>
+    </form>
+
+    <form id="2FNPOyN0Pr4" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data">
+    <?php
+    	//this form is submited by javascript 'document.getElementById("fn445dya48d").submit();'' which is implemented by 'if (event.ctrlKey)' in 'function clickField(event)' it passes filter settings
+        formValHolder("command", $menuRandomsArray["Show Records For Full Year"]); //this page!
+        formValHolder("ExcludeFiltIdr", 0); //this value is set in 'clickField(event)' whenever a cell is clicked on'
     ?>
     </form>
 

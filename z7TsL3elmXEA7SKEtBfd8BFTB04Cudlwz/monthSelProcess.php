@@ -15,64 +15,83 @@ if (empty($_calledFromIndexPage)) { //prevents someone trying to open this page 
 
 $newMasterYrSelected = FALSE;
 if (!array_key_exists ("masterYear", $nonVolatileArray)) { //create empty masterYear if it doesn't already exist (should only run once on first call to this page!)
+	$nonVolatileArray["AllDates"] = FALSE; //flag that will be set if "ALL" button is clicked - all other buttons will be deselected but date selection stored so "ALL" can be toggled off to go back to selection
 	$nonVolatileArray["masterYear"] = $_masterYear; //set to current year (i.e. 2019) set in index.php
-	$nonVolatileArray["startYearOffsetPlusMnth"] = "1".date("m");
-	$nonVolatileArray["endYearOffsetPlusMnth"] = "1".date("m");
+	$nonVolatileArray["startYearOffsetPlusMnth"] = "0".date("m"); //set prefix to 0 if $_masterYear (indexPage.php) is set to the next year (e.g. if it is set to 2021 and we are at Aug 2020) otherwise set to 1
+	$nonVolatileArray["endYearOffsetPlusMnth"] = "0".date("m"); //  "     "   etc.
 }
 
 $newDateSelected = FALSE; //cancels family display in showRecsForFullYr.php if set to TRUE
 $newYrMnth = array_search($subCommand, $monthsSelRndArray);
-if ($newYrMnth) { //a new year/month has been selected (or could be the same year/month reselected!) or a year back or forward or whole financial year command has been selected
-	$newYrMnthRatnl = rationaliseYrMnth($newYrMnth); //rationalise the yearMonth dates for comparisons that happen below
-	$startYearOffsetPlusMnthRatnl = rationaliseYrMnth($nonVolatileArray["startYearOffsetPlusMnth"]);
-	$endYearOffsetPlusMnthRatnl = rationaliseYrMnth($nonVolatileArray["endYearOffsetPlusMnth"]);
-	$startYearOffsetPlusMnthPrev = $nonVolatileArray["startYearOffsetPlusMnth"];
-	$endYearOffsetPlusMnthPrev = $nonVolatileArray["endYearOffsetPlusMnth"];
-	$newDateSelected = TRUE;
-	if ($newYrMnth == "Back") { //the year back button has been clicked
-		$nonVolatileArray["masterYear"] = strval($nonVolatileArray["masterYear"] - 1); //decrement the master year value
-		$newMasterYrSelected = TRUE;
-	}
-	if ($newYrMnth == "Forward") { //the year forward button has been clicked
-		$nonVolatileArray["masterYear"] = strval($nonVolatileArray["masterYear"] + 1); //increment the master year value
-		$newMasterYrSelected = TRUE;
-	}	
-	if (!$newMasterYrSelected) { //a new master year hasn't been selected so command is intended to update the selected year/month
-		if ($newYrMnth == "Whole Financial Year") {
-			$nonVolatileArray["startYearOffsetPlusMnth"] = "0".$_startMonth; //uses start month from index.php
-			$nonVolatileArray["endYearOffsetPlusMnth"] = "1".$_endMonth;
+if ($newYrMnth) { //a button in the date selection panel has been clicked!
+	if ($newYrMnth == "All Dates") { //all dates button has been clicked so toggle on or off
+		if ($nonVolatileArray["AllDates"]) {
+			$nonVolatileArray["AllDates"] = FALSE;
 		}
-		else { //regular saving of year/month - i.e. command has come frome simply clicking a month button (perhaps with 'shift' held down - doesn't make any difference at this stage)
-			if ($subSubCommand == "mnthButShift") { //shift has been pressed to select a sequence of months starting with the previously selected month, ending with the month selected while shift was held down
-				if (($newYrMnthRatnl < $startYearOffsetPlusMnthRatnl) && ($newYrMnthRatnl < $endYearOffsetPlusMnthRatnl)) { //new date EARLIER than both previous start and end dates
-					$nonVolatileArray["startYearOffsetPlusMnth"] = $newYrMnth; //make start date earlier to match new date - leave end date as it was - month range will be exteded in earlier direction
-				}
-
-				if (($startYearOffsetPlusMnthRatnl < $newYrMnthRatnl) && ($endYearOffsetPlusMnthRatnl < $newYrMnthRatnl)) { //new date LATER than both previous start and end dates
-					$nonVolatileArray["endYearOffsetPlusMnth"] = $newYrMnth; //make end date later to match new date - leave start date as it was - month range will be exteded in later direction
-				}
-
-				if (($startYearOffsetPlusMnthRatnl < $newYrMnthRatnl) && ($newYrMnthRatnl < $endYearOffsetPlusMnthRatnl)) { //new date BETWEEN previous start and end dates
-					if (($endYearOffsetPlusMnthRatnl - $newYrMnthRatnl) <= ($newYrMnthRatnl - $startYearOffsetPlusMnthRatnl)) { //new date equidistant or nearer to end date
-						$nonVolatileArray["endYearOffsetPlusMnth"] = $newYrMnth; //make end date earlier to match new date - leave start date as it was - end month will be moved back to contract range
-					}
-					else { //new date nearer to start date
-						$nonVolatileArray["startYearOffsetPlusMnth"] = $newYrMnth; //make start date later to match new date - leave end date as it was - start date will be monved forward to contract range
-					}
-				}
-			}
-			else {
-				$nonVolatileArray["startYearOffsetPlusMnth"] = $newYrMnth; //make both start and end date same as new date - single month will be selected
-				$nonVolatileArray["endYearOffsetPlusMnth"] = $newYrMnth;
-			}
+		else {
+			$nonVolatileArray["AllDates"] = TRUE;
 		}
 	}
-	if (($startYearOffsetPlusMnthPrev == $nonVolatileArray["startYearOffsetPlusMnth"]) && ($endYearOffsetPlusMnthPrev == $nonVolatileArray["endYearOffsetPlusMnth"])) { //compare newly calculated yearMonth dates with previous ones and make $newDateSelected FALSE if no change - means month buttons can be used to refresh page without cancelling show family as long as no new months chosen
-		$newDateSelected = FALSE;
+	else {
+		$nonVolatileArray["AllDates"] = FALSE;
+		$newYrMnthRatnl = rationaliseYrMnth($newYrMnth); //rationalise the yearMonth dates for comparisons that happen below
+		$startYearOffsetPlusMnthRatnl = rationaliseYrMnth($nonVolatileArray["startYearOffsetPlusMnth"]);
+		$endYearOffsetPlusMnthRatnl = rationaliseYrMnth($nonVolatileArray["endYearOffsetPlusMnth"]);
+		$startYearOffsetPlusMnthPrev = $nonVolatileArray["startYearOffsetPlusMnth"];
+		$endYearOffsetPlusMnthPrev = $nonVolatileArray["endYearOffsetPlusMnth"];
+		$newDateSelected = TRUE;
+		if ($newYrMnth == "Back") { //the year back button has been clicked
+			$nonVolatileArray["masterYear"] = strval($nonVolatileArray["masterYear"] - 1); //decrement the master year value
+			$newMasterYrSelected = TRUE;
+		}
+		if ($newYrMnth == "Forward") { //the year forward button has been clicked
+			$nonVolatileArray["masterYear"] = strval($nonVolatileArray["masterYear"] + 1); //increment the master year value
+			$newMasterYrSelected = TRUE;
+		}	
+		if (!$newMasterYrSelected) { //a button other than "Back" or "Forward" has been clicked, so a new master year hasn't been selected, therefore the command is intended to update the selected year/month
+			if ($newYrMnth == "Whole Financial Year") { //the middle, year (e.g. "2020") button has been clicked so select whole financial year
+				$nonVolatileArray["startYearOffsetPlusMnth"] = "0".$_startMonth; //uses start month from index.php
+				$nonVolatileArray["endYearOffsetPlusMnth"] = "1".$_endMonth;
+			}
+			else { //regular saving of year/month - i.e. command has come frome simply clicking a month button (perhaps with 'shift' held down - doesn't make any difference at this stage)
+				if ($subSubCommand == "mnthButShift") { //shift has been pressed to select a sequence of months starting with the previously selected month, ending with the month selected while shift was held down
+					if (($newYrMnthRatnl < $startYearOffsetPlusMnthRatnl) && ($newYrMnthRatnl < $endYearOffsetPlusMnthRatnl)) { //new date EARLIER than both previous start and end dates
+						$nonVolatileArray["startYearOffsetPlusMnth"] = $newYrMnth; //make start date earlier to match new date - leave end date as it was - month range will be exteded in earlier direction
+					}
+
+					if (($startYearOffsetPlusMnthRatnl < $newYrMnthRatnl) && ($endYearOffsetPlusMnthRatnl < $newYrMnthRatnl)) { //new date LATER than both previous start and end dates
+						$nonVolatileArray["endYearOffsetPlusMnth"] = $newYrMnth; //make end date later to match new date - leave start date as it was - month range will be exteded in later direction
+					}
+
+					if (($startYearOffsetPlusMnthRatnl < $newYrMnthRatnl) && ($newYrMnthRatnl < $endYearOffsetPlusMnthRatnl)) { //new date BETWEEN previous start and end dates
+						if (($endYearOffsetPlusMnthRatnl - $newYrMnthRatnl) <= ($newYrMnthRatnl - $startYearOffsetPlusMnthRatnl)) { //new date equidistant or nearer to end date
+							$nonVolatileArray["endYearOffsetPlusMnth"] = $newYrMnth; //make end date earlier to match new date - leave start date as it was - end month will be moved back to contract range
+						}
+						else { //new date nearer to start date
+							$nonVolatileArray["startYearOffsetPlusMnth"] = $newYrMnth; //make start date later to match new date - leave end date as it was - start date will be monved forward to contract range
+						}
+					}
+				}
+				else {
+					$nonVolatileArray["startYearOffsetPlusMnth"] = $newYrMnth; //make both start and end date same as new date - single month will be selected
+					$nonVolatileArray["endYearOffsetPlusMnth"] = $newYrMnth;
+				}
+			}
+		}
+		if (($startYearOffsetPlusMnthPrev == $nonVolatileArray["startYearOffsetPlusMnth"]) && ($endYearOffsetPlusMnthPrev == $nonVolatileArray["endYearOffsetPlusMnth"])) { //compare newly calculated yearMonth dates with previous ones and make $newDateSelected FALSE if no change - means month buttons can be used to refresh page without cancelling show family as long as no new months chosen
+			$newDateSelected = FALSE;
+		}
 	}
 }
-$startDate = (substr($nonVolatileArray["startYearOffsetPlusMnth"], 0, 1) - 1 + $nonVolatileArray["masterYear"])."-".substr($nonVolatileArray["startYearOffsetPlusMnth"], 1, 2)."-01"; //set startDate to first day of selected year/month
-$maxDayOfMonth = cal_days_in_month(CAL_GREGORIAN, substr($nonVolatileArray["endYearOffsetPlusMnth"], 1, 2), substr($nonVolatileArray["endYearOffsetPlusMnth"], 0, 1) - 1 + $nonVolatileArray["masterYear"]); //calc max day of month for endDate
-$endDate = (substr($nonVolatileArray["endYearOffsetPlusMnth"], 0, 1) - 1 + $nonVolatileArray["masterYear"])."-".substr($nonVolatileArray["endYearOffsetPlusMnth"], 1, 2)."-".$maxDayOfMonth; //set endDate to last day of selected year/month
+
+if (!$nonVolatileArray["AllDates"]) { //AllDates not toggled on so convert date info held in $nonVolatileArray["startYearOffsetPlusMnth"], $nonVolatileArray["endYearOffsetPlusMnth"] and $nonVolatileArray["masterYear"] to $startDate and $endDate
+	$startDate = (substr($nonVolatileArray["startYearOffsetPlusMnth"], 0, 1) - 1 + $nonVolatileArray["masterYear"])."-".substr($nonVolatileArray["startYearOffsetPlusMnth"], 1, 2)."-01"; //set startDate to first day of selected year/month
+	$maxDayOfMonth = cal_days_in_month(CAL_GREGORIAN, substr($nonVolatileArray["endYearOffsetPlusMnth"], 1, 2), substr($nonVolatileArray["endYearOffsetPlusMnth"], 0, 1) - 1 + $nonVolatileArray["masterYear"]); //calc max day of month for endDate
+	$endDate = (substr($nonVolatileArray["endYearOffsetPlusMnth"], 0, 1) - 1 + $nonVolatileArray["masterYear"])."-".substr($nonVolatileArray["endYearOffsetPlusMnth"], 1, 2)."-".$maxDayOfMonth; //set endDate to last day of selected year/month
+}
+else { //hard set dates that cover from 2000-01-02 (to avoid deleted transactions sitting at 2000-01-01) to 2099-12-31 - i.e. effectively the whole working date range
+	$startDate = "2000-01-02";
+	$endDate = "2099-12-31";
+}
 
 ?>

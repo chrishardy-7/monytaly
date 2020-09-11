@@ -28,7 +28,8 @@ $monthsNamesArray = array(
 	"Sep",
 	"Oct",
 	"Nov",
-	"V"
+	"V",
+	"ALL"
 );
 
 $monthsAry = array(
@@ -55,7 +56,8 @@ $monthsAry = array(
 	"1"."09",
 	"1"."10",
 	"1"."11",
-	"Forward"
+	"Forward",
+	"All Dates"
 );
 
 //creates new (refreshed) menu randoms that will be saved to the sessionArrays in the tail
@@ -66,14 +68,18 @@ $monthsSelRndArray = createKeysAndRandomsArray($monthsAry, $_cmndRndmLngth, $uni
 <form id="monthSelForm" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data">
 	<?php
 	$monthIndex = 0;
-	foreach($monthsSelRndArray as $monthNum => $monthRandom) {
+	foreach($monthsSelRndArray as $monthNum => $monthRandom) { //DRAWS ALL BUTTONS IN DATE SELECTION PANEL - THEY ARE DRAWN SELECTED OR UNSELECTED BASED ON THE DATE RANGE DEFINED BY: $nonVolatileArray["startYearOffsetPlusMnth"] AND $nonVolatileArray["endYearOffsetPlusMnth"]. "Back" "Forward" AND "Whole Financial Year" BUTTONS ARE ALWAYS DRAWN DESELECTED BUT WITH BOLD BLUE TEXT
 		$monthNumButId = $monthRandom."mnthNumButId";
 		$monthButClass = "monthBtn";
 		if (($monthNum == "Back") || ($monthNum == "Forward") || ($monthNum == "Whole Financial Year")) {
 			$monthButClass = "monthBtnYearUpDown";
 		}
-		//elseif (($yrMnthStart <= $monthNum) && ($monthNum <= $yrMnthEnd)) { //if monthNum is definitely as month and not "Back" / "Forward" / "Whole Financial Year", compare with dates to generate class
-		elseif (($nonVolatileArray["startYearOffsetPlusMnth"] <= $monthNum) && ($monthNum <= $nonVolatileArray["endYearOffsetPlusMnth"])) { //if monthNum is definitely as month and not "Back" / "Forward" / "Whole Financial Year", compare with dates and generate appropriate class
+		elseif ($monthNum == "All Dates") {
+			if ($nonVolatileArray["AllDates"]) {
+				$monthButClass = "monthBtnSelected";
+			}
+		}
+		elseif (!$nonVolatileArray["AllDates"] && ($nonVolatileArray["startYearOffsetPlusMnth"] <= $monthNum) && ($monthNum <= $nonVolatileArray["endYearOffsetPlusMnth"])) { //as long as "All Dates" hasn't been toggled on, if monthNum is definitely as month and not "Back" / "Forward" / "Whole Financial Year", compare with dates and generate appropriate class
 			$monthButClass = "monthBtnSelected";
 		}
 		?>

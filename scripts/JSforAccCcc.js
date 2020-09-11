@@ -12,6 +12,7 @@ var fromClickCellCmnd = false;
 var autoClickDwnFromCalOrButPnl = false;
 var millisecStartTime = 0; //global variable for startTimeout() and checkTimeout()
 var checkTimeoutFunction = "Console"; //controls checkTimeout() - "Alert", "Console" or "Off"
+var currentKey = "none"; //stores value of current key - either "none", "Control" etc. or a code number (e.g. 112 = "p"). Shift key produces "Shift" and not the code number for an uppercase (e.g. 80 = "P")
 
 function clickField(event) {
 	if (!fromClickCellCmnd) { //click from normal display area rather than calendar or selection panel buttons so cancel clickDown feature
@@ -26,7 +27,13 @@ function clickField(event) {
 	if (id.split("-")[1] == "piv") {
 		document.getElementById("pivCellId").value = id;
 		document.getElementById("pivCellVal").value = document.getElementById(id).innerText;
-		document.getElementById("m88vof5A73").submit(); //calls showRecsForFullYr.php with filter info from clicked pivot display
+		if ((id.split("-")[0] == "surplus") || (id.split("-")[0] == "bal") || (id.split("-")[0] == "spacer")) { //if any of these rows clicked do nothing as it would be meaningless
+
+		}
+		else {
+			document.getElementById("m88vof5A73").submit(); //calls showRecsForFullYr.php with filter info from clicked pivot display
+			
+		}
 		return "function exited";
 	}
 
@@ -48,18 +55,20 @@ function clickField(event) {
 	var ctrlKeyPressed = false;
 	if (event.ctrlKey) {
 		ctrlKeyPressed = true;
+		currentKey = "Control";
 	}
 	var shiftKeyPressed = false;
 	if (event.shiftKey) {
 		shiftKeyPressed = true;
+		currentKey = "Shift";
 	}
 
-	doEverything(id, ctrlKeyPressed, shiftKeyPressed, currentKey);
+	doEverything(id, ctrlKeyPressed, shiftKeyPressed, currentKey); //currentKey comes from function keyPressDetect()
 }
 
 function doEverything(id, ctrlKeyPressed, shiftKeyPressed, heldKey) {
 	//timeToCons();
-	
+
     // ########################### LOCAL JAVASCRIPT STUFF - DOES NOT INTERACT WITH SERVER ###################
     createParent = "no"; //set to no as default
     var date = new Date();
@@ -84,13 +93,20 @@ function doEverything(id, ctrlKeyPressed, shiftKeyPressed, heldKey) {
     // ########################### LOCAL JAVASCRIPT STUFF - END ###################
 
 
-    valSet("filterRecordIdR", id); //stored the newly clicked cell id in formValHolder for "filterRecordIdR" (gets sent as filter term when cntrl click is done)
+    valSet("IncludeFiltIdr", id); //stored the newly clicked cell id in formValHolder for "IncludeFiltIdr" (gets sent as filter term when cntrl click is done)
+    valSet("ExcludeFiltIdr", id); //stored the newly clicked cell id in formValHolder for "IncludeFiltIdr" (gets sent as filter term when cntrl click is done)
     valSet("bankStatementIdR", id.split("-")[0]); //stored the newly clicked row idR in formValHolder to identifiy which bank statenment has been selected for display when the statement button is clicked
+    valSet("behindBankStatementIdR", id.split("-")[0]); //same for if previous or next buttons are clicked first
+    valSet("aheadBankStatementIdR", id.split("-")[0]);
 
 
     // ########################### STATEMENTS ALL ACCESS THE SERVER AND DATABASE (AND REFRESH PAGE) #####################
-	if (ctrlKeyPressed) { //call filter send function from this if condition and exit this clickField() function so no other server calls are made
+	if (heldKey == "Control") { //call filter Include send function from this if condition and exit this clickField() function so no other server calls are made
 		document.getElementById("fn445dya48d").submit(); //calls new (same) page immediately with filter function set
+		return "function exited";
+	}
+	if (heldKey == 101) { //call filter Exclude send function from this if condition and exit this clickField() function so no other server calls are made
+		document.getElementById("2FNPOyN0Pr4").submit(); //calls new (same) page immediately with filter function set
 		return "function exited";
 	}
 	if (id.split("-")[1] == 12) { //if family column has been clicked call toggle display of family and exit this clickField() function so no other server calls are made
@@ -180,7 +196,7 @@ function atomicAjaxCall(
 	) {
 	console.log("HERE ##################################### atomicAjaxCall()");
 	if (atomicAjaxCallCompleted) { //prevents new calls to server before existing one has completed - NOT SURE IF THIS IS THE OPTIMUM PLACE FOR THIS (BUT COULD BE IF ALL SERVER CALLS COME THROUGH HERE!)
-
+console.log(fileRndm);
 console.log("HERE ##################################### atomicAjaxCall()   PRE-AJAX SENDS");
 
 		var random = (new Date).getTime(); //random number to add as GET variable to php calls to prevent xmlHttpReq caching (not used by php script).
@@ -231,6 +247,7 @@ console.log("HERE ##################################### atomicAjaxCall()   PRE-A
 
 		xmlhttp.onreadystatechange=function() { //only use this for test purposes to display the addressed column in the reporting area on the html page
 		    if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+		    	//alert (xmlhttp.responseText);
 		    	console.log(xmlhttp.responseText);
 		      	var arryBackFromPhp = JSON.parse(xmlhttp.responseText);
 		      	console.log(JSON.stringify(arryBackFromPhp, null, 4));
@@ -254,7 +271,7 @@ console.log("HERE ##################################### atomicAjaxCall()   PRE-A
 									docOnlyBalId
 				);
 		      	docUpdateReceive(arry, arryBackFromPhp);
-		      	atomicAjaxCallCompleted = true;     
+		      	atomicAjaxCallCompleted = true;
 		    }
 		}
 		xmlhttp.open("POST", pathToPhpFile, true);
@@ -630,13 +647,11 @@ function strToHex(strng){
 
 
 
-function keyPressDetect(event) {
-	currentKey = event.which || event.keyCode;
-	//alert("keypressed");
+function keyPressDetect(event) { //this function is called by the system whenever a nonm-special key (like shift or control) is pressed
+	currentKey = event.which || event.keyCode; //an effort to capture the key number for different operating systems/browsers. different number for uppercase/lowercase
 }
 
 function keyUpDetect(event) {
-	//alert(currentKey);
 	currentKey = "none";
 }
 

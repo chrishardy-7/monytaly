@@ -44,22 +44,356 @@
  */
 function createPivotDisplData(
         $recordsDataArry,
-        $filtersColIdxAry,
         $pivotCellClass,
         $pivotCellRowNameClass,
         $pivotCellRedClass,
         $pivotCellGreenClass,
         $pivotCellOrangeClass,
         $pivotCellRowNameRightClass,
-        $blankRecncldClass,
-        $unRecncldClass,
-        $tooEarlyRecncld,
-        $endDate,
-        $download,
-        $allowEdit,
-        $allRecordsColNameRndAry,
-        $displayBankAcc
-                            ) {
+        $columnForHeadings,
+        $columnForRows,
+        $colForBroughtFwdKey,
+        $broughtFwdStr
+    ) {
+    global $tables;
+
+    //settings that determine which columns are used for the pivot table (must match settings used for grouping in getPivotTableAry - $columnForHeadings then $columnForRows in group - MAY NOT MATTER!!)
+    $spendColumnToSumKey = "amountWithdrawn";
+    $creditColumnToSumKey = "amountPaidIn";
+
+    $broughtFwdKey = $tables->getKey($colForBroughtFwdKey, $broughtFwdStr); //DOCUMENT CAVEAT THAT THIS KEY MUST BE PRESENT AND PRODUCED EVEN IF PERSON NAMES ARE BEING USED, OR ANY OTHER COMBINATIONS
+
+    $dataExists = FALSE;
+
+    $rowsAry = 			[];
+    $rowsNameAry = 		[];
+
+    $headingsAry = 						[];
+    $headingsTotalBroughtFwdSumAry = 	[];
+    $headingsTotalCreditSumAry = 		[];
+    $headingsTotalSpendSumAry = 		[];
+    $headingsTotalSurplusSumAry = 		[];
+    $headingsbalanceAry = 				[];
+    $spacerRowAry = 					[]; 
+
+    $headingsClassesAry = 					[];
+    $headingsTotalBroughtFwdSumClassesAry = [];
+    $headingsTotalCreditSumClassesAry = 	[];
+    $headingsTotalSpendSumClassesAry = 		[];
+    $headingsTotalSurplusSumClassesAry =	[];
+    $headingsbalanceClassesAry = 			[];
+    $headingsSpacerClassesAry = 			[];
+
+    $headingCellIdsAry = 					[];
+    $headsTotalBroughtFwdSumCellIdsAry =	[];
+    $headsTotalCreditSumCellIdsAry = 		[];
+    $headsTotalSpendSumCellIdsAry = 		[];
+    $headsTotalSurplusSumCellIdsAry =		[];
+    $headsBalanceCellIdsAry = 				[];
+    $headsSpacerCellIdsAry = 				[];
+
+    $headingsTotalBroughtFwdSum = 	0.00;
+    $headingsTotalCreditSum = 		0.00;
+    $headingsTotalSpendSum = 		0.00;
+
+    foreach ($recordsDataArry as $singleRecArry) { //ROW LOOP - through allRecords DATA, loop through all rows of supplied data from allRecords table creating array of heading names and an array of row names
+        $headingVal =  $tables->getStrValue($columnForHeadings, $singleRecArry[$columnForHeadings]); //create a heading from the column selected for headings at the current row iteration
+        if (!in_array($headingVal, $headingsAry)) { //if it's not in the array already append it
+            $headingsAry[] = $headingVal;  
+            $dataExists = TRUE;          
+        }
+        $rowsNameVal =  $tables->getStrValue($columnForRows, $singleRecArry[$columnForRows]); //create a row name from the column selected for row names at the  current row iteration
+        if (!in_array($rowsNameVal, $rowsNameAry)) { //if it's not in the array already append it
+            $rowsNameAry[] = $rowsNameVal;
+			$dataExists = TRUE;
+        }        
+    }
+
+    if (!$dataExists) { //terminate things here, nothing to display!
+    	$returnAry["headerAry"] = [];
+    	$returnAry["rowsAry"] = [];
+    	return $returnAry;
+    }
+
+    sort($headingsAry); //get things in alphabetical order
+    sort($rowsNameAry);
+
+    if ($headingsAry[0] == "") { //if first budget is "" this means unallocated 
+        $headingsAry[0] = "STILL TO ALLOCATE BUDGET!";
+    }
+
+    foreach ($headingsAry as $headingText) { //COLUMN LOOP create headings section initialised rows that have the same number of positions as there are headings. To be populated with sums/classes/ids later
+
+    	// 7 Lines
+    	//$headingsAry has been populated in initial row loop above
+    	$headingsTotalBroughtFwdSumAry[] = 	0;
+        $headingsTotalCreditSumAry[] = 		0;
+        $headingsTotalSpendSumAry[] = 		0;
+        $headingsTotalSurplusSumAry[] = 	0;
+        $headingsbalanceAry[] = 			0;
+        $spacerRowAry[] = 					"";
+
+        // 7 Lines
+        $headingsClassesAry[] = 					$pivotCellClass;
+        $headingsTotalBroughtFwdSumClassesAry[] = 	$pivotCellClass;
+        $headingsTotalCreditSumClassesAry[] = 		$pivotCellClass;
+        $headingsTotalSpendSumClassesAry[] = 		$pivotCellClass;
+        $headingsTotalSurplusSumClassesAry[] = 		$pivotCellClass;
+        $headingsbalanceClassesAry[] = 				$pivotCellClass;
+        $headingsSpacerClassesAry[] = 				$pivotCellClass;
+
+        $colHeadingTblIdx = $tables->getKey($columnForHeadings, $headingText);
+        // 7 Lines
+        $headingCellIdsAry[] = 					"heading-piv-".$colHeadingTblIdx; //create headings cell ids from column heading table index. Will facilitate click filtering
+        $headsTotalBroughtFwdSumCellIdsAry[] = 	"brtfwd-piv-".$colHeadingTblIdx; 
+        $headsTotalCreditSumCellIdsAry[] = 		"credit-piv-".$colHeadingTblIdx; 
+        $headsTotalSpendSumCellIdsAry[] = 		"spend-piv-".$colHeadingTblIdx; 
+        $headsTotalSurplusSumCellIdsAry[] = 	"surplus-piv-".$colHeadingTblIdx;
+        $headsBalanceCellIdsAry[] = 			"bal-piv-".$colHeadingTblIdx; 
+        $headsSpacerCellIdsAry[] = 				"spacer-piv-".$colHeadingTblIdx; 
+    }
+
+    // 7 Lines
+    array_unshift($headingCellIdsAry, 					"heading-piv-rowTotal"); //designates column with row totals, inserted to right of header row name column
+    array_unshift($headsTotalBroughtFwdSumCellIdsAry, 	"brtfwd-piv-rowTotal");
+    array_unshift($headsTotalCreditSumCellIdsAry, 		"credit-piv-rowTotal");
+    array_unshift($headsTotalSpendSumCellIdsAry, 		"spend-piv-rowTotal");
+    array_unshift($headsTotalSurplusSumCellIdsAry, 		"surplus-piv-rowTotal");
+    array_unshift($headsBalanceCellIdsAry, 				"bal-piv-rowTotal");
+    array_unshift($headsSpacerCellIdsAry, 				"spacer-piv-rowTotal");
+
+    // 7 Lines
+    array_unshift($headingCellIdsAry, 					"heading-piv-rowName");  //designates column with row names
+    array_unshift($headsTotalBroughtFwdSumCellIdsAry, 	"brtfwd-piv-rowName");
+    array_unshift($headsTotalCreditSumCellIdsAry, 		"credit-piv-rowName");
+    array_unshift($headsTotalSpendSumCellIdsAry, 		"spend-piv-rowName");
+    array_unshift($headsTotalSurplusSumCellIdsAry, 		"surplus-piv-rowName");
+    array_unshift($headsBalanceCellIdsAry, 				"bal-piv-rowName");
+    array_unshift($headsSpacerCellIdsAry, 				"spacer-piv-rowName");
+    
+
+    foreach ($rowsNameAry as $rowIdx => $rowName) { //ROW LOOP - goes through all the predetermined pivot table row names creating and populate 2 dimensional array with summed spend data
+    	$rowContainsSpendData = FALSE; //flag that will be set to true if any cells in the row being created contain anything other than 0
+        $rowNameTableIdx = $tables->getKey($columnForRows, $rowName); //gets table index of heading name. If name is "" (empty), 0 is returned in keeping with allRecords column data
+        $rowTempAry = [$rowName]; //create row name at index 0
+        $rowsClassesTempAry = [];
+        $rowCellIdsTempAry = [];
+        $rowTableId = $tables->getKey($columnForRows, $rowName);
+
+        $rowSum = 0;
+        foreach ($headingsAry as $headingIdx => $heading) { //COLUMN LOOP in this foreach() section sum all the spend data for the current pivot table row name 
+        	$rowsClassesTempAry[] = $pivotCellClass; //append a new cell class of pivot cell class
+        	$rowCellIdsTempAry[] = $rowTableId."-piv-".$tables->getKey($columnForHeadings, $heading); //create cell id from row name table index concatonated with "-piv-" and column heading table index. Will facilitate click filtering
+
+
+            $colSum = 0;
+            $headingTableIdx = $tables->getKey($columnForHeadings, $heading); //gets table index of heading name. If name is "" (empty), 0 is returned in keeping with allRecords column data
+            foreach ($recordsDataArry as $singleRecArry) { //ROW LOOP - loops through all the selected rows of data from allRecords
+                if ($singleRecArry[$columnForRows] == $rowNameTableIdx) { //if current records row has the pivot table row name in its row name selected column
+                    if ($singleRecArry[$columnForHeadings] == $headingTableIdx) { //if current records row has the pivot table heading in its headings selected column
+                        $colSum = $singleRecArry[$spendColumnToSumKey] + $colSum; //add to the value
+                        if ($singleRecArry[$spendColumnToSumKey] != 0) { //a value other than 0 exists and is being summed
+                        	$rowContainsSpendData = TRUE;
+                        }
+
+                        if ($singleRecArry[$colForBroughtFwdKey] == $broughtFwdKey) { //if allRecords cell in column for pivot 'row' display matches the $broughtFwd key, sum to "Brought Fwd" headings row instead
+                        	$headingsTotalBroughtFwdSumAry[$headingIdx] =   fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey]    + $headingsTotalBroughtFwdSumAry[$headingIdx], TRUE);
+                            $headingsTotalBroughtFwdSum =                   fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey]    + $headingsTotalBroughtFwdSum, TRUE);
+                            
+                        }
+                        else { //not "Brought Fwd" category so sum as normal to "Credit" row
+                            $headingsTotalCreditSumAry[$headingIdx] =   fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey]    + $headingsTotalCreditSumAry[$headingIdx], TRUE);
+                            $headingsTotalCreditSum =                   fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey]    + $headingsTotalCreditSum, TRUE);
+                        }
+                        $headingsTotalSpendSumAry[$headingIdx] = 	fourThreeOrTwoDecimals($singleRecArry[$spendColumnToSumKey] 	+ $headingsTotalSpendSumAry[$headingIdx], TRUE);
+                        $headingsTotalSpendSum = 					fourThreeOrTwoDecimals($singleRecArry[$spendColumnToSumKey] 	+ $headingsTotalSpendSum, TRUE);
+                    }
+                }
+            }
+            $rowTempAry[] = fourThreeOrTwoDecimals($colSum); //append sum to array - format to two decimal places with single leading zero for amounts < £1.00
+            $rowSum = $colSum + $rowSum;
+        }
+
+        //DO ALL THE FOLLOWING FOR EACH ROW OF THE PIVOT TABLE
+        if ($rowContainsSpendData) { //if the row has any spend data (i.e. only create row in array if it has something to display and isn't empty!)
+	        $rowSumDecimalised = fourThreeOrTwoDecimals($rowSum, TRUE); 
+	        $rowTempAry[] = array_splice($rowTempAry, 1, 0, $rowSumDecimalised); //insert total to right of row name
+	        $rowsAry[$rowIdx]["displayRowsAry"] = $rowTempAry;  //append newly populated row to $rowsAry
+	        
+	        
+	        $rowTotalClass = $pivotCellClass; //create default standard cell class for last (totals) column at end of row of classes
+	        if ($rowSumDecimalised == 0) {
+	        	$rowTotalClass = $pivotCellOrangeClass; //change class to orange for zero value (means no value assigned to row name)
+	        }
+	        array_unshift($rowsClassesTempAry, $rowTotalClass); //insert modified cell class for totals column to the right of the row name class
+	        array_unshift($rowsClassesTempAry, $pivotCellRowNameClass); //insert cell class for first (row names) column at beginning of row of classes - left justified
+
+	        $rowsAry[$rowIdx]["displayRowsClassesAry"] = $rowsClassesTempAry; //append row classes 
+
+	        
+	        array_unshift($rowCellIdsTempAry, $rowTableId."-piv-rowTotal"); //use "rowTotal" as the last part of the id to designate column of row totals
+	        array_unshift($rowCellIdsTempAry, $rowTableId."-piv-rowName");  //use "rowName" as the last part of the id to designate column with row names
+	        $rowsAry[$rowIdx]["displayRowIdsAry"] = $rowCellIdsTempAry; //append standard row classes to show totals column
+	    }
+    }
+
+    // 7 Lines
+    array_unshift($headingsAry, "Totals"); //add to right of header names column to name totals column
+    array_unshift($headingsTotalBroughtFwdSumAry, fourThreeOrTwoDecimals($headingsTotalBroughtFwdSum, TRUE)); //add credit totals column to right of header row names (LH) column
+    array_unshift($headingsTotalCreditSumAry, fourThreeOrTwoDecimals($headingsTotalCreditSum, TRUE)); // "   "
+    array_unshift($headingsTotalSpendSumAry, fourThreeOrTwoDecimals($headingsTotalSpendSum, TRUE)); //  "   "
+    //$headingsTotalSurplusSumAry calculated and populated in column loop below
+    //$headingsbalanceAry calculated and populated in column loop below
+    array_unshift($spacerRowAry, ""); //add additional rightmost cell to spacer column so it has the same number as all others
+
+
+    // 7 Lines
+    array_unshift($headingsClassesAry, 						$pivotCellClass); 	//insert cell class for totals column to right of header names classes
+    array_unshift($headingsTotalBroughtFwdSumClassesAry, 	$pivotCellClass);
+    array_unshift($headingsTotalCreditSumClassesAry,		$pivotCellClass);
+    array_unshift($headingsTotalSpendSumClassesAry, 		$pivotCellClass);
+    array_unshift($headingsTotalSurplusSumClassesAry,		$pivotCellClass);
+    array_unshift($headingsbalanceClassesAry, 				$pivotCellClass);
+    array_unshift($headingsSpacerClassesAry,         		$pivotCellClass);
+
+
+    foreach ($headingsTotalCreditSumAry as $sumsIdx => $headingsTotalCredSum) { //COLUMN LOOP run loop to do subtraction on each column total and create balance array (also class choosing and formatting)
+        $headingsbalanceAry[$sumsIdx] = fourThreeOrTwoDecimals($headingsTotalBroughtFwdSumAry[$sumsIdx] + $headingsTotalCredSum - $headingsTotalSpendSumAry[$sumsIdx], TRUE); //bal from brought fwd + credit - spend
+        $headingsTotalSurplusSumAry[$sumsIdx] = fourThreeOrTwoDecimals($headingsTotalCredSum - $headingsTotalSpendSumAry[$sumsIdx], TRUE); //bal from credit - spend
+
+        //this section conditionally sets the colour and converts 0 to "-" in some cases according to the values in various cells of the brought fwd and credit (receipts) row
+        if ($headingsTotalBroughtFwdSumAry[$sumsIdx] == 0) { //Brought Fwd is 0
+        	$headingsTotalBroughtFwdSumAry[$sumsIdx] = "-"; //make Brought Fwd invisible because no value
+        	if ($headingsTotalCreditSumAry[$sumsIdx] < 0) {
+	        	$headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellRedClass; //set Credit class to red for -ve value
+	        }
+	        if ($headingsTotalCreditSumAry[$sumsIdx] == 0) {
+	        	$headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellOrangeClass; //set Credit class to orange for -zero value
+	        	$headingsTotalCreditSumAry[$sumsIdx] = "-"; //make Credit invisible because no value
+	        	$headingsTotalBroughtFwdSumClassesAry[$sumsIdx] = $pivotCellOrangeClass; //set Brought Fwd class to orange because both it and Credit are 0
+	        }
+        }
+        else {
+        	if ($headingsTotalBroughtFwdSumAry[$sumsIdx] < 0) { //Brought Fwd is -ve
+        		$headingsTotalBroughtFwdSumClassesAry[$sumsIdx] = $pivotCellRedClass; //set Brought Fwd class to red for -ve value
+        		if ($headingsTotalCreditSumAry[$sumsIdx] < 0) {
+		        	$headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellRedClass; //set Credit class to red for -ve value
+		        }
+		        if ($headingsTotalCreditSumAry[$sumsIdx] == 0) {
+		        	$headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellOrangeClass; //set Credit class to orange for -zero value
+		        }
+        	}
+        	else {
+        		if ($headingsTotalCreditSumAry[$sumsIdx] < 0) {
+		        	$headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellRedClass; //set Credit class to red for -ve value
+		        }
+		        if ($headingsTotalCreditSumAry[$sumsIdx] == 0) {
+		        	$headingsTotalCreditSumAry[$sumsIdx] = "-"; //make Credit invisible because no value
+		        }
+        	}
+
+        }
+
+        //this section conditionally sets the color of the balance row cells according to whether they're 0, +ve or -ve
+        if ($headingsbalanceAry[$sumsIdx] < 0) {
+        	$headingsbalanceClassesAry[$sumsIdx] = $pivotCellRedClass; //set class to red for -ve value
+        }
+        if ($headingsbalanceAry[$sumsIdx] == 0) {
+        	$headingsbalanceClassesAry[$sumsIdx] = $pivotCellGreenClass; //set class to orange for zero value
+        }
+    }
+
+    // 7 Lines
+    array_unshift($headingsAry, 							$columnForHeadings); //insert headings title at beginning of headingsAry 
+    array_unshift($headingsTotalBroughtFwdSumAry, 			"Brought Fwd"); 	 //insert "Brought Fwd" at beginning of headingsTotalBroughtFwdSumAry to move totals over to the right and align things
+    array_unshift($headingsTotalCreditSumAry, 				"Receipts"); 		 // "   "
+    array_unshift($headingsTotalSpendSumAry, 				"Payments"); 		 // "   "
+    array_unshift($headingsTotalSurplusSumAry, 				"Surplus"); 	 	 // "   "
+    array_unshift($headingsbalanceAry, 						"Carried Fwd"); 	 // "   "
+    array_unshift($spacerRowAry, 							$columnForRows); 	 // "   "
+
+    // 7 Lines
+    array_unshift($headingsClassesAry, 						$pivotCellRowNameRightClass); //insert at beginning class for header names - right justified
+    array_unshift($headingsTotalBroughtFwdSumClassesAry, 	$pivotCellRowNameRightClass);
+    array_unshift($headingsTotalCreditSumClassesAry, 		$pivotCellRowNameRightClass);
+    array_unshift($headingsTotalSpendSumClassesAry, 		$pivotCellRowNameRightClass);
+    array_unshift($headingsTotalSurplusSumClassesAry, 		$pivotCellRowNameRightClass);
+    array_unshift($headingsbalanceClassesAry, 				$pivotCellRowNameRightClass);
+    array_unshift($headingsSpacerClassesAry, 				$pivotCellRowNameClass); //insert at beginning class for column names title - left justified
+
+
+    $returnAry["rowAndHeadNames"] = $columnForRows."-".$columnForHeadings;
+    
+    //add headings, credit, spend, balance and spacer with classes arrays and cellIds arrays - append each to $returnAry["headerAry"]
+    // 7 Lines
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsAry,                   	 "headerRowsClassesAry"=>$headingsClassesAry, 				    "headerCellIdsAry"=>$headingCellIdsAry];
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalBroughtFwdSumAry,   "headerRowsClassesAry"=>$headingsTotalBroughtFwdSumClassesAry,	"headerCellIdsAry"=>$headsTotalBroughtFwdSumCellIdsAry];
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalCreditSumAry,       "headerRowsClassesAry"=>$headingsTotalCreditSumClassesAry,	    "headerCellIdsAry"=>$headsTotalCreditSumCellIdsAry];
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalSpendSumAry,        "headerRowsClassesAry"=>$headingsTotalSpendSumClassesAry, 	    "headerCellIdsAry"=>$headsTotalSpendSumCellIdsAry];
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalSurplusSumAry,      "headerRowsClassesAry"=>$headingsTotalSurplusSumClassesAry, 	"headerCellIdsAry"=>$headsTotalSurplusSumCellIdsAry];
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsbalanceAry,              "headerRowsClassesAry"=>$headingsbalanceClassesAry, 		    "headerCellIdsAry"=>$headsBalanceCellIdsAry];
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $spacerRowAry,                    "headerRowsClassesAry"=>$headingsSpacerClassesAry, 			"headerCellIdsAry"=>$headsSpacerCellIdsAry]; 
+
+    $returnAry["rowsAry"] = $rowsAry; //add row data
+    
+    return $returnAry;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* 
+
+
+ */
+function createPivotDisplDataDEPR(
+        $recordsDataArry,
+        $pivotCellClass,
+        $pivotCellRowNameClass,
+        $pivotCellRedClass,
+        $pivotCellGreenClass,
+        $pivotCellOrangeClass,
+        $pivotCellRowNameRightClass
+    ) {
     global $orgPersonsListAry;
     global $transCatListAry;
     global $accountListAry;
@@ -107,15 +441,15 @@ function createPivotDisplData(
         $rowsNameVal =  aryValueOrZeroStr($rowNamesListAry, $singleRecArry[$columnForRows]); //create a row name from the column selected for row names at the  current row iteration
         if (!in_array($rowsNameVal, $rowsNameAry)) { //if it's not in the array already append it
             $rowsNameAry[] = $rowsNameVal;
-			$rowsExist = TRUE;
+            $rowsExist = TRUE;
         }
         
     }
 
     if (!$columnsExist && !$rowsExist) { //terminate things here, nothing to display!
-    	$returnAry["headerAry"] = [];
-    	$returnAry["rowsAry"] = [];
-    	return $returnAry;
+        $returnAry["headerAry"] = [];
+        $returnAry["rowsAry"] = [];
+        return $returnAry;
     }
 
     sort($headingsAry); //get things in alphabetical order
@@ -175,8 +509,8 @@ function createPivotDisplData(
 
         $rowSum = 0;
         foreach ($headingsAry as $headingIdx => $heading) { //COLUMN LOOP in this foreach() section sum all the spend data for the current pivot table row name and heading 
-        	$rowsClassesProtoAry[] = $pivotCellClass; //append a new cell class of pivot cell class
-        	$rowCellIdsAry[] = $rowTableId."-piv-".aryKeyOrZeroNum($headingsListAry, $heading); //create cell id from row name table index concatonated with "-piv-" and column heading table index. Will facilitate click filtering
+            $rowsClassesProtoAry[] = $pivotCellClass; //append a new cell class of pivot cell class
+            $rowCellIdsAry[] = $rowTableId."-piv-".aryKeyOrZeroNum($headingsListAry, $heading); //create cell id from row name table index concatonated with "-piv-" and column heading table index. Will facilitate click filtering
 
 
             $colSum = 0;
@@ -186,10 +520,10 @@ function createPivotDisplData(
                     if ($singleRecArry[$columnForHeadings] == $headingTableIdx) { //if current records row has the pivot table heading in its headings selected column
                         $colSum = $singleRecArry[$spendColumnToSumKey] + $colSum; //add to the value
 
-                        $headingsTotalCreditSumAry[$headingIdx] = 	fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey] 	+ $headingsTotalCreditSumAry[$headingIdx], TRUE); //accumulate RH sum
-                        $headingsTotalCreditSum = 					fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey] 	+ $headingsTotalCreditSum, TRUE);
-                        $headingsTotalSpendSumAry[$headingIdx] = 	fourThreeOrTwoDecimals($singleRecArry[$spendColumnToSumKey] 	+ $headingsTotalSpendSumAry[$headingIdx], TRUE);
-                        $headingsTotalSpendSum = 					fourThreeOrTwoDecimals($singleRecArry[$spendColumnToSumKey] 	+ $headingsTotalSpendSum, TRUE);
+                        $headingsTotalCreditSumAry[$headingIdx] =   fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey]    + $headingsTotalCreditSumAry[$headingIdx], TRUE); //accumulate RH sum
+                        $headingsTotalCreditSum =                   fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey]    + $headingsTotalCreditSum, TRUE);
+                        $headingsTotalSpendSumAry[$headingIdx] =    fourThreeOrTwoDecimals($singleRecArry[$spendColumnToSumKey]     + $headingsTotalSpendSumAry[$headingIdx], TRUE);
+                        $headingsTotalSpendSum =                    fourThreeOrTwoDecimals($singleRecArry[$spendColumnToSumKey]     + $headingsTotalSpendSum, TRUE);
                     }
                 }
             }
@@ -205,7 +539,7 @@ function createPivotDisplData(
         array_unshift($rowsClassesProtoAry, $pivotCellRowNameClass); //insert cell class for first (row names) column at beginning of row of classes - left justified
         $rowTotalClass = $pivotCellClass; //create default standard cell class for last (totals) column at end of row of classes
         if ($rowSumDecimalised == 0) {
-        	$rowTotalClass = $pivotCellOrangeClass; //change class to orange for zero value (means no value assigned to row name)
+            $rowTotalClass = $pivotCellOrangeClass; //change class to orange for zero value (means no value assigned to row name)
         }
         $rowsClassesProtoAry[] = $rowTotalClass; //append modified cell class for last (totals) column at end of row of classes
         $rowsAry[$rowIdx]["displayRowsClassesAry"] = $rowsClassesProtoAry; //append row ids 
@@ -225,18 +559,18 @@ function createPivotDisplData(
         $headingsbalanceAry[$sumsIdx] = fourThreeOrTwoDecimals($headingsTotalCreditSum - $headingsTotalSpendSumAry[$sumsIdx], TRUE);
 
         if ($headingsTotalCreditSumAry[$sumsIdx] < 0) {
-        	$headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellRedClass; //set class to red for -ve value
+            $headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellRedClass; //set class to red for -ve value
         }
         if ($headingsTotalCreditSumAry[$sumsIdx] == 0) {
-        	$headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellOrangeClass; //set class to green for -zero value
+            $headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellOrangeClass; //set class to green for -zero value
         }
 
 
         if ($headingsbalanceAry[$sumsIdx] < 0) {
-        	$headingsbalanceClassesAry[$sumsIdx] = $pivotCellRedClass; //set class to red for -ve value
+            $headingsbalanceClassesAry[$sumsIdx] = $pivotCellRedClass; //set class to red for -ve value
         }
         if ($headingsbalanceAry[$sumsIdx] == 0) {
-        	$headingsbalanceClassesAry[$sumsIdx] = $pivotCellGreenClass; //set class to orange for zero value
+            $headingsbalanceClassesAry[$sumsIdx] = $pivotCellGreenClass; //set class to orange for zero value
         }
     }
 
@@ -255,20 +589,20 @@ function createPivotDisplData(
     array_unshift($headingsSpacerClassesAry, $pivotCellRowNameClass); //insert at beginning class for column names title - left justified
 
 
-    $headingsClassesAry[] 				= $pivotCellClass; //insert cell class for last (totals) column at end of row of classes
+    $headingsClassesAry[]               = $pivotCellClass; //insert cell class for last (totals) column at end of row of classes
     $headingsTotalCreditSumClassesAry[] = $pivotCellClass;
     $headingsTotalSpendSumClassesAry[]  = $pivotCellClass;
-    $headingsbalanceClassesAry[] 		= $pivotCellClass;
+    $headingsbalanceClassesAry[]        = $pivotCellClass;
     $headingsSpacerClassesAry[]         = $pivotCellClass;
 
     $returnAry["rowAndHeadNames"] = $columnForRows."-".$columnForHeadings;
     
     //add headings, credit, spend, balance and spacer with classes arrays and cellIds arrays - append each to $returnAry["headerAry"]
-    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsAry,                "headerRowsClassesAry"=>$headingsClassesAry, 				"headerCellIdsAry"=>$headingCellIdsAry];
-    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalCreditSumAry,  "headerRowsClassesAry"=>$headingsTotalCreditSumClassesAry,	"headerCellIdsAry"=>$headsTotalCreditSumCellIdsAry];
-    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalSpendSumAry,   "headerRowsClassesAry"=>$headingsTotalSpendSumClassesAry, 	"headerCellIdsAry"=>$headsTotalSpendSumCellIdsAry];
-    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsbalanceAry,         "headerRowsClassesAry"=>$headingsbalanceClassesAry, 		"headerCellIdsAry"=>$headsBalanceCellIdsAry];
-    $returnAry["headerAry"][] = ["headerRowsAry"=> $spacerRowAry,               "headerRowsClassesAry"=>$headingsSpacerClassesAry, 			"headerCellIdsAry"=>$headsSpacerCellIdsAry]; 
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsAry,                "headerRowsClassesAry"=>$headingsClassesAry,                "headerCellIdsAry"=>$headingCellIdsAry];
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalCreditSumAry,  "headerRowsClassesAry"=>$headingsTotalCreditSumClassesAry,  "headerCellIdsAry"=>$headsTotalCreditSumCellIdsAry];
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalSpendSumAry,   "headerRowsClassesAry"=>$headingsTotalSpendSumClassesAry,   "headerCellIdsAry"=>$headsTotalSpendSumCellIdsAry];
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsbalanceAry,         "headerRowsClassesAry"=>$headingsbalanceClassesAry,         "headerCellIdsAry"=>$headsBalanceCellIdsAry];
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $spacerRowAry,               "headerRowsClassesAry"=>$headingsSpacerClassesAry,          "headerCellIdsAry"=>$headsSpacerCellIdsAry]; 
 
     $returnAry["rowsAry"] = $rowsAry; //add row data
     
@@ -573,7 +907,7 @@ Array (
  */
 function createStndDisplData(
         $recordsDataArry,
-        $filtersColIdxAry,
+        $IncludeFiltIdxAry,
         $standardCellClass,
         $rowSelCellClass,
         $rowSelMoneyCellClass,
@@ -795,7 +1129,7 @@ $newClass = $standardCellClass." ".$green;
 
         
 
-        foreach ($filtersColIdxAry as $colIdx) { //set filter class for those columns that have been filtered - shouldn't (don't know if it is explicitly prevented) be used for reconciled date column
+        foreach ($IncludeFiltIdxAry as $colIdx) { //set filter class for those columns that have been filtered - shouldn't (don't know if it is explicitly prevented) be used for reconciled date column
             if (($displayCellDescrpAry[$colIdx] == "MoneyOut") || ($displayCellDescrpAry[$colIdx] == "MoneyIn")) { //needs right alignment because withdrawn or paidin cell
                 $displayRowsClassesAry[$colIdx] = $filtMoneyCellClass;
             }
@@ -1020,6 +1354,38 @@ function parseFile($inputFileNameWithPath, $outputFileNameWithPath) {
 	fclose($fileOutput);
 }
 
+
+/* Sorts in ascending order an array of arrays based on the values in the sub arrays designated by the key $subAryKey. e.g. if $subAryKey = 1 then:
+    array( [0]=>array([0]=>Dog, [1]=>Cat), [1]=>array([0]=>Zebra, [1]=>Ardvark) )
+    is returned as
+    array( [0]=>array([0]=>Zebra, [1]=>Ardvark), [1]=>array([0]=>Dog, [1]=>Cat) )
+    because sorting is done based on Cat, Ardvark.
+    No error checking is included to catch out of range indexes.
+*/
+function sortTwoDimAry($aryToSort, $subAryKey) {
+    usort($aryToSort, function($a, $b) use ($subAryKey) {
+        if ($a[$subAryKey] == $b[$subAryKey]) return 0;
+        return ($a[$subAryKey] < $b[$subAryKey]) ? -1 : 1;
+    });
+    return $aryToSort;
+}
+
+/* Sorts in ascending order an array of arrays of arrays based on the values in the sub sub arrays designated by the key $subAryKey and subSubAryKey. e.g. if $subAryKey = 0 and subSubAryKey = 1 then:
+    array(  [0]=>array( [0]=>array([0]=>Mouse, [1]=>Cat), [1]=>array([0]=>Horse, [1]=>Pig) ),    [1]=>array( [0]=>array([0]=>Dog, [1]=>Badger), [1]=>array([0]=>Zebra, [1]=>Ardvark) )  )
+    is returned as
+    array(  [0]=>array( [0]=>array([0]=>Dog, [1]=>Badger), [1]=>array([0]=>Zebra, [1]=>Ardvark) ),    [1]=>array( [0]=>array([0]=>Mouse, [1]=>Cat), [1]=>array([0]=>Horse, [1]=>Pig) )  )
+    because sorting is done based on Cat, Badger.
+    No error checking is included to catch out of range indexes.
+*/
+function sortThreeDimAry($aryToSort, $subAryKey, $subSubAryKey) {
+    usort($aryToSort, function($a, $b) use ($subAryKey, $subSubAryKey) {
+        if ($a[$subAryKey][$subSubAryKey] == $b[$subAryKey][$subSubAryKey]) return 0;
+        return ($a[$subAryKey][$subSubAryKey] < $b[$subAryKey][$subSubAryKey]) ? -1 : 1;
+    });
+    return $aryToSort;
+}
+
+
 function getFieldName($key) {
     global $_fieldNameAry;
     return $_fieldNameAry[$key];
@@ -1045,7 +1411,7 @@ function getNonVolAryItem($key) {
 	return $nonVolatileArray[$key];
 }
 
-function ifNonVolAryKeyExists($key) {
+function nonVolAryKeyExists($key) {
 	global $nonVolatileArray;
 	return array_key_exists ($key, $nonVolatileArray);
 }
@@ -2550,66 +2916,6 @@ function getIdFromSingleSeltdAry ($identityKeyAry) {
 }
 
 
-function displayHiddenChars($line) {
-    $line = str_replace(" ", "<span style='background-color:#E0E0E0; color:#FFFFFF;' >S</span>", $line);
-    $line = str_replace("\r", "<span style='background-color:#A0C0FF; color:#FFFFFF;' >CR</span>", $line);
-    $line = str_replace("\n", "<span style='background-color:#80E080; color:#FFFFFF;' >LF</span>", $line);
-    $line = str_replace("\t", "<span style='background-color:#E0E0E0; color:#FFFFFF;' >TAB</span>", $line);
-    return $line;
-}
-
-
-/* Prints an array in a hierarchical display using shifts to the right and newlines to help readability. Uses this function recursively! (difficult to explain how it all works)  */
-function ary($maybeAry, $outerKey = "", $tab = "") {
-    
-    if (is_array($maybeAry)) {
-        print($tab);
-        if (($outerKey) || ($outerKey === 0)) {
-            print_r("[".displayHiddenChars($outerKey)."] => ");
-        }
-        print_r("array (");
-        print_r("</br>");
-        $prevTab = $tab;
-        $tab .= "&emsp;&emsp;&emsp;&emsp;";
-        foreach ($maybeAry as $key => $value) {
-            ary($value, $key, $tab);
-        }
-        print($prevTab);
-        print_r(")");
-        print_r("</br>");
-    }
-    else {
-        print($tab);
-        print_r("[".displayHiddenChars($outerKey)."] => ".displayHiddenChars($maybeAry));
-        print_r("</br>");
-    }
-}
-
-
-
-/* Special print function that will reveal the real value of a variable, i.e. NULL etc. It also prints an array in a display friendly way using ary() */
-function pr($input) {
-    if (is_array($input)) {
-        ary($input);
-    }
-    elseif (is_null($input)) {
-        print_r("!Null!");
-    }
-    elseif ($input === "") {
-        print_r("!Empty zero length string!");
-    }
-    elseif ($input === FALSE) {
-        print_r("!FALSE!");
-    }
-    elseif ($input === TRUE) {
-        print_r("!TRUE!");
-    }
-    else {
-        print_r(displayHiddenChars($input));
-    }
-
-}
-
 
 /* Sets cookie on client using the cookie name and data (random alphanumeeric). Cookie is set to expire on browser exit, nothing special is set for path or domain, secure is set to false, httpOnly is set to true */
 function setCookieOnClient($cookieName, $cookieData) {
@@ -2736,7 +3042,7 @@ A fileUploadReport array that records details of files that have been successful
 array([0]=>array(  [0]=>pdfDateName, [1]=>pdfFileNum, [2]=>"pdf", [3]=>numOfPages [4]=>sourceFileName  [5]=>Filesize, [6]=>Success/Failure-Reason, [7]=>Success-TRUE/FALSE, [8]=>IsOutputFile    ), [1]=>array([0]=>Filename, [1]=>Filesize, [2].. ), [2]... etc.)
 If no file(s) have been selected for upload no new subdirectory of $uploadsDir on the server will be created and an empty array is returned.
 */
-function uploadJpgFilesToPdfs_DEPRICATED($filesToBeUploaded, $maxSize, $uploadsDir, $subDirForThisUpload, $pdfDateName, $pdfFileNum, $createMultiPagePdf) {
+function uploadJpgFilesToPdfs_DEPRECATED($filesToBeUploaded, $maxSize, $uploadsDir, $subDirForThisUpload, $pdfDateName, $pdfFileNum, $createMultiPagePdf) {
     global $_ImagickExceptionVisibility;
     $fileUploadReport = Array(); //initialise file upload array that will be used to record details of files that have been successfully uploaded or have failed.
     $sourceFilesErrorFree = TRUE;
@@ -2926,7 +3232,7 @@ array ([0]=>array(  [0]=>, [1]=>pageCount, [2]=>MergedPdf, [3]=>MergedFileSize, 
 -
 TO REMOVE AN INTRUSIVE LINE THAT APPEARED NEAR THE TOP OF EACH MERGED PDF PAGE (TO DO WITH HEADER ACCORDING TO FORUMS) THE BODY OF function header() wAs removed from ./PDFMerger/tcpdf/tcpdf.php line 3481
  */
-function mergePdfs($fileUploadReportSinglePdfs, $uploadsDir) {
+function mergePdfs_DEPRICATED_PDFMerger ($fileUploadReportSinglePdfs, $uploadsDir) {
     $fileMergeReport = Array("", "", "", "", "", "No uploaded pdfs", FALSE); //default report for if there are no previously upladed and converted pdfs to merge!
     if (0 < count($fileUploadReportSinglePdfs)) { //as long as there are some uploaded pdfs to merge
         $allUploadsSuccess = TRUE;
@@ -2939,7 +3245,7 @@ function mergePdfs($fileUploadReportSinglePdfs, $uploadsDir) {
             $subDirOfUpload = subDirNameFromDate($fileUploadReportSinglePdfs[0][2]); //create year-month i.e. 2018-03 for use as subfolder name from the first listed filename in the upload report
             $destinationPath = $uploadsDir."/".$subDirOfUpload."/"; //path where the existing pdfs are and where the resultant multi one is to go (permissions must allow server php to write to this path)
             $pdfMergr = "PDFMerger"; //do this in an effort to avoid deprecation error of calling an instance the same name as the class (apparently! - according to a forum)
-            $nextUnusedFileNum = getNextFileSufixNumFromUploadDate($fileUploadReportSinglePdfs[0][2], $uploadsDir); //used to create the file number that comes after the the last one that is used in the current upload - to temporarily store multi file
+            $nextUnusedFileNum = getNextFileSufixNumFromUploadDate($fileUploadReportSinglePdfs[0][2], $uploadsDir); //used to create the file number that comes after the the last one that is used in the current upload - to temporarily store multi file. This place holder should be unused as the file namNumbers are allocated in order of need and are never released for use except by this function itself when they are used temporarily
             $tempMultiFilename = dateFromFilenameNumDotPdf($fileUploadReportSinglePdfs[0][2])."-".$nextUnusedFileNum.".pdf"; //create a temporary file name using the original file nameDate and the next free file number
 
             //pdfMerger SECTION THAT MERGES ALL THE SELECTED EXISTING PDFS INTO ONE FILE
@@ -2968,6 +3274,54 @@ function mergePdfs($fileUploadReportSinglePdfs, $uploadsDir) {
     }
     return array($fileMergeReport); //return as index [0] of an array to match the way data is presented in  uploadJpgFilesToSnglPdfs()
 }
+
+
+
+/* Takes already uploaded, converted and numbered pdf files - detailed in $fileUploadReportSinglePdfs - and merges them together into one high quality pdf in the calculated subdir of $uploadsDir (compared with Imagick's effort at merging mixed jpeg/pdf files). An array is returned with the following information:
+array ([0]=>array(  [0]=>, [1]=>pageCount, [2]=>MergedPdf, [3]=>MergedFileSize, [4]=>Success/Failure-Reason, [5]=>Success-TRUE/FALSE ) )
+-
+Uses pdftk (linux shell program that must be installed) to improve on original PDFMerger (that was php based) because it had page format (size) and clipping problems.
+ */
+function mergePdfs($fileUploadReportSinglePdfs, $uploadsDir) {
+    $fileMergeReport = Array("", "", "", "", "", "No uploaded pdfs", FALSE); //default report for if there are no previously upladed and converted pdfs to merge!
+    if (0 < count($fileUploadReportSinglePdfs)) { //as long as there are some uploaded pdfs to merge
+        $allUploadsSuccess = TRUE;
+        foreach ($fileUploadReportSinglePdfs as $indvidualPdfDetails) { //checks all uploaded converted files and sets $allUploadsSuccess to FALSE if any file had an error
+            if (!$indvidualPdfDetails[6]) { //execute if statement if error in current file
+                $allUploadsSuccess = FALSE;
+            }
+        }
+        if ($allUploadsSuccess) { //as long as there wern't any errors during the upload of the files
+            $subDirOfUpload = subDirNameFromDate($fileUploadReportSinglePdfs[0][2]); //create year-month i.e. 2018-03 for use as subfolder name from the first listed filename in the upload report
+            $destinationPath = $uploadsDir."/".$subDirOfUpload."/"; //path where the existing pdfs are and where the resultant multi one is to go (permissions must allow server php to write to this path)
+            $nextUnusedFileNum = getNextFileSufixNumFromUploadDate($fileUploadReportSinglePdfs[0][2], $uploadsDir); //used to create the file number that comes after the the last one that is used in the current upload - to temporarily store multi file. This place holder should be unused as the file namNumbers are allocated in order of need and are never released for use except by this function itself when they are used temporarily
+            $tempMultiFilename = dateFromFilenameNumDotPdf($fileUploadReportSinglePdfs[0][2])."-".$nextUnusedFileNum.".pdf"; //create a temporary file name using the original file nameDate and the next free file number
+            //pdftk SECTION THAT MERGES ALL THE SELECTED EXISTING PDFS INTO ONE FILE
+            $fileListCsv = ""; //empty string that will contain list of filenames (with paths) to be merged           
+            foreach ($fileUploadReportSinglePdfs as $indvidualPdfDetails) { //process all uploaded converted files one at a time
+                $filename = $indvidualPdfDetails[2]; //get filename i.e. 2018-02-07-5.pdf
+                $fileListCsv = $fileListCsv." ".$destinationPath.$filename;
+            }
+            shell_exec("pdftk ".$fileListCsv." cat output ".$destinationPath.$tempMultiFilename);
+            foreach ($fileUploadReportSinglePdfs as $indvidualPdfDetails) { //goes through all uploaded filenames and deletes them
+                $filenameToDelete = $indvidualPdfDetails[2]; //extract filename i.e. 2018-02-07-5.pdf
+                unlink($destinationPath.$filenameToDelete); //delete file
+            }
+            rename($destinationPath.$tempMultiFilename, $destinationPath.$fileUploadReportSinglePdfs[0][2]); //change num of temporarily saved merged file to take the place of the lowest numbered file in the sequence of files that have just been deleted
+            $convertedFileSize = parseFileSizeForDisplay(filesize($destinationPath.$fileUploadReportSinglePdfs[0][2])); //get filesize of newly renamed merged file
+            $imageForPageCount = new Imagick();
+            $imageForPageCount->pingImage($destinationPath.$fileUploadReportSinglePdfs[0][2]);            
+            $pageCount = $imageForPageCount->getNumberImages();
+            $fileMergeReport = Array("", "", $fileUploadReportSinglePdfs[0][2], $convertedFileSize, $pageCount, "Merge success", TRUE); //report on success of pdf merge
+        }
+        else {
+            $fileMergeReport = Array("", "", "", "", "", "Error in some pdfs", FALSE);
+        }
+    }
+    return array($fileMergeReport); //return as index [0] of an array to match the way data is presented in  uploadJpgFilesToSnglPdfs()
+}
+
+
 
 
 /* Uses multidimensional array $filesToBeUploaded to get a list of file names and details that are to be uploaded. Attempts to convert files to pdfs and move them (they will have already been uploaded from the client and given temporary names) to a subdirectory $subDirForThisUpload (i.e. 2018-03) of $uploadsDir (i.e. "../uploads", which must be in correct relationship to the directory in which this script is run). The pdf filenames will follow the regime given in $pdfDateName and $pdfFileNum which give the date name of the file (i.e. 2018-02-11) and the number of the file for that date name if more than one file will exist for that date name i.e. 2018-05-14-12.pdf . File numbers will be automatically incremented where more than one file is to be created. Uploaded files can be either one or more individual jpg or pdf files that will be converted into individual pdfs.
@@ -3859,6 +4213,75 @@ print_r("The test function in ./php/functions.php is working OK internally. ");
 return "Stuff is being returned from the function too!";
 }
 
+
+
+
+
+
+function displayHiddenChars($line) {
+    $line = str_replace(" ", "<span style='background-color:#E0E0E0; color:#FFFFFF;' >S</span>", $line);
+    $line = str_replace("\r", "<span style='background-color:#A0C0FF; color:#FFFFFF;' >CR</span>", $line);
+    $line = str_replace("\n", "<span style='background-color:#80E080; color:#FFFFFF;' >LF</span>", $line);
+    $line = str_replace("\t", "<span style='background-color:#E0E0E0; color:#FFFFFF;' >TAB</span>", $line);
+    return $line;
+}
+
+
+/* Prints an array in a hierarchical display using shifts to the right and newlines to help readability. Uses this function recursively! (difficult to explain how it all works)  */
+function ary($maybeAry, $outerKey = "", $tab = "") {
+    
+    if (is_array($maybeAry)) {
+        print_r($tab);
+        if (($outerKey) || ($outerKey === 0)) {
+            print_r("[".displayHiddenChars($outerKey)."] => ");
+        }
+        print_r("array (");
+        print_r("</br>");
+        $prevTab = $tab;
+        $tab .= "&emsp;&emsp;&emsp;&emsp;";
+        foreach ($maybeAry as $key => $value) {
+            ary($value, $key, $tab);
+        }
+        print_r($prevTab);
+        print_r(")");
+        print_r("</br>");
+    }
+    else {
+        print_r($tab);
+        
+        //print_r("[".displayHiddenChars($outerKey)."] => ".displayHiddenChars($maybeAry));
+        print_r("[");
+        pr($outerKey);
+        print_r("] => ");
+        pr($maybeAry);
+
+        print_r("</br>");
+    }
+}
+
+
+/* Special print function that will reveal the real value of a variable, i.e. NULL etc. It also prints an array in a display friendly way using ary() */
+function pr($input) {
+    if (is_array($input)) {
+        ary($input);
+    }
+    elseif (is_null($input)) {
+        print_r("!Null!");
+    }
+    elseif ($input === "") {
+        print_r("!Empty zero length string!");
+    }
+    elseif ($input === FALSE) {
+        print_r("!FALSE!");
+    }
+    elseif ($input === TRUE) {
+        print_r("!TRUE!");
+    }
+    else {
+        print_r(displayHiddenChars($input));
+    }
+
+}
 
 ?>
 
