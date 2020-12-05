@@ -106,6 +106,73 @@ class persistVar {
 }
 
 
+class familyCommand {
+	public $name;
+	public $editFamButSet;
+	public $showFamButSet;
+
+	function __construct($name, $editFamButSet, $showFamButSet, $reset) { //name that will be used as $nonVolatileArray key to preserve the family id through page loads, also a reset flag
+		$this->name = $name; // save locally so $nonVolatileArray can be modified as needed
+		$this->editFamButSet = $editFamButSet;
+		$this->showFamButSet = $showFamButSet;
+		if (!nonVolAryKeyExists($name) || $reset) { //if $nonVolatileArray key doesn't exist, or reset is true, create an array entry - 0
+	    	setNonVolAryItem($name, 0);
+	    }
+	}
+
+	function inputFamId($value) { //inputs the current clicked family id
+		if (getNonVolAryItem($this->name) == getFamilyId($value)) { //if NonVolAryItem family id is already set to passed value, set it to 0, else set it to passed value - this is a toggle action
+			setNonVolAryItem($this->name, 0);
+		}
+		else {
+			setNonVolAryItem($this->name, $value);
+		}
+	}
+
+	function getCmnd() {
+		if ($this->editFamButSet || $this->showFamButSet) {
+			return "All";
+		}
+		else {
+			if (0 < getNonVolAryItem($this->name)) {
+				return getNonVolAryItem($this->name); //return value in array
+			}
+			else {
+				return "NoKids";
+			}
+		}
+	}
+
+	function justFam() {
+		if ($this->editFamButSet || $this->showFamButSet) {
+			return FALSE;
+		}
+		else {
+			if (0 < getNonVolAryItem($this->name)) {
+				return TRUE; //a family number is set and neither editFamily nor showFamily buttons have been selected, so just the family on its own should be shown
+			}
+			else {
+				return FALSE;
+			}
+		}
+	}
+
+	function getFiltInhib() {
+		if ((getNonVolAryItem($this->name) != 0) && !$this->editFamButSet && !$this->showFamButSet) {
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	function destroy() {
+		if (nonVolAryKeyExists($this->name)) { //check that array key esists before trying to destroy item!
+			destroyNonVolAryItem($this->name);
+		}
+	}
+}
+
 
 
 /* Creates set of buttons with different legends. They work like radio buttons where selecting one deselects all the others, initial state will be all buttons deselected.  */

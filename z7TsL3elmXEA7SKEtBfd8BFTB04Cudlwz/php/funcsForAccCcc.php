@@ -2,6 +2,65 @@
 
 //$thisFileName = "funcsForAccCcc.php";
 
+
+
+
+/* Returns an array of record rows and sorted so any compound rows are grouped together inserted in the correct date position, with the Master first in its original position followed by any slaves (which will be in idR order). Any compound rows with the same compound number should already all have the same date from when they were set as compound in the allRecords table, because this was forced by the PHP function setCompoundTrans(). (SHOULD ALSO CONSIDER INCORPORATING THIS FORCING ACTION TO KEEP DATES IN SYNC IN OTHER PHP FUNCTIONS THAT ATTEMPT TO CHANGE THEM !!) */
+function sortCompoundRows($recordsDataArry) {
+	$nonSlaveRowsAry = [];
+	$slaveCompoundAry = [];
+	$outputAry = [];
+	foreach ($recordsDataArry as $row) { //loop through all record rows one at a time
+		if ((0 < $row["compound"]) && (($row["compound"] != $row["idR"]))) { //if a row is a slave compound one
+			$slaveCompoundAry[] = $row; //concatonate compound slave to $slaveCompoundAry
+		}
+		else {
+			$nonSlaveRowsAry[] = $row;
+		}
+	}
+    $slaveSortedAry = sortTwoDimAryForTwoSubArys($slaveCompoundAry, "compound", "idR"); //sort $slaveCompoundAry into first compound then idR order
+    $slaveAryLength = count($slaveSortedAry);
+    $slaveAryIdx = 0;
+	foreach ($nonSlaveRowsAry as $nonSlaveRow) {
+		if (0 < $nonSlaveRow["compound"]) { //this is a compound master so add it and  any associated slaves before going on to next nonslave row
+			$outputAry[] = $nonSlaveRow;
+			foreach ($slaveSortedAry as $slaveIdx=>$slaveRow) { //go through all slave rows and where there is a match of compound number add them
+				if ($slaveRow["compound"] == $nonSlaveRow["compound"]) {
+					$outputAry[] = $slaveRow;
+				}
+			}
+		}
+		else { //ordinary row date is less than or equal to current compound row so just keep adding ordinery rows
+			$outputAry[] = $nonSlaveRow;
+		}
+
+	}
+	return $outputAry;
+} 
+
+
+/* Merges groups of subarrays from $masterAry and $slaveAry alternately into the returned array of subarrays in order values pointed to by $subArykey. Subarrays from $masterAry with the first found key value are copied to the merged array first then subarrays with the same key value from $slaveAry. This happens alternately until all the subarrays in $masterAry and $slaveAry have been traversed. */
+function mergeAlternate($masterAry, $slaveAry, $subaryKey) {
+    $mergeAry = [];
+    $slaveAryIdx = 0;
+    foreach ($masterAry as $masterRow) { 
+        $mergeAry[] = $masterRow; //just copy to mergeAry
+        while ($masterRow[$subaryKey] == $slaveAry[$slaveAryIdx][$subaryKey]) {
+        	$mergeAry[] = $slaveAry[$slaveAryIdx]; //just copy current matching slave row to mergeAry
+        	$slaveAryIdx++;
+        }
+	}
+	return $mergeAry;
+}
+
+
+/* Converts passed date string, $date, (which is in the form "07-04-2020" or "2020-04-07") by removing the separator "-"s, and returning "07042020" or "20200407" which can be used directly for comparisons such as > < ==. */
+function dateRemoveHyphs($date) {
+	$dateAry = explode("-", $date);
+	return $dateAry[0].$dateAry[1].$dateAry[2];
+}
+
+
 // EXPERIMENTAL GREEN ADDITIVE CLASS IS IN createStndDisplData() BELOW THE SQUARE:
 
 
@@ -341,276 +400,6 @@ function createPivotDisplData(
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* 
-
-
- */
-function createPivotDisplDataDEPR(
-        $recordsDataArry,
-        $pivotCellClass,
-        $pivotCellRowNameClass,
-        $pivotCellRedClass,
-        $pivotCellGreenClass,
-        $pivotCellOrangeClass,
-        $pivotCellRowNameRightClass
-    ) {
-    global $orgPersonsListAry;
-    global $transCatListAry;
-    global $accountListAry;
-    global $budgetListAry;
-    global $umbrellaListAry;
-    global $docTypeListAry;
-    global $_filenameRandLength;
-
-    //settings that determine which columns are used for the pivot table (must match settings used for grouping in getPivotTableAry - $columnForHeadings then $columnForRows in group - MAY NOT MATTER!!)
-    $columnForHeadings = "budget";
-    $headingsListAry = $budgetListAry;
-    $columnForRows = "transCatgry";
-    $rowNamesListAry = $transCatListAry;
-    $spendColumnToSumKey = "amountWithdrawn";
-    $creditColumnToSumKey = "amountPaidIn";
-
-    $columnsExist = FALSE;
-    $rowsExist = FALSE;
-
-    $rowsAry = [];
-    $rowsClassesAry = [];
-    $headingsAry = [];
-    $spacerRowAry = [];
-    $rowsNameAry = [];
-
-    $headingsClassesAry = [];
-    $headingsTotalCreditSumClassesAry = [];
-    $headingsTotalSpendSumClassesAry = [];
-    $headingsbalanceClassesAry = [];
-    $headingsSpacerClassesAry = [];
-
-    $headingCellIdsAry = [];
-    $headsTotalCreditSumCellIdsAry = [];
-    $headsTotalSpendSumCellIdsAry = [];
-    $headsBalanceCellIdsAry = [];
-    $headsSpacerCellIdsAry = [];
-
-    foreach ($recordsDataArry as $singleRecArry) { //loop through all rows of supplied data
-        $headingVal =  aryValueOrZeroStr($headingsListAry, $singleRecArry[$columnForHeadings]); //create a heading from the column selected for headings at the current row iteration
-        if (!in_array($headingVal, $headingsAry)) { //if it's not in the array already append it
-            $headingsAry[] = $headingVal;  
-            $columnsExist = TRUE;          
-        }
-
-        $rowsNameVal =  aryValueOrZeroStr($rowNamesListAry, $singleRecArry[$columnForRows]); //create a row name from the column selected for row names at the  current row iteration
-        if (!in_array($rowsNameVal, $rowsNameAry)) { //if it's not in the array already append it
-            $rowsNameAry[] = $rowsNameVal;
-            $rowsExist = TRUE;
-        }
-        
-    }
-
-    if (!$columnsExist && !$rowsExist) { //terminate things here, nothing to display!
-        $returnAry["headerAry"] = [];
-        $returnAry["rowsAry"] = [];
-        return $returnAry;
-    }
-
-    sort($headingsAry); //get things in alphabetical order
-    sort($rowsNameAry);
-
-    if ($headingsAry[0] == "") { //is first budget is "" this means unallocated 
-        $headingsAry[0] = "STILL TO ALLOCATE BUDGET!";
-    }
-
-    $headingsListFlippedAry = array_flip($headingsListAry);
-    $rowNamesListFlippedAry = array_flip($rowNamesListAry);
-
-    foreach ($headingsAry as $headingText) { //COLUMN LOOP create rows with same number of positions as there are headings to be populated with sums and classes to be set to default
-
-        $headingsClassesAry[] = $pivotCellClass;
-        $headingsTotalCreditSumClassesAry[] = $pivotCellClass;
-        $headingsTotalSpendSumClassesAry[] = $pivotCellClass;
-        $headingsbalanceClassesAry[] = $pivotCellClass;
-        $headingsSpacerClassesAry[] = $pivotCellClass;
-
-        $headingsTotalCreditSumAry[] = 0;
-        $headingsTotalSpendSumAry[] = 0;
-        $headingsbalanceAry[] = 0;
-        $spacerRowAry[] = "";
-
-        $headingCellIdsAry[] = "heading-piv-".aryKeyOrZeroNum($headingsListAry, $headingText); //create headings cell ids from column heading table index. Will facilitate click filtering
-        $headsTotalCreditSumCellIdsAry[] = "credit-piv-".aryKeyOrZeroNum($headingsListAry, $headingText); 
-        $headsTotalSpendSumCellIdsAry[] = "spend-piv-".aryKeyOrZeroNum($headingsListAry, $headingText); 
-        $headsBalanceCellIdsAry[] = "bal-piv-".aryKeyOrZeroNum($headingsListAry, $headingText); 
-        $headsSpacerCellIdsAry[] = "spacer-piv-".aryKeyOrZeroNum($headingsListAry, $headingText); 
-    }
-
-    array_unshift($headingCellIdsAry, "heading-piv-rowName");  //designates column with row names
-    $headingCellIdsAry[] = "heading-piv-rowTotal"; //designates column with row totals
-
-    array_unshift($headsTotalCreditSumCellIdsAry, "credit-piv-rowName");
-    $headsTotalCreditSumCellIdsAry[] = "credit-piv-rowTotal";
-
-    array_unshift($headsTotalSpendSumCellIdsAry, "spend-piv-rowName");
-    $headsTotalSpendSumCellIdsAry[] = "spend-piv-rowTotal";
-
-    array_unshift($headsBalanceCellIdsAry, "bal-piv-rowName");
-    $headsBalanceCellIdsAry[] = "bal-piv-rowTotal";
-
-    array_unshift($headsSpacerCellIdsAry, "spacer-piv-rowName");
-    $headsSpacerCellIdsAry[] = "spacer-piv-rowTotal";
-    
-    $headingsTotalCreditSum = 0.00;
-    $headingsTotalSpendSum = 0.00;
-
-    foreach ($rowsNameAry as $rowIdx => $rowName) { //ROW LOOP create and populate 2 dimensional array with summed spend data
-        $rowNameTableIdx = aryValueOrZeroNum($rowNamesListFlippedAry, $rowName); //gets table index of heading name. If name is "" (empty), 0 is returned in keeping with allRecords column data
-        $rowProtoAry = [$rowName]; //create row name at index 0
-        $rowsClassesProtoAry = [];
-        $rowCellIdsAry = [];
-        $rowTableId = aryKeyOrZeroNum($rowNamesListAry, $rowName);
-
-        $rowSum = 0;
-        foreach ($headingsAry as $headingIdx => $heading) { //COLUMN LOOP in this foreach() section sum all the spend data for the current pivot table row name and heading 
-            $rowsClassesProtoAry[] = $pivotCellClass; //append a new cell class of pivot cell class
-            $rowCellIdsAry[] = $rowTableId."-piv-".aryKeyOrZeroNum($headingsListAry, $heading); //create cell id from row name table index concatonated with "-piv-" and column heading table index. Will facilitate click filtering
-
-
-            $colSum = 0;
-            $headingTableIdx = aryValueOrZeroNum($headingsListFlippedAry, $heading); //gets table index of heading name. If name is "" (empty), 0 is returned in keeping with allRecords column data
-            foreach ($recordsDataArry as $singleRecArry) { //loops through all the rows of data in the selected records array
-                if ($singleRecArry[$columnForRows] == $rowNameTableIdx) { //if current records row has the pivot table row name in its row name selected column
-                    if ($singleRecArry[$columnForHeadings] == $headingTableIdx) { //if current records row has the pivot table heading in its headings selected column
-                        $colSum = $singleRecArry[$spendColumnToSumKey] + $colSum; //add to the value
-
-                        $headingsTotalCreditSumAry[$headingIdx] =   fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey]    + $headingsTotalCreditSumAry[$headingIdx], TRUE); //accumulate RH sum
-                        $headingsTotalCreditSum =                   fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey]    + $headingsTotalCreditSum, TRUE);
-                        $headingsTotalSpendSumAry[$headingIdx] =    fourThreeOrTwoDecimals($singleRecArry[$spendColumnToSumKey]     + $headingsTotalSpendSumAry[$headingIdx], TRUE);
-                        $headingsTotalSpendSum =                    fourThreeOrTwoDecimals($singleRecArry[$spendColumnToSumKey]     + $headingsTotalSpendSum, TRUE);
-                    }
-                }
-            }
-            $rowProtoAry[] = fourThreeOrTwoDecimals($colSum); //append sum to array - format both withdrawn and paidin to two decimal places with single leading zero for amounts < £1.00
-            $rowSum = $colSum + $rowSum;
-        }
-
-        $rowSumDecimalised = fourThreeOrTwoDecimals($rowSum, TRUE);
-        $rowProtoAry[] = $rowSumDecimalised; //append total to right end of current row
-        $rowsAry[$rowIdx]["displayRowsAry"] = $rowProtoAry;  //append newly populated row to $rowsAry
-        
-
-        array_unshift($rowsClassesProtoAry, $pivotCellRowNameClass); //insert cell class for first (row names) column at beginning of row of classes - left justified
-        $rowTotalClass = $pivotCellClass; //create default standard cell class for last (totals) column at end of row of classes
-        if ($rowSumDecimalised == 0) {
-            $rowTotalClass = $pivotCellOrangeClass; //change class to orange for zero value (means no value assigned to row name)
-        }
-        $rowsClassesProtoAry[] = $rowTotalClass; //append modified cell class for last (totals) column at end of row of classes
-        $rowsAry[$rowIdx]["displayRowsClassesAry"] = $rowsClassesProtoAry; //append row ids 
-
-        array_unshift($rowCellIdsAry, $rowTableId."-piv-rowName");  //use "rowName" to designate column with row names
-        $rowCellIdsAry[] = $rowTableId."-piv-rowTotal"; //use -2 to designate column with row totals
-        $rowsAry[$rowIdx]["displayRowIdsAry"] = $rowCellIdsAry; //append standard row classes to show totals column
-    }
-
-
-    $headingsAry[] = "Totals"; //add rightmost heading to name totals column
-    $headingsTotalCreditSumAry[] = fourThreeOrTwoDecimals($headingsTotalCreditSum, TRUE); //add rightmost credit totals column
-    $headingsTotalSpendSumAry[] = fourThreeOrTwoDecimals($headingsTotalSpendSum, TRUE); //  "   "
-    $spacerRowAry[] = ""; //add additional rightmost cell to spacer column so it has the same number as all others
-
-    foreach ($headingsTotalCreditSumAry as $sumsIdx => $headingsTotalCreditSum) { //COLUMN LOOP run loop to do subtraction on each column total and create ballance array
-        $headingsbalanceAry[$sumsIdx] = fourThreeOrTwoDecimals($headingsTotalCreditSum - $headingsTotalSpendSumAry[$sumsIdx], TRUE);
-
-        if ($headingsTotalCreditSumAry[$sumsIdx] < 0) {
-            $headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellRedClass; //set class to red for -ve value
-        }
-        if ($headingsTotalCreditSumAry[$sumsIdx] == 0) {
-            $headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellOrangeClass; //set class to green for -zero value
-        }
-
-
-        if ($headingsbalanceAry[$sumsIdx] < 0) {
-            $headingsbalanceClassesAry[$sumsIdx] = $pivotCellRedClass; //set class to red for -ve value
-        }
-        if ($headingsbalanceAry[$sumsIdx] == 0) {
-            $headingsbalanceClassesAry[$sumsIdx] = $pivotCellGreenClass; //set class to orange for zero value
-        }
-    }
-
-    array_unshift($headingsAry, $columnForHeadings); //insert headings title at beginning of headingsAry to move headings over to the right and have "" as the heading for the column of row names
-    array_unshift($headingsTotalCreditSumAry, "Credit"); //insert "Credit" at beginning of headingsTotalCreditSumAry to move totals over to the right and align things
-    array_unshift($headingsTotalSpendSumAry, "Spend"); //insert "Spend" at beginning of headingsTotalSpendSumAry to move totals over to the right and align things
-    array_unshift($headingsbalanceAry, "Balance"); //insert "Spend" at beginning of headingsTotalSpendSumAry to move totals over to the right and align things
-    array_unshift($spacerRowAry, $columnForRows); //insert rows title at beginning of spacer row to move totals over to the right and align things
-
-    
-
-    array_unshift($headingsClassesAry, $pivotCellRowNameRightClass); //insert at beginning class for header names - right justified
-    array_unshift($headingsTotalCreditSumClassesAry, $pivotCellRowNameRightClass);
-    array_unshift($headingsTotalSpendSumClassesAry, $pivotCellRowNameRightClass);
-    array_unshift($headingsbalanceClassesAry, $pivotCellRowNameRightClass);
-    array_unshift($headingsSpacerClassesAry, $pivotCellRowNameClass); //insert at beginning class for column names title - left justified
-
-
-    $headingsClassesAry[]               = $pivotCellClass; //insert cell class for last (totals) column at end of row of classes
-    $headingsTotalCreditSumClassesAry[] = $pivotCellClass;
-    $headingsTotalSpendSumClassesAry[]  = $pivotCellClass;
-    $headingsbalanceClassesAry[]        = $pivotCellClass;
-    $headingsSpacerClassesAry[]         = $pivotCellClass;
-
-    $returnAry["rowAndHeadNames"] = $columnForRows."-".$columnForHeadings;
-    
-    //add headings, credit, spend, balance and spacer with classes arrays and cellIds arrays - append each to $returnAry["headerAry"]
-    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsAry,                "headerRowsClassesAry"=>$headingsClassesAry,                "headerCellIdsAry"=>$headingCellIdsAry];
-    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalCreditSumAry,  "headerRowsClassesAry"=>$headingsTotalCreditSumClassesAry,  "headerCellIdsAry"=>$headsTotalCreditSumCellIdsAry];
-    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalSpendSumAry,   "headerRowsClassesAry"=>$headingsTotalSpendSumClassesAry,   "headerCellIdsAry"=>$headsTotalSpendSumCellIdsAry];
-    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsbalanceAry,         "headerRowsClassesAry"=>$headingsbalanceClassesAry,         "headerCellIdsAry"=>$headsBalanceCellIdsAry];
-    $returnAry["headerAry"][] = ["headerRowsAry"=> $spacerRowAry,               "headerRowsClassesAry"=>$headingsSpacerClassesAry,          "headerCellIdsAry"=>$headsSpacerCellIdsAry]; 
-
-    $returnAry["rowsAry"] = $rowsAry; //add row data
-    
-    return $returnAry;
-}
-
-
-
 /* ##########################          ##############          ##############          ##############          #############################
    ##########################          ##############          ##############          ##############          #############################
    ##########################          ##############          ##############          ##############          #############################
@@ -921,7 +710,8 @@ function createStndDisplData(
         $download,
         $allowEdit,
         $allRecordsColNameRndAry,
-        $displayBankAcc
+        $displayBankAcc,
+        $colClssAry
         ) {
     global $orgPersonsListAry;
     global $transCatListAry;
@@ -930,10 +720,6 @@ function createStndDisplData(
     global $umbrellaListAry;
     global $docTypeListAry;
     global $_filenameRandLength;
-
-$greenBase = "green";
-$green = " ".$greenBase;
-$newClass = $standardCellClass." ".$green;
 
     $index = 0;
     $rowsAry = array();
@@ -944,6 +730,7 @@ $newClass = $standardCellClass." ".$green;
     $displayLineSelClassesAry = array();
     $fileNameRands = array();
     $idrArry = array();
+    $compoundRowsAry = []; //used to hold idRs of all compound lines. each idR key will have a corresponding value that is either "Master" or "Slave"
     
 
     $totalWithdrawn = 0;
@@ -1072,12 +859,28 @@ $newClass = $standardCellClass." ".$green;
     $displayLineSelClassesAry[] = $rowSelCellClass;
 
     
-
-    foreach ($recordsDataArry as $singleRecArry) { //loop through all persOrgs selected for display creating indexed array of values like "idR", "persOrgCategory" for each row to be displayed
+    $recordsDataAryLength = count($recordsDataArry);
+    foreach ($recordsDataArry as $recordsIdx=>$singleRecArry) { //loop through all persOrgs selected for display creating indexed array of values like "idR", "persOrgCategory" for each row to be displayed
         $displayRowsAry = array();
         $displayRowsClassesAry = array();
 
-
+        $compoundRowStatus = "None";
+        if (0 < $singleRecArry["compound"]) { //this row is part of a compound set of rows
+            if ($singleRecArry["compound"] == $singleRecArry["idR"]) { //the compound row is a master
+            	$compoundRowStatus = "Master";
+                $compoundRowsAry[$singleRecArry["idR"]] = "Master";
+            }
+            else { //the compound row is a slave
+            	if (($recordsIdx < $recordsDataAryLength) && ($recordsDataArry[$recordsIdx + 1]["compound"] == $singleRecArry["compound"])) { //if next row is same compound number
+	            	$compoundRowStatus = "Slave";
+	                $compoundRowsAry[$singleRecArry["idR"]] = "Slave";
+                }
+                else { //the next row is not part of current compound group so make this the final slave in teh group
+                	$compoundRowStatus = "FinalSlave";
+	                $compoundRowsAry[$singleRecArry["idR"]] = "FinalSlave";
+                }
+            }
+        }
 
 
 //##############################
@@ -1096,45 +899,60 @@ $newClass = $standardCellClass." ".$green;
 
 //green experimental settings are near top of function
 
-        $displayRowsClassesAry[] = $standardCellClass;
-        $displayRowsClassesAry[] = $standardCellClass; 
-        $displayRowsClassesAry[] = $standardCellClass;
-        $displayRowsClassesAry[] = $moneyCellClass;
-        $displayRowsClassesAry[] = $moneyCellClass;
-        $displayRowsClassesAry[] = $standardCellClass;  //.$green;
-        $displayRowsClassesAry[] = $standardCellClass;
-        $displayRowsClassesAry[] = $standardCellClass;
+        if ($compoundRowStatus == "Master") {
+        	$colorSuffixClass = $colClssAry["compoundMaster"];
+        }
+        else if ($compoundRowStatus == "Slave") {
+        	$colorSuffixClass = $colClssAry["compoundSlave"];
+        }
+        else if ($compoundRowStatus == "FinalSlave") {
+        	$colorSuffixClass = $colClssAry["compoundSlaveFinal"];
+        }
+        else {
+        	$colorSuffixClass = $colClssAry["unselCol"];
+        }
+
+        //pr($colorSuffixClass);
+
+        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
+        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; 
+        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
+        $displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass;
+        $displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass;
+        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
+        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
+        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
 
                 //set appropriate class for reconcile date display to indicate status (by default it is already set in class sections above to $standardCellClass)
         if ($endDate < $singleRecArry["reconciledDate"]) { //reconcile date is later than the end of the latest displayed month so show as unreconciled (usually red)
-            $displayRowsClassesAry[] = $unRecncldClass;
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["notRcnclCol"];    //$unRecncldClass;
         }
         elseif ($singleRecArry["reconciledDate"] < $singleRecArry["recordDate"]) { //reconcile date is earlier than the transaction date so either...
             if ($singleRecArry["reconciledDate"] == "2000-01-01") { //blank the date as it is the default value (usually by setting the font and the background to the same colour)
-                $displayRowsClassesAry[] = $blankRecncldClass;
+                $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselInvisCol"];
             }
             else { //set a warning colour to indicate the reconcile date has been set to a date earlier than the transaction date but not the default date (usually orange)
-                $displayRowsClassesAry[] = $tooEarlyRecncld;
+                $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["rcnclTooEarlyCol"];
             }
 
         }
         else { //none of above apply so set to standard class to just show plain date
-            $displayRowsClassesAry[] = $standardCellClass;
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
         }
 
-        $displayRowsClassesAry[] = $standardCellClass;
-        $displayRowsClassesAry[] = $standardCellClass;
-        $displayRowsClassesAry[] = $standardCellClass;
-        $displayRowsClassesAry[] = $standardCellClass;
+        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
+        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
+        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
+        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
 
         
 
         foreach ($IncludeFiltIdxAry as $colIdx) { //set filter class for those columns that have been filtered - shouldn't (don't know if it is explicitly prevented) be used for reconciled date column
             if (($displayCellDescrpAry[$colIdx] == "MoneyOut") || ($displayCellDescrpAry[$colIdx] == "MoneyIn")) { //needs right alignment because withdrawn or paidin cell
-                $displayRowsClassesAry[$colIdx] = $filtMoneyCellClass;
+                $displayRowsClassesAry[$colIdx] = $moneyCellClass." ".$colClssAry["columnFiltCol"];
             }
             else { //ordinary cell so normal left alignment
-                $displayRowsClassesAry[$colIdx] = $filtCellClass;
+                $displayRowsClassesAry[$colIdx] = $standardCellClass." ".$colClssAry["columnFiltCol"];
             }
         }
 
@@ -1253,6 +1071,7 @@ $newClass = $standardCellClass." ".$green;
     $returnAry["staticArys"] = $staticArys;
     $returnAry["idrArry"] = $idrArry;
     $returnAry["rowsAry"] = $rowsAry;
+    $returnAry["compoundRowsAry"] = $compoundRowsAry;
     
     //$returnAry["linesDiff"] = ($index -1) - $bankStmtLines;
 
@@ -1352,6 +1171,60 @@ function parseFile($inputFileNameWithPath, $outputFileNameWithPath) {
 	}
 	fclose($fileInput);
 	fclose($fileOutput);
+}
+
+
+/* Sorts in ascending order and then return an array of arrays based on the values in two sub arrays indexed by the keys: first in order of values indexed by $subAryKey1, then in order of values indexed by $subAryKey2. The values from $a and $b indexed by $subAryKey2 are first padded with leading zeros as needed to make them the same number of digits before concatonation to enable proper comparisons. No error checking is included to catch out of range indexes.
+BEFORE SORT:
+array (
+    [0] => array (
+        [idR] => 6
+        [compound] => 2
+    )
+    [1] => array (
+        [idR] => 7
+        [compound] => 3
+    )
+    [2] => array (
+        [idR] => 5
+        [compound] => 2
+    )
+)
+AFTER SORT:
+array (
+    [0] => array (
+        [idR] => 5
+        [compound] => 2
+    )
+    [1] => array (
+        [idR] => 6
+        [compound] => 2
+    )
+    [2] => array (
+        [idR] => 7
+        [compound] => 3
+    )
+)
+*/
+function sortTwoDimAryForTwoSubArys($aryToSort, $subAryKey1, $subAryKey2) {
+    usort($aryToSort, function($a, $b) use ($subAryKey1, $subAryKey2) {
+        $key2ValA = $a[$subAryKey2]; //extract value for 2nd sub array key
+        $key2ValB = $b[$subAryKey2];
+        
+        while (strlen((string)$key2ValB) < strlen((string)$key2ValA)) { //if number of digits in B < number of digits in A add leading zero to B until they have equal number of digits
+            $key2ValB = "0".$key2ValB;
+        }
+        while (strlen((string)$key2ValA) < strlen((string)$key2ValB)) { //if number of digits in A < number of digits in B add leading zero to A until they have equal number of digits
+            $key2ValA = "0".$key2ValA;
+        }
+        //if neither of these while loops run $key2ValA and $key2ValB already have an equal number of digits
+        $comparisonNumA = $a[$subAryKey1].$key2ValA;
+        $comparisonNumB = $b[$subAryKey1].$key2ValB;
+
+        if ($comparisonNumA == $comparisonNumB) return 0;
+        return ($comparisonNumA < $comparisonNumB) ? -1 : 1;
+    });
+    return $aryToSort;
 }
 
 
@@ -1534,9 +1407,9 @@ function namedValHolder($name, $initialValue = "") {
 }
 
 /* Holds a name in a hidden p element that can be changed by javascript. The initial name is set to $initialName.  */
-function nameHolder($id, $initialName = "") {
+function nameAndValHolder($id, $initialName, $initialValue = "") {
     ?>
-    <input hidden id="<?php echo $id; ?>" name="<?php echo $initialName;?>">
+    <input hidden id="<?php echo $id; ?>" name="<?php echo $initialName;?>" value="<?php echo $initialValue;?>">
     <?php
 }
 

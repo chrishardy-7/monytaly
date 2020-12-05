@@ -62,6 +62,87 @@
  */
 
 
+function setCompoundTrans($inputArry, $outputArry, $allowedToEdit) { 
+    global $conn;
+    if (array_key_exists("createCompoundTransAjaxSendHasRun", $inputArry) && $allowedToEdit) { //only do update if the calling JS function has run and cellIdForNewParent string exists and allowed to edit
+    	$compoundActionAry = [];
+        $cellIdAry = explode('-', $inputArry["cellIdForCompoundTrans"]);
+        $idR = $cellIdAry[0];
+        $compoundNum = $inputArry["compoundNum"];
+        try {
+            
+            $stmt = $conn->prepare('SELECT compound FROM allRecords WHERE idR = ?'); //get compound value for the clicked row
+            $stmt->execute(array($idR));
+            $compoundRow = $stmt->fetch(PDO::FETCH_ASSOC);
+            $compound = $compoundRow["compound"];
+            
+
+            if (0 == $compoundNum) { //compoundNum = 0
+                if ($compound == 0) { //row not a compound one
+                	$compoundActionAry[$idR] = "Created"; //send message back to client JS that new master has been created
+                    $stmt = $conn->prepare('UPDATE allRecords SET compound = idR WHERE idR = ?'); //CREATE MASTER - set clicked row to compound master (compound becomes the idR of this clicked row)
+                    $stmt->execute(array($idR));
+                    $returnCompoundNum = $idR; //set returned compoundNum to idR of clicked line
+                }
+                else if ($compound == $idR) { //row already a compound master
+                	$stmt = $conn->prepare('SELECT idR FROM allRecords WHERE compound = ?'); //get compound value for the clicked row
+		            $stmt->execute(array($idR));
+		            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			            $compoundActionAry[$row['idR']] = "Destroyed";
+			        }
+                    $stmt = $conn->prepare('UPDATE allRecords SET compound = 0 WHERE compound = ?'); //CLEAR ALL - clear all rows where compound == the idR of this clicked master row
+                    $stmt->execute(array($idR));
+                    $returnCompoundNum = 0; //leave compoundNum at 0 
+                }
+                else { //row a compound slave
+                	$compoundActionAry[$idR] = "Destroyed"; //send message back to client JS that an existing slave has been destroyed
+                    $stmt = $conn->prepare('UPDATE allRecords SET compound = 0 WHERE idR = ?'); //CLEAR SLAVE - clear this slave row
+                    $stmt->execute(array($idR));
+                    $returnCompoundNum = $compound; //set returned compoundNum to compound value of this clicked slave line
+                }
+            }
+            else { //compoundNum has already been set by a previous click
+                if ($compound == 0) { //row not a compound one
+                    $stmt = $conn->prepare('SELECT recordDate FROM allRecords WHERE idR = ?'); //get recordDate from row of current Master (idR == $compoundNum)
+                    $stmt->execute(array($compoundNum));
+                    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+                    $masterDate = $row["recordDate"];
+
+                	$compoundActionAry[$idR] = "Created"; //send message back to client JS that new slave has been created (DATE IS FORCED TO SAME DATE AS MASTER SO THINGS MAKE SENSE!)
+                    $stmt = $conn->prepare('UPDATE allRecords SET recordDate = ?, compound = ? WHERE idR = ?'); //CREATE SLAVE - compound becomes $compoundNum so this slave joins existing master
+                    $stmt->execute(array($masterDate, $compoundNum, $idR));
+                    $returnCompoundNum = $compoundNum; //set returned compoundNum to compoundNum value that was passed in the inputArry to maintain it on the client
+                }
+                else if ($compound == $idR) { //row already a compound master
+                	$stmt = $conn->prepare('SELECT idR FROM allRecords WHERE compound = ?'); //get compound value for the clicked row
+		            $stmt->execute(array($idR));
+		            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+			            $compoundActionAry[$row['idR']] = "Destroyed";
+			        }
+                    $stmt = $conn->prepare('UPDATE allRecords SET compound = 0 WHERE compound = ?'); //CLEAR ALL - clear all rows where compound == the idR of this clicked master row
+                    $stmt->execute(array($idR));
+                    $returnCompoundNum = 0; //set returned compoundNum to 0 (clear it)
+                }
+                else { //row a compound slave
+                	$compoundActionAry[$idR] = "Destroyed"; //send message back to client JS that an existing slave has been destroyed
+                    $stmt = $conn->prepare('UPDATE allRecords SET compound = 0 WHERE idR = ?'); //CLEAR SLAVE - clear this slave row
+                    $stmt->execute(array($idR));
+                    $returnCompoundNum = $compoundNum; //set returned compoundNum to compoundNum value that was passed in the inputArry to maintain it on the client
+                }
+            }
+
+
+      
+        } catch(PDOException $e) {
+          echo 'ERROR: ' . $e->getMessage();
+          }
+        $outputArry["compoundActionAry"] = $compoundActionAry;
+        $outputArry["returnCompoundNum"] = $returnCompoundNum; 
+        $outputArry["PHPsetCompoundTransHasRun"] = TRUE; //flag that indicates this PHP function has run and that the receiving JS function should run to handle the returned data
+    }
+    return $outputArry;
+}
+
 
 /* Returns the next filename number to be used for a given filenameDate. If a file name for the given date doesn't exist 1 will be returned (assumes this is the first time the filename date is to be used).  NOW USE VERSION IN funcForAccCcc.php THAT CHECKS THE UPLOAD DIRECTORY FOR THE FILES DIRECTLY ! */
 function getNextFileSufixNumFromFileNameDate_DEPRECATED($fileNameDate) {
@@ -297,7 +378,7 @@ function clearSession($userId, $reason, $callingCode = "") {
 /* Edits the record identified by $inputArry["cellIdForNewParent"] to set up parent credentials - parentDate = recordDate, parent = idR. The function only runs if $inputArry["cellIdForNewParent"] exists and $allowedToEdit is true. After the record is updated parent is read back from the table and returned in $outputArry["createNewParentId"] for confirmation. parentDate is not read back, it is assumed that it will have completed correctly.   */
 function createNewParent($inputArry, $outputArry, $allowedToEdit) {
     global $conn;
-    if (array_key_exists("cellIdForNewParent", $inputArry) && $allowedToEdit) { //only do update from cellIdForNewParent string if it has been added to the array and allowed to edit
+    if (array_key_exists("createParentAjaxSendHasRun", $inputArry) && array_key_exists("cellIdForNewParent", $inputArry) && $allowedToEdit) { //only do update if the calling JS function has run and cellIdForNewParent string exists and allowed to edit
         $cellIdAry = explode('-', $inputArry["cellIdForNewParent"]);
         $rowId = $cellIdAry[0];
        
@@ -320,7 +401,7 @@ function createNewParent($inputArry, $outputArry, $allowedToEdit) {
           echo 'ERROR: ' . $e->getMessage();
           }
         $outputArry["createNewParentId"] = $updatedParentStr; //create output string
-        
+        $outputArry["PHPcreateNewParentHasRun"] = TRUE; //flag that indicates this PHP function has run and that the receiving JS function should run to handle the returned data
     }
     return $outputArry;
 }
@@ -376,25 +457,16 @@ function deleteRecRow($idR) {
       }
 }
 
-/* Copies allRecords fields: docId, recordType, recordDate, personOrOrg, persOrgCategory, accWorkedOn, linkedAccOrBudg from row with index $idR and writes them either to a previously used row (marked by 'Reuse' in statusR) or, if there are no rows for reuse, a new row is created. Returns the id of the new row that has been created. */
+/* Copies allRecords fields: (see list in statements below) from row with index $idR and writes them to a newly created row. Returns the id of the new row that has been created. */
 function duplicateRecRow($idR) {
     global $conn;
     try {
-        $stmt = $conn->prepare("SELECT fileName, docType, recordType, recordDate, parent, parentDate, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, amountPaidIn, recordNotes FROM allRecords WHERE idR = ?");
+        $stmt = $conn->prepare("SELECT fileName, docType, recordType, recordDate, parent, parentDate, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, linkedAccOrBudg, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, amountPaidIn, recordNotes FROM allRecords WHERE idR = ?");
         $stmt->execute(array($idR));
         $rowAry = $stmt->fetch(PDO::FETCH_NUM);
-        //DELETED THIS SECTION TO PREVENT DELECTED RECORDS FROM BEING OVERWRITTEN - ALLOWS UNLIMITTED RECOVERY OF DELETIONS ONCE METHODS ARE CREATED TO DO THAT
-     /*   $stmt = $conn->prepare("UPDATE allRecords SET fileName = ?, docType = ?, recordType = ?, dateTimeRecCreated = NOW(), recordDate = ?, parent = ?, parentDate = ?, compound = ?, personOrOrg = ?, transCatgry = ?, accWorkedOn = ?, budget = ?, referenceInfo = ?, umbrella = ?, reconcilingAcc = ?, reconciledDate = ?, reconcileDocId = ?, amountWithdrawn = ?, amountPaidIn = ?, statusR = 'Live', recordNotes = ? WHERE statusR = 'Reuse' ORDER BY idR LIMIT 1");
-        $stmt->execute($rowAry);
-        $reusableRowFound = TRUE;
-        if ($stmt->rowCount() == 0) {
-            $reusableRowFound = FALSE;
-        }
-        if (!$reusableRowFound) { //no reusable rows so create new record*/
-            $stmt = $conn->prepare("INSERT INTO allRecords (fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, parentDate, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, amountPaidIn, statusR, recordNotes) VALUES (?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Live', ?)");
+            $stmt = $conn->prepare("INSERT INTO allRecords (fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, parentDate, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, linkedAccOrBudg, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, amountPaidIn, statusR, recordNotes) VALUES (?, ?, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Live', ?)");
             $stmt->execute($rowAry);
             $newRowId = $conn->lastInsertId();
-       // }
     } catch(PDOException $e) {
       echo 'ERROR: ' . $e->getMessage();
       }
@@ -735,7 +807,7 @@ function getFilterStrBalData($columnToMatch, $recRowId, $recStartDate, $recEndDa
 function getFilterStrAllBalData($inputArry, $outputArry, $filterStr, $familyChoice) {
     global $conn;
     global $_fieldNameAry;
-    if (array_key_exists("cellIdBal", $inputArry)) {
+    if (array_key_exists("getBalDataSendHasRun", $inputArry) && array_key_exists("cellIdBal", $inputArry)) { //only do update if the calling JS function has run and cellIdBal exists
         $cellId = $inputArry["cellIdBal"];
         $recStartDate = $inputArry["recStartDate"];
         $recEndDate = $inputArry["recEndDate"];
@@ -859,8 +931,9 @@ function getFilterStrAllBalData($inputArry, $outputArry, $filterStr, $familyChoi
             }
 
         } catch(PDOException $e) {
-          echo 'ERROR: ' . $e->getMessage();
+          $outputArry["ERROR in funcsToRdWrTblesForAccCcc.php / getFilterStrAllBalData()"] = "#".$familyChoice."#"." ". $e->getMessage();
           }
+        $outputArry["PHPgetFilterStrAllBalDataHasRun"] = TRUE; //flag that indicates this PHP function has run and that the receiving JS function should run to handle the returned data
     }
     return $outputArry;
 }
@@ -1154,7 +1227,7 @@ function getMultDocDataAryBAK($recStartDate, $recEndDate, $filterStr, $order, $f
 }
 
 /* Returns an array of data for a single document specified by $fileNameNumExt. Only non-private document data will be returned unless a valid $userId is supplied upon which ONLY private document data for the given userId will be returned. This function uses a join to access rows in docCatalog and allRecords tables. If $returnCsvPersOrg is set to TRUE (default) a single row with docOrganisationOrPerson as csv is returned (contains columns from allRecords that may not be used as they are not complete). If $returnCsvPersOrg is set to FALSE multiple rows, one per persOrg are returned containing all columns from allRecords, and in this cases rows from allRecords containing just a 0 persOrg placeholder will not be returned. */
-function getSingleDocDataAry($fileNameNumExt, $returnCsvPersOrg = TRUE, $userId = 0) {
+function getSingleDocDataAryDEPR($fileNameNumExt, $returnCsvPersOrg = TRUE, $userId = 0) {
     global $conn;
     $nameNumExtArray = explode('.', $fileNameNumExt); //section to derive filename date, number and extension from $fileNameNumExt - [0] => [2018-05-07-02], [1] => [pdf]
     $nameNumArray = explode('-', $nameNumExtArray[0]);  //turn date, number back into an array   
@@ -1315,7 +1388,7 @@ function getorgPerCategories() {
 }
 
 /* Returns an array of copy button sticky values in an array('accWorkedOn' => 3, 'linkedAccOrBudg' => 7) etc. The data is stored in a single row where statusR = 'copyButSticky'. */
-function getCopyButStickyValues() {
+function getCopyButStickyValuesDEPR() {
     global $conn;
     $docVarietyNameArray = array();
     try {
@@ -1915,7 +1988,7 @@ function updateDocFilename($inputArry, $outputArry, $allowedToEdit) {
     global $conn;
     global $nonVolatileArray;
     $outputArry["docChanged"] = "No";
-    if (array_key_exists("docUpdateSendHasRun", $inputArry)) { //only do update if the docUpdateSend() JS function has run (used as a means to select whether the function needs to run)
+    if (array_key_exists("docUpdateSendHasRun", $inputArry)) { //only do update if the calling JS function has run 
         try {
             $cellIdAry = explode('-', $inputArry["docUpdateCellId"]);
             $idR = $cellIdAry[0];
@@ -2006,6 +2079,7 @@ function updateDocFilename($inputArry, $outputArry, $allowedToEdit) {
         } catch(PDOException $e) {
           $outputArry["ERROR"] = ': '.$e->getMessage();
           }
+        $outputArry["PHPupdateDocFilenameHasRun"] = TRUE; //flag that indicates this PHP function has run and that the receiving JS function should run to handle the returned data
     }
     return $outputArry;
 }
@@ -2059,7 +2133,7 @@ function updateDocsTblWithNewFileInfoDEPRECATED($fileUpldReportArry, $subDirName
 function updateEditableItem($inputArry, $outputArry, $allowedToEdit) {
     global $conn;
     global $plainItemsWithRandKeysAry;
-    if (array_key_exists("directStrEditAjaxSendHasRun", $inputArry)) { //only run this function code if the matching javascript function has run to call it
+    if (array_key_exists("directStrEditAjaxSendHasRun", $inputArry)) { //only do update if the calling JS function has run 
         $fieldName = getPlain($inputArry["allrecordsColNameRnd"]);
         $str = $inputArry["editableCellVal"];
         $rowId = $inputArry["editableCellIdR"];
@@ -2075,6 +2149,7 @@ function updateEditableItem($inputArry, $outputArry, $allowedToEdit) {
         } catch(PDOException $e) {
           echo 'ERROR: ' . $e->getMessage();
           }
+        $outputArry["PHPupdateEditableItemHasRun"] = TRUE; //flag that indicates this PHP function has run and that the receiving JS function should run to handle the returned data
     }
     return $outputArry;
 }
@@ -2117,7 +2192,7 @@ function updateTable($tableName, $fieldName, $value, $whereField, $whereValue) {
 /* Updates withdrawn and paidin amounts in allRecords table with values passed in $inputArry["withdrawn"] and $inputArry["paidin"] at row pointed to by $inputArry["moneyIdR"]. Modifies $outputArry by adding $outputArry["withdrawn"] and $outputArry["paidin"] read back from the table at the same row as a confirmation that the update occurred. Any existing values in $outputArry will be passed unchanged. If $inputArry["moneyIdR"] doesn't exist this function does nothing but return the $outputArry. If $allowedToEdit is FALSE the data is not written to the table but it is still read back and returned in $outputArry.  */
 function updateWithdrawnPaidin($inputArry, $outputArry, $allowedToEdit) {
     global $conn;
-    if (array_key_exists("moneyIdR", $inputArry) && ($inputArry["withdrawn"] != "NaN")  && ($inputArry["paidin"] != "NaN")) { //only do update from money string if the array item that points to the table row exists (used as a means to select whether the function needs to run) and nothing stupid has been entered that wa not caught by the javascript regex expression in getTwoDecPlacesAndSan(value)
+    if (array_key_exists("withdrawnPaidinAjaxSendHasRun", $inputArry) && array_key_exists("moneyIdR", $inputArry) && ($inputArry["withdrawn"] != "NaN")  && ($inputArry["paidin"] != "NaN")) { //only do update if the calling JS function has run and money string exists and the array item that points to the table row exists and nothing stupid has been entered that was not caught by the javascript regex expression in getTwoDecPlacesAndSan(value)
         try {
             if ($allowedToEdit) { //only allow updateing if permissions exist
                 $stmt = $conn->prepare('UPDATE allRecords SET amountWithdrawn = ?, amountPaidIn = ? WHERE idR = ?');
@@ -2133,6 +2208,7 @@ function updateWithdrawnPaidin($inputArry, $outputArry, $allowedToEdit) {
           }
         $outputArry["withdrawn"] = $updatedAmountWithdrawn;
         $outputArry["paidin"] = $updatedAmountPaidIn;
+        $outputArry["PHPupdateWithdrawnPaidinHasRun"] = TRUE; //flag that indicates this PHP function has run and that the receiving JS function should run to handle the returned data
     }
     return $outputArry;
 }
@@ -2160,7 +2236,7 @@ function userIdifPasswordMatches($username, $password) {
 function writeReadAllRecordsItem($inputArry, $outputArry, $allowedToEdit) {
     global $conn;
     //$outputArry["parentAndNotChildless"] = "no";
-    if (array_key_exists("itemStr", $inputArry)) { //only do update from item string if it has been added to the array 
+    if (array_key_exists("stickyAjaxSendHasRun", $inputArry) && array_key_exists("itemStr", $inputArry)) { //only do update if the calling JS function has run and item string exists 
         $cellIdAry = explode('-', $inputArry["cellId"]);
         $rowId = $cellIdAry[0];
         $columnId  = $cellIdAry[1];
@@ -2293,6 +2369,7 @@ function writeReadAllRecordsItem($inputArry, $outputArry, $allowedToEdit) {
         } catch(PDOException $e) {
             echo 'ERROR: ' . $e->getMessage();
             }
+        $outputArry["PHPwriteReadAllRecordsItemHasRun"] = TRUE; //flag that indicates this PHP function has run and that the receiving JS function should run to handle the returned data
     }
     return $outputArry;
 }

@@ -32,7 +32,7 @@ if (empty($_calledFromIndexPage)) { //prevents someone trying to open this page 
 		<button class="btnSelected" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-FromMainMenu-Unrestricted1920";?>><i class="fas fa-check"></i> Unrestricted 2019-20</button>
 		<button class="btnSelected" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-FromMainMenu-Bank1920";?>><i class="fas fa-check"></i> Bank 2019-20</button>
 		<button class="btnSelected" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-FromMainMenu-Eileen2021";?>><i class="fas fa-check"></i> Restricted 2020-21</button>
-		<button class="btnSelected" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-FromMainMenu-EileenReclaim";?>><i class="fas fa-check"></i> Sept Reclaim</button>
+		<button class="btnSelected" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-FromMainMenu-EileenReclaim";?>><i class="fas fa-check"></i> Oct Reclaim</button>
 
 	<!--	<button class="btn" type="submit" name="command" value=<?php echo $menuRandomsArray["Add User"]."-FromMainMenu";?>><i class="fas fa-user-plus"></i> Add User</button>
 		<button class="btn" type="submit" name="command" value=<?php echo $menuRandomsArray["Show References"]."-FromMainMenu";?>><i class="fas fa-check"></i> Refs</button> -->
@@ -51,7 +51,7 @@ if (empty($_calledFromIndexPage)) { //prevents someone trying to open this page 
 	<button class="btnSelected" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-FromMainMenu-Unrestricted1920";?>><i class="fas fa-check"></i> Unrestricted 2019-20</button>
 	<button class="btnSelected" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-FromMainMenu-Bank1920";?>><i class="fas fa-check"></i> Bank 2019-20</button>
 	<button class="btnSelected" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-FromMainMenu-Eileen2021";?>><i class="fas fa-check"></i> Restricted 2020-21</button>
-	<button class="btnSelected" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-FromMainMenu-EileenReclaim";?>><i class="fas fa-check"></i> Sept Reclaim</button>
+	<button class="btnSelected" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-FromMainMenu-EileenReclaim";?>><i class="fas fa-check"></i> Oct Reclaim</button>
 	<button class="btn" type="submit" name="command" value=<?php echo $menuRandomsArray["New Password"]."-FromMainMenu";?>><i class="fas fa-arrow-up"></i> New Password</button>
 	<button class="btn" type="submit" name="command" value=<?php echo $menuRandomsArray["Logout"]."-FromMainMenu";?>><i class="fas fa-sign-out-alt"></i> Logout</button>
 	<?php

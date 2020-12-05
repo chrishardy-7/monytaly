@@ -15,9 +15,28 @@ $indexPage = htmlspecialchars($_SERVER["PHP_SELF"]);
 $timeStart = microtime(true); //use microtime to time how long this page takes to execute
 $download = FALSE; //flag to indicate record data should be downloaded
 
+//TEST AREA START ###########################
+
+
+
+//TEST AREA END #############################
 
 //parseFile("/home/chris/Desktop/accCcc.css", "/parse/accCccVW.css"); //used to change css file from px units to vw units
 
+$colClssAry = [	"unselCol"				=>	"white", 
+				"unselInvisCol"			=>	"whiteInvis", 
+				"selCol"				=>	"grey", 
+				"selInvisCol"			=>	"greyInvis",
+				"cellSelCol"			=>	"blue",
+				"cellSelInvisCol"		=>	"blueInvis",
+				"cellSelEditCol"		=>	"blueEdit", 
+				"rcnclTooEarlyCol"		=>	"orangeWhiteTxt", 
+				"notRcnclCol"			=>	"redWhiteTxt",
+				"columnFiltCol"			=>	"tan",
+				"compoundMaster"		=>	"yellowGradientHardBot",
+				"compoundSlave"			=>	"green",
+				"compoundSlaveFinal"	=>	"greenGradientHardTop"
+			];
 
 
 
@@ -213,7 +232,7 @@ function getFiltersAryFromPivotCell($rowFiltId, $colFiltId, $rowAndHeadNames, $p
 			$filtersAry = 	[$rowFieldName => $rowFiltId]; //filter for only transactions for that rowname (e.g. 'Van Crew')
 		}
 		elseif ($colFiltId == "rowTotal") {			//main display area, far RH totals column - ids from the column in the standard display that became rows in the pivot display
-			$filtersAry = 	[];
+			$filtersAry = 	[$rowFieldName => $rowFiltId];
 		}
 		elseif ($rowFiltId == "heading") {			//header section, heading row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
 			$filtersAry = 	[$colFieldName => $colFiltId]; //filter for only transactions for that colName (e.g. 'FiSCAF Apr20')
@@ -279,9 +298,20 @@ if (getPlain($subSubCommand) == "Filters From Pivot") { //this if section runs w
 	$nonVolatileArray["Pivot"] = FALSE;
 }
 
-
-
 $pivotBut = new toggleBut("Pivot", "fas fa-table", "subMenuBtn", "subMenuBtnSel", ($subCommand == "FromMainMenu"));
+
+
+
+$fam = new familyCommand("FamId", $editFamBut->isSet(), $showFamBut->isSet(), ($subCommand == "FromMainMenu"));
+
+if (sanPost("idRforFamily")) {
+	$fam->inputFamId(sanPost("idRforFamily"));
+}
+
+if ($fam->getFiltInhib()) { //detects when single family is being displayed and turns off the normal filter so whole of family can be seen
+	$genFilter->inhibit(); //inhibit general filter
+}
+
 
 if ($subSubCommand == "Eileen1920") { //sets up pivot table for all of 2019-20 filtered for furniture project and show families selected
 	$genFilter->replaceIncludeFiltStrValAry(["umbrella" => "Furniture Project"]);
@@ -306,7 +336,6 @@ if ($subSubCommand == "Eileen2021") { //same as 2019-20 but for 2020-21 - a lot 
 }
 
 
-
 if ($subSubCommand == "Unrestricted1920") { //sets up pivot table for all of 2019-20 filtered for furniture project and show families selected
 	$genFilter->replaceIncludeFiltStrValAry(["budget" => "Church Main"]);
 	$nonVolatileArray["AllDates"] = FALSE;
@@ -327,48 +356,12 @@ if ($subSubCommand == "Bank1920") { //sets up pivot table for all of 2019-20 fil
 }
 
 
-$famId = new persistVar("famId", 0); //holds the 2 possible states derived from the family column - "" or an id number for the family that has been clicked
-if (($subCommand == "FromMainMenu") || $newDateSelected) {
-	$famId->set(0);
-}
-
-//SETS / UNSETS FAMILY ID
-if (sanPost("idRforFamily")) {
-	$clickedFamId = getFamilyId(sanPost("idRforFamily"));
-	if ($famId->get() === $clickedFamId) { //if family id is already set to clicked stored id, set it to "" - this is a toggle action
-		$famId->set(0);
-	}
-	else { //set stored id to clicked value
-		$famId->set($clickedFamId);
-	}
-}
-
-//SETS "NoKids" OR FAMILY ID (THAT WILL HAVE ALREADY BEEN SET/UNSET ABOVE)
-$familyCmnd = new persistVar("familyCmnd");
-$familyCmnd->set("NoKids"); //default
-if (0 < $famId->get()) {
-	$familyCmnd->set($famId->get()); //a family id is selected so set $familyCmnd to the family id value
-}
-
-//OVERRIDES AND SETS TO "All" IF Edit Family OR Show Families BUTTONS HAVE BEEN TOGGLED ON
-if ($editFamBut->isSet() || $showFamBut->isSet()) {
-	$familyCmnd->set("All");
-}
-
-if (($famId->get() != 0) && !$showFamBut->isSet() && !$editFamBut->isSet()) { //detects when single family is being displayed and turns off the normal filter so whole of family can be seen
-	$genFilter->inhibit(); //inhibit general filter
-}
-
-
-
-
 if ($subSubCommand == "EileenReclaim") { //
-	$nonVolatileArray["AllDates"] = FALSE;
-	$nonVolatileArray["masterYear"] = "2021";
-	$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
-	$nonVolatileArray["endYearOffsetPlusMnth"] = "103";
-	$nonVolatileArray["famId"] = 5408;
-	$nonVolatileArray["familyCmnd"] = 5408;
+	//$nonVolatileArray["AllDates"] = FALSE;
+	//$nonVolatileArray["masterYear"] = "2021";
+	//$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
+	//$nonVolatileArray["endYearOffsetPlusMnth"] = "103";
+	$fam->inputFamId(330);
 }
 
 
@@ -397,7 +390,7 @@ $dummySubButPanelId = $subButPanelIdSuffix.'None'; //unique id for dummy sidebar
 
 $initialRow = 0;
 if (array_key_exists ("genrlAryRndms", $nonVolatileArray) && (array_search($subCommand, $nonVolatileArray["genrlAryRndms"]) == "duplicateRec")) { //check "genrlAryRndms" key exists and then that the subarray at that key contains the key "duplicateRec"
-	$newRowId = duplicateRecRow(sanpost("storeSelectedRecordIdR")); //sets new row id to value of latest duplicate - used later to set first sellected cell to this after page is loaded from 'duplicate' cmnd
+	$newRowId = duplicateRecRow(sanpost("storeSelectedRecordIdR")); //sets new row id to value of latest duplicate - used later to set first selected cell to this after page is loaded from 'duplicate' cmnd
 	//$initialRow = sanpost("storeSelectedRowIdx", 0);
 }
 
@@ -437,11 +430,11 @@ if ($displayBankAcc) {
 }
 else {
 	if ($pivotBut->isSet()) {
-		$recordsPivotArry = getPivotTableAry($startDate, $endDate, $genFilter->getFiltStr(), "", $familyCmnd->get(), "budget, transCatgry"); //for pivot table filters need to be applied as normal
+		$recordsPivotArry = getPivotTableAry($startDate, $endDate, $genFilter->getFiltStr(), "", $fam->getCmnd(), "budget, transCatgry"); //for pivot table filters need to be applied as normal
 		//pr($recordsPivotArry);
 	}
 	else {
-		$recordsDataArry = getMultDocDataAry($startDate, $endDate, $genFilter->getFiltStr(), "", $familyCmnd->get(), $groupColSelector, $onlyRowsWhereThisFieldNotZero);
+		$recordsDataArry = sortCompoundRows(getMultDocDataAry($startDate, $endDate, $genFilter->getFiltStr(), "", $fam->getCmnd(), $groupColSelector, $onlyRowsWhereThisFieldNotZero)); //gets records data from allRecords table and then uses sortCompoundRows() to group compound rows together in the correct date position with master first followed by slaves in idR order
 	}
 }
 
@@ -668,7 +661,9 @@ else { //loop through all records that have been retrieved from the allRecords t
 		$displayData = createPivotDisplData($recordsPivotArry, "pivotCellStd", "pivotCellRowName", "pivotCellRed", "pivotCellGreen", "pivotCellOrange", "pivotCellRowNameRight", "budget", "transCatgry", "transCatgry", "Budget Fwd"); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scro;;able display area
 	}
 	else {
-			$displayData = createStndDisplData($recordsDataArry, $genFilter->getInclColIdxsAry(), "displayCellStd", "displayCellRowSel", "displayCellRowSelMoney", "displayCellFilt", "displayMoneyCellFiltClass", "displayCellMoney", "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", $endDate, $download, $allowedToEdit, $allRecordsColNameRndAry, $displayBankAcc); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scro;;able display area
+			$displayData = createStndDisplData($recordsDataArry, $genFilter->getInclColIdxsAry(), "displayCellStd", "displayCellRowSel", "displayCellRowSelMoney", "displayCellFilt", "displayMoneyCellFiltClass", "displayCellMoney", "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", $endDate, $download, $allowedToEdit, $allRecordsColNameRndAry, $displayBankAcc, $colClssAry); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scrollable display area
+			//pr($recordsDataArry);
+//pr($displayData["compoundRowsAry"]);
 	}
 
 	$idrArry = $displayData["idrArry"]; //simple indexed array of idRs
@@ -924,7 +919,7 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 
 				foreach ($displayData["rowsAry"] as $rowIdx => $curRow) { //ROW LOOP
 					$rowId = $displayData["idrArry"][$rowIdx];
-					nameHolder($rowId."-docRnd", $curRow["fileNameRand"]); //assign to name holder the random for the current doc file name 
+					nameAndValHolder($rowId."-docRnd", $curRow["fileNameRand"], "7777777"); //assign to name holder the random for the current doc file name 
 					?>
 					<div style="float:left;">
 						<div style="display:flex; flex-direction:row; align-items: stretch; ">
@@ -1326,7 +1321,7 @@ else {
 
 
 <script type="text/javascript">
-	var currentKey = "none"; //holds the keyboard key that is currently held down - for use when a cell is clicked to know if a particular command (like create new parent) has been selected
+	//var currentKey = "none"; //holds the keyboard key that is currently held down - for use when a cell is clicked to know if a particular command (like create new parent) has been selected
 	var createParent = "no"; //flag to indicate to JS functions that create new parent is in operation
 	var accountBankLinksArry = {"General":"RBS 8252", "Reserved":"Clyde 5477"}; //proxy for database table that will be created and editable - to describe the relationships between working accounts and the bank accounts they are linked to. The array provides the information required to display the correct bank's statements for a given working account and to enable the buttons that select the statements by date 
 	var butPanelIdSuffix = <?php echo json_encode($butPanelIdSuffix);?>;
@@ -1342,6 +1337,7 @@ else {
 	var idrAry = <?php echo json_encode($displayData["idrArry"]);?>;
 	var displayCellDescrpAry = <?php echo json_encode($displayData["displayCellDescrpAry"]);?>;
 	var allRecordsColNameRndAry = <?php echo json_encode($displayData["allRecordsColNameRndAry"]);?>;
+	var colClssAry = <?php echo json_encode($colClssAry);?>;
 	var displayStndClassesAry = <?php echo json_encode($displayData["displayStndClassesAry"]);?>;
 	var displayLineSelClassesAry = <?php echo json_encode($displayData["displayLineSelClassesAry"]);?>;
 	var bankAccNameAry = ["RBS 8252", "Clyde 5477"];
@@ -1359,7 +1355,7 @@ else {
 		document.getElementById("ff48f454n8f").submit();
 	}
 
-	function atomicCall(shiftKeyPressed, auxButtonTxt) {
+	function atomicCall(auxButtonTxt) {
 		atomicAjaxCall(  //function that combines updateFromSticky(id, valueStr), displayBalances(id), upDatewithdrnPaidin(id), newDocFileName(id) in one atomic ajax call to server to prevent race conditions
 			valGet("seltdRowCellId"),
 			inrGet("sticky-"+valGet("seltdRowCellId").split("-")[1]),
@@ -1380,9 +1376,10 @@ else {
         	'<?php echo $startDate;?>',
         	'<?php echo $endDate;?>',
         	currentKey,
+        	compoundNum,
+        	altGrLastPressedTime,
         	createParent,
         	<?php echo json_encode($idrArry);?>, //convert php array of all idRs displayed to javascript array and pass as argument
-        	shiftKeyPressed,
         	accountBankLinksArry,
         	auxButtonTxt,
         	displayCellDescrpAry,

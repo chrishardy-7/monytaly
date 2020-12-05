@@ -305,11 +305,148 @@ input: focus, textarea: focus, select: focus {
     display: none;
 }
 
-.green {
-	background-color: #80FF80;
+.white {
+    background-color: #FFFFFF;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
 }
 
+.whiteInvis {
+    color: #FFFFFF;
+    background-color: #FFFFFF;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
 
+.yellowGradientHardBot {
+    background-color: yellow;
+    background-image: linear-gradient(to bottom, white, yellow 15px);
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.green {
+	background-color: #80FF80;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.greenInvis {
+    color: #80FF80;
+    background-color: #80FF80;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.greenGradientHardTop {
+    background-color: #80FF80;
+    background-image: linear-gradient(to top, white, #80FF80 15px);
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.orangeWhiteTxt {
+    color:  #FFFFFF;
+    background-color:  #FFAA00;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.red {
+    background-color: #FF8080;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.tan {
+    background-color: #FFFF80;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.redWhiteTxt {
+    color:  #FFFFFF;
+    background-color:  #FF0000;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.blue {
+    background-color: #9090FF;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.blueInvis {
+    color:  #9090FF;
+    background-color: #9090FF;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.blueEdit {
+    background-color: #9090FF;
+    cursor:  text;
+    -webkit-user-select:  auto;  /* Chrome all / Safari all - allows text to be selected */
+    -moz-user-select:  auto;     /* Firefox all */
+    -ms-user-select:  auto;      /* IE 10+ */
+    user-select:  auto;          /* Likely future */ 
+}
+
+.grey {
+    background-color: #E0E0E0;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.greyInvis {
+    color: #E0E0E0;
+    background-color: #E0E0E0;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
 
 /*
 ##############################################      #######
@@ -850,7 +987,7 @@ input: focus, textarea: focus, select: focus {
     }
 
     .displayCellStd, .displayCellRowSel, .displayCellSnglSel, .displayCellSnglSelEditable, .displayCellSnglSelMoney, .displayCellWarn, .displayCellFilt, .displayMoneyCellFiltClass, .displayCellRcnclEarly, .displayCellRcnclNot, .displayCellSnglSelRcnclBlank, .displayCellLineSelRcnclBlank, .displayCellRcnclBlank, .displayCellMoney, .displayCellMoneyWarn, .displayCellRowSelMoney {
-        color:  #000000;
+       /* color:  #000000; REMOVED SO IT COULD BE ASSERTED BY SUFFIX COLOR CLASS IF REQUIRED */
         font-size:  0.57288vw;
         word-wrap:  break-word;
         width:  3.59352vw;
@@ -861,11 +998,14 @@ input: focus, textarea: focus, select: focus {
         border-color:  #C0C0C0;
         padding:  0.15624vw;
       /*  background-color:  #FFFFFF; */
+         
+    }
+    .removedFromAbove {
         cursor:  pointer;
         -webkit-user-select:  none;  /* Chrome all / Safari all */
         -moz-user-select:  none;     /* Firefox all */
         -ms-user-select:  none;      /* IE 10+ */
-        user-select:  none;          /* Likely future */  
+        user-select:  none;          /* Likely future */ 
     }
 
     .pivotCellStd, .pivotCellGreen, .pivotCellOrange, .pivotCellRed, .pivotCellRowName, .pivotCellRowNameRight {
@@ -926,8 +1066,8 @@ input: focus, textarea: focus, select: focus {
     }
 
     .displayCellRcnclBlank {
-        color:  #FFFFFF;
-        background-color:  #FFFFFF;
+      /*  color:  #FFFFFF;
+        background-color:  #FFFFFF; REMOVED SO THESE ATRIBUTES COULD BE SET BY SUFFIX COLOR CLASS IN PHP createStndDisplData() IF DESIRED */
     }
 
     .displayCellRowSel {

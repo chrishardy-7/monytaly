@@ -13,6 +13,9 @@ var autoClickDwnFromCalOrButPnl = false;
 var millisecStartTime = 0; //global variable for startTimeout() and checkTimeout()
 var checkTimeoutFunction = "Console"; //controls checkTimeout() - "Alert", "Console" or "Off"
 var currentKey = "none"; //stores value of current key - either "none", "Control" etc. or a code number (e.g. 112 = "p"). Shift key produces "Shift" and not the code number for an uppercase (e.g. 80 = "P")
+var altGrLastPressedTime = 0;
+var compoundNum = 0;
+
 
 function clickField(event) {
 	if (!fromClickCellCmnd) { //click from normal display area rather than calendar or selection panel buttons so cancel clickDown feature
@@ -21,9 +24,10 @@ function clickField(event) {
 	}
 	fromClickCellCmnd = false;
 	var id = event.target.id;
-	//alert(id);
+
 	console.log("Clicked Id = "+id);
 
+//alert(compound.mastIdr);
 	if (id.split("-")[1] == "piv") {
 		document.getElementById("pivCellId").value = id;
 		document.getElementById("pivCellVal").value = document.getElementById(id).innerText;
@@ -52,21 +56,10 @@ function clickField(event) {
 		return;
 	}
 
-	var ctrlKeyPressed = false;
-	if (event.ctrlKey) {
-		ctrlKeyPressed = true;
-		currentKey = "Control";
-	}
-	var shiftKeyPressed = false;
-	if (event.shiftKey) {
-		shiftKeyPressed = true;
-		currentKey = "Shift";
-	}
-
-	doEverything(id, ctrlKeyPressed, shiftKeyPressed, currentKey); //currentKey comes from function keyPressDetect()
+	doEverything(id, currentKey); //currentKey comes from function keyPressDetect()
 }
 
-function doEverything(id, ctrlKeyPressed, shiftKeyPressed, heldKey) {
+function doEverything(id, heldKey) {
 	//timeToCons();
 
     // ########################### LOCAL JAVASCRIPT STUFF - DOES NOT INTERACT WITH SERVER ###################
@@ -90,14 +83,14 @@ function doEverything(id, ctrlKeyPressed, shiftKeyPressed, heldKey) {
 
 	allowSetSticky = true; //enable sticky again in case it had been inhibited by 
     valSet("mouseClickPreviousTime", msTime);
-    // ########################### LOCAL JAVASCRIPT STUFF - END ###################
-
-
     valSet("IncludeFiltIdr", id); //stored the newly clicked cell id in formValHolder for "IncludeFiltIdr" (gets sent as filter term when cntrl click is done)
     valSet("ExcludeFiltIdr", id); //stored the newly clicked cell id in formValHolder for "IncludeFiltIdr" (gets sent as filter term when cntrl click is done)
     valSet("bankStatementIdR", id.split("-")[0]); //stored the newly clicked row idR in formValHolder to identifiy which bank statenment has been selected for display when the statement button is clicked
     valSet("behindBankStatementIdR", id.split("-")[0]); //same for if previous or next buttons are clicked first
     valSet("aheadBankStatementIdR", id.split("-")[0]);
+    // ########################### LOCAL JAVASCRIPT STUFF - END ###################
+
+
 
 
     // ########################### STATEMENTS ALL ACCESS THE SERVER AND DATABASE (AND REFRESH PAGE) #####################
@@ -105,7 +98,7 @@ function doEverything(id, ctrlKeyPressed, shiftKeyPressed, heldKey) {
 		document.getElementById("fn445dya48d").submit(); //calls new (same) page immediately with filter function set
 		return "function exited";
 	}
-	if (heldKey == 101) { //call filter Exclude send function from this if condition and exit this clickField() function so no other server calls are made
+	if (heldKey == 101) { //ASCII "e" held down so call filter Exclude send function from this if condition and exit this clickField() function so no other server calls are made
 		document.getElementById("2FNPOyN0Pr4").submit(); //calls new (same) page immediately with filter function set
 		return "function exited";
 	}
@@ -120,17 +113,27 @@ function doEverything(id, ctrlKeyPressed, shiftKeyPressed, heldKey) {
 	}
 	// ########################### STATEMENTS ALL ACCESS THE SERVER AND DATABASE (AND REFRESH PAGE) - END #####################
 
+
+
+
     
 	// ########################### LOCAL JAVASCRIPT STUFF - DOES NOT INTERACT WITH SERVER ###################
+	selectTableRowsForDoc(12, false, colClssAry, valGet("seltdRowCellId"), "white", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "", "unselect"); //use the id of the previously clicked cell (stored in formValHolder for "seltdRowCellId") to unselect all the previously selected rows associated with the previous document
 	
-	selectTableRowsForDoc(12, valGet("seltdRowCellId"), displayStndClassesAry, valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "", "unselect"); //use the id of the previously clicked cell (stored in formValHolder for "seltdRowCellId") to unselect all the previously selected rows associated with the previous document
 	if (id.split("-").length == 2) { //only store cell id if it is an actual cell with a hiphon in between the row and column indexes (prevents selectable items in button panels and elsewhere being stored)
 		valSet("seltdRowCellId", id); //stored the newly clicked cell id in formValHolder for "seltdRowCellId" (for use to unselect the row on a later pass of this func)
 	}
 
 	valSet("storeSelectedRecordIdR", id.split("-")[0]); //store the id of the clicked row, which is the idR of the row in allRecords - used by Duplicate Row and Delete Row
-	selectTableRowsForDoc(12, id, displayLineSelClassesAry, valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellLineSelRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "docLineCountDispId", "select"); //use the id of the current clicked cell id to select all the rows associated with the current document
-	selectCell(id, "displayCellSnglSel", "displayCellSnglSelEditable", "displayCellSnglSelMoney", "displayCellSnglSelRcnclBlank", displayCellDescrpAry);           //use the id of the current clicked cell to set the current cell to edit
+	
+	selectTableRowsForDoc(12, true, colClssAry, id, "grey", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellLineSelRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "docLineCountDispId", "select"); //use the id of the current clicked cell id to select all the rows associated with the current document
+	
+	selectCell(id, colClssAry, "displayCellSnglSel", "displayCellSnglSelEditable", "displayCellSnglSelMoney", "displayCellSnglSelRcnclBlank", displayCellDescrpAry, "blue", "blueEdit");           //use the id of the current clicked cell to set the current cell to edit
+	
+
+
+
+
 	if (valGet("allowedToEdit") == "Yes") {
 
 		selectButPanel(staticArys["displayCellDescrpAry"], staticArys["butPanelControlAry"], id, butPanelIdSuffix, dummyButPanelId, noEditButPanelId, "dateAndItemSelectRecnclDivId", {}, "Edit"); //use the id of the current clicked cell (freshly stored in formValHolder for "seltdRowCellId") to display the appropriate but panel
@@ -154,9 +157,12 @@ function doEverything(id, ctrlKeyPressed, shiftKeyPressed, heldKey) {
 	
 
 
+
+
+
 	// ########################### STATEMENTS ALL ACCESS THE SERVER AND DATABASE #####################
 
-	atomicCall(shiftKeyPressed, ""); //function that combines updateFromSticky(id, valueStr), displayBalances(id), upDatewithdrnPaidin(id), newDocFileName(id) in one atomic to prevent race conditions
+	atomicCall(""); //function that combines updateFromSticky(id, valueStr), displayBalances(id), upDatewithdrnPaidin(id), newDocFileName(id) in one atomic to prevent race conditions
 	valSet("previousCellId", valGet("seltdRowCellId")); //store current row so that it is available next click (used with shift to copy sticky value to a range of selected cells)
 	// ########################### STATEMENTS ALL ACCESS THE SERVER AND DATABASE - END #####################
 
@@ -184,9 +190,10 @@ function atomicAjaxCall(
 	recStartDate,
 	recEndDate,
 	heldKey,
+	compoundNum,
+	altGrLastPressedTime,
 	createParent,
 	idrArry,
-	shiftKeyPressed,
 	accountBankLinksArry,
 	auxButtonTxt,
 	displayCellDescrpAry,
@@ -212,7 +219,7 @@ console.log("HERE ##################################### atomicAjaxCall()   PRE-A
 		var arry = {};
 		arry["NAME"] = "arry";
 
-		if (shiftKeyPressed) { //general code to create an array of idRs for a series of cells selected in a column using 'shift' key - first used for sticky function to copy value to a number of cells at once
+		if (heldKey == "Shift") { //general code to create an array of idRs for a series of cells selected in a column using 'shift' key - used for sticky function to copy value to a number of cells at once
 			var firstArryIndex = idrArry.indexOf(valGet("previousCellId").split("-")[0]);
 			var secArryIndex = idrArry.indexOf(valGet("seltdRowCellId").split("-")[0]);
 			if (firstArryIndex < secArryIndex) {
@@ -235,9 +242,11 @@ console.log("HERE ##################################### atomicAjaxCall()   PRE-A
 			savedCellClassesArry[value] = document.getElementById(value+"-"+cellId.split("-")[1]).className; //save original class for re-enstatement later;
 			
 		});
+
+		arry = setCompoundTransAjaxSend(arry, cellId, heldKey, compoundNum);
 		
 		arry = createParentAjaxSend(arry, cellId, createParent, cellWarnClass); //only executes internally if createParent = "yes" (if this is so stickyAjaxSend() will have already been disabled for families)
-		arry = stickyAjaxSend(arry, itemStr, cellId, shiftKeyPressed, idrArry, cellWarnClass, displayCellDescrpAry); //only executes internally if sticky item for this column has been set (i.e. isn't "")
+		arry = stickyAjaxSend(arry, itemStr, cellId, idrArry, cellWarnClass, displayCellDescrpAry); //only executes internally if sticky item for this column has been set (i.e. isn't "")
 		arry = withdrawnPaidinAjaxSend(arry, editableCellIdValHldr, moneyCellWarnClass, displayCellDescrpAry, headingAry, bankAccNameAry); //only executes internally if editableCellIdValHldr value is != 0 (i.e. a withdrawn/paidin value has been changed)
 		arry = directStrEditAjaxSend(arry, editableCellIdValHldr, cellWarnClass, displayCellDescrpAry, allRecordsColNameRndAry); //only executes internally if editableCellIdValHldr value is != 0 (i.e. a  editable string cell value has been clicked)
 		arry = getBalDataSend(arry, cellId, recStartDate, recEndDate, valGet("runNormalBalFunc")); //executes if runBalFunc = "Yes" (though php on server may return all balances as "0.00" if nonsensical column like date is clicked)
@@ -252,6 +261,7 @@ console.log("HERE ##################################### atomicAjaxCall()   PRE-A
 		      	var arryBackFromPhp = JSON.parse(xmlhttp.responseText);
 		      	console.log(JSON.stringify(arryBackFromPhp, null, 4));
 
+		      	setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellDescrpAry);
 		      	createParentAjaxReceive(arry, arryBackFromPhp, cellId);
 		      	stickyAjaxReceive(arry, arryBackFromPhp, cellId, itemStr, savedCellClassesArry);
 		      	withdrawnPaidinAjaxReceive(arry, arryBackFromPhp);
@@ -278,6 +288,7 @@ console.log("HERE ##################################### atomicAjaxCall()   PRE-A
 		xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 		xmlhttp.send("command="+fileRndm+"&arryJsonStr="+JSON.stringify(arry)+"&random="+random);
 		atomicAjaxCallCompleted = false; //set to false to prevent other attempts at sending ajax data until the current one has completed and this flag hasbeen set to true by return from server above
+		console.log("HERE ##################################### atomicAjaxCall()   POST-AJAX SENDS");
 		//alert("End Of atomicAjaxCall");
 	}
 }
@@ -290,6 +301,34 @@ console.log("HERE ##################################### atomicAjaxCall()   PRE-A
 //                                                                                                         #########
 
 
+function setCompoundTransAjaxSend(arry, cellId, heldKey, compoundNum) {
+	if (heldKey == "AltGr") { //only run if "AltGr" is held down
+		arry["cellIdForCompoundTrans"] = cellId;
+		arry["compoundNum"] = compoundNum;
+		arry["createCompoundTransAjaxSendHasRun"] = true;
+		//alert("setCompoundTransAjaxSend has run "+compoundNum);
+	}
+	return arry;
+}
+
+function setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellDescrpAry) {
+	var maxColIdx = displayCellDescrpAry.length - 1; //derive maximum column index from displayCellDescrpAry which holds single word descriptions for each column
+	if (existsAndTrue(arryBackFromPhp, "PHPsetCompoundTransHasRun")) { //only run if complementary send function has already run
+		compoundNum = arryBackFromPhp["returnCompoundNum"]; //used to set value of this global external to this function (also cleared by both press or release of AltGr keyboard button)
+		var compoundActionAry = arryBackFromPhp["compoundActionAry"];
+		for (let key in compoundActionAry) {
+			if (compoundActionAry[key] == "Created") {
+				for(i = 0; i <= maxColIdx; i++) { //loop through all the columns in the row
+			    	rowColIdx = cellId.split("-")[0]+"-"+i; //reconstruct the element id for each element the loop addresses
+			    	changeSuffixClass(rowColIdx, "yellowGradient");
+			    } 
+			}
+		  	
+		}
+		//consoleAry(compoundActionAry);
+	}
+}
+
 function createParentAjaxSend(arry, cellId, createParent, cellWarnClass) {
 	if ((createParent == "yes") && (inrGet(cellId).substring(0, 2) != "OO")) { //only run if createParent = "yes" and target row not already parent (THIS USES A SIMPLE CHECK OF FIRST TWO DISPLAYED CHARACTERS OF "OO" - WOULD NEED TO CHANGE THIS IF A FUTURE FEATURE OF COLOURS OR SHAPES FOR PARENTS AND CHILDREN IS ADOPTED!!!)
 		arry["cellIdForNewParent"] = cellId;
@@ -301,7 +340,7 @@ function createParentAjaxSend(arry, cellId, createParent, cellWarnClass) {
 }
 
 function createParentAjaxReceive(arry, arryBackFromPhp, cellId) {
-	if (existsAndTrue(arry, "createParentAjaxSendHasRun")) { //only run if complementary send function has already run
+	if (existsAndTrue(arryBackFromPhp, "PHPcreateNewParentHasRun")) { //only run if complementary send function has already run
 		itemStrFromTable = arryBackFromPhp["createNewParentId"];
 	    cleanedItemStrFromTable = itemStrFromTable.trim(); //removes unwanted spaces.	    
 	    document.getElementById(cellId).className = arry["NewParentOrgClass"]; //re-enstate original class	    
@@ -310,7 +349,7 @@ function createParentAjaxReceive(arry, arryBackFromPhp, cellId) {
 	}
 }
 
-function stickyAjaxSend(arry, itemStr, cellId, shiftKeyPressed, idrArry, cellWarnClass, displayCellDescrpAry) {
+function stickyAjaxSend(arry, itemStr, cellId, idrArry, cellWarnClass, displayCellDescrpAry) {
 	console.log("HERE ##################################### stickyAjaxSend()");
 	var colId = cellId.split("-")[1];
 	var dispCellDscrp = displayCellDescrpAry[colId];
@@ -343,7 +382,7 @@ function stickyAjaxSend(arry, itemStr, cellId, shiftKeyPressed, idrArry, cellWar
 }
 
 function stickyAjaxReceive(arry, arryBackFromPhp, cellId, itemStr, savedCellClassesArry) {
-	if (existsAndTrue(arry, "stickyAjaxSendHasRun")) { //only run if complementary send function has already run
+	if (existsAndTrue(arryBackFromPhp, "PHPwriteReadAllRecordsItemHasRun")) { //only run if complementary send function has already run
 		console.log("In stickyAjaxReceive() !");
 		var column = cellId.split("-")[1];
 		for (var idR in arryBackFromPhp["stickyItemsUpdatedObjects"]) {
@@ -430,7 +469,7 @@ function withdrawnPaidinAjaxSend(arry, editableCellIdValHldr, moneyWarnClass, di
 }
 
 function withdrawnPaidinAjaxReceive(arry, arryBackFromPhp) {
-	if (existsAndTrue(arry, "withdrawnPaidinAjaxSendHasRun")) { //only run if complementary send function has already run
+	if (existsAndTrue(arryBackFromPhp, "PHPupdateWithdrawnPaidinHasRun")) { //only run if complementary send function has already run
 	    var returnedWithdrawnFmtd = getTwoDecPlacesAndSan(arryBackFromPhp["withdrawn"]); //formatted returned withdrawn value
 	    var returnedPaidinFmtd = getTwoDecPlacesAndSan(arryBackFromPhp["paidin"]); //formatted returned paidin value
 	    if (valGet("allowedToEdit") == "Yes") { //only check for match of sent and return data before removing warning class if editing rights are given - with no editing rights the current table values will always be returned and the table will remain unaltered
@@ -472,7 +511,7 @@ function directStrEditAjaxSend(arry, editableCellIdValHldr, cellWarnClass, displ
 
 
 function directStrEditAjaxReceive(arry, arryBackFromPhp) {
-	if (existsAndTrue(arry, "directStrEditAjaxSendHasRun")) { //only run if complementary send function has already run
+	if (existsAndTrue(arryBackFromPhp, "PHPupdateEditableItemHasRun")) { //only run if complementary send function has already run
 	    var updatedEditableStr = arryBackFromPhp["updatedEditableStr"]; //returned  value
 	    if (valGet("allowedToEdit") == "Yes") { //only check for match of sent and return data before removing warning class if editing rights are given - with no editing rights the current table values will always be returned and the table will remain unaltered
 
@@ -511,7 +550,7 @@ function getBalDataReceive(
 	docOnlyPaidInId,
 	docOnlyBalId
 	) {
-	if (existsAndTrue(arry, "getBalDataSendHasRun")) { //only run if complementary send function has already run
+	if (existsAndTrue(arryBackFromPhp, "PHPgetFilterStrAllBalDataHasRun")) { //only run if complementary send function has already run
 	    document.getElementById(OrdWithdrawnId).innerText = formatTo2DecPlcs(arryBackFromPhp["withdrawnNorm"], true); //set element to cleaned withdrawn value.
 	    document.getElementById(OrdPaidInId).innerText = formatTo2DecPlcs(arryBackFromPhp["paidInNorm"], true);
 	    document.getElementById(OrdBalId).innerText = formatTo2DecPlcs(arryBackFromPhp["balanceNorm"], true);
@@ -545,7 +584,7 @@ function docUpdateSend(arry, docUpdateCellId, accountBankLinksArry, auxButtonTxt
 }
     
 function docUpdateReceive(arry, arryBackFromPhp) {
-	if ((existsAndTrue(arry, "docUpdateSendHasRun")) && (arryBackFromPhp["docChanged"] == "Yes")) { //only run if complementary send function has already run
+	if ((existsAndTrue(arryBackFromPhp, "PHPupdateDocFilenameHasRun")) && (arryBackFromPhp["docChanged"] == "Yes")) { //only run if complementary send function has already run
 		if (valGet("previousObscureFile") == "obscureTest.php") { //set previousObscureFile value holder to obscureTest2.php and obscureTest.php alternately to fool pdfjs
 			valSet("previousObscureFile", "obscureTest2.php"); //toggle file name
 			document.getElementById("pdfIframe").src  = "./web/viewer.html?file="+docFilename2+"#page="+pageNum+"&zoom=100";
@@ -564,7 +603,69 @@ function docUpdateReceive(arry, arryBackFromPhp) {
 //                                                                                                         #########
 
 
+function setSeveralClasses(elementId, arrayOfClasses) {
+	var elementClass = "";
+	arrayOfClasses.forEach(myFunction);
+	function myFunction(value, index) {
+	  	if (index == 0) {
+	  		elementClass = value;
+	  	}
+	  	else {
+	  		elementClass = elementClass + " " + value;
+	  	}
+	}
+	document.getElementById(elementId).className = elementClass; //set to selected class
+}
 
+
+
+/* For the element identified by elementId any preexisting OldsuffixClass of a compound class (like "mainClass oldSuffixClass") is returned for storage (if required) and replaced by the passed newSuffixClass. If there is no preexisting OldsuffixClass "" is returned, and the mainClass is suffixed with a space followed by the passed newSuffixClass to create a new compound class. If newSuffixClass is not passed or it is "" any preexisting OldsuffixClass is removed along with its preceding space.  */
+function changeSuffixClass(elementId, newSuffixClass = "") {
+	var combinationClass = document.getElementById(elementId).className.split(" ");
+	var mainClass = combinationClass[0];
+	if(2 == combinationClass.length) { //a preexisting oldSuffixClass exists
+		var oldSuffixClass = combinationClass[1];
+		if (0 < newSuffixClass.length) { //passed newSuffixClass contains a string so add it to preexisting mainClass
+			document.getElementById(elementId).className = mainClass + " " + newSuffixClass; //set class to mainClass + newSuffixClass
+		}
+		else { //passed newSuffixClass empty or not given so just set mainClass (effectively removing any preexisting oldSuffixClass and preceding space)
+			document.getElementById(elementId).className = mainClass;
+		}
+		return oldSuffixClass;
+	}
+	else { //no preexisting oldSuffixClass so if it exists concatonate newSuffixClass to mainClass and return ""
+		if (0 < newSuffixClass.length) { //passed newSuffixClass contains a string so add it to preexisting mainClass
+			document.getElementById(elementId).className = mainClass + " " + newSuffixClass; //set class to mainClass + newSuffixClass
+		}
+		else {
+			//do nothing - existing mainClass will remain undisturbed
+		}
+		return "";
+	}
+}
+
+
+
+/* For the element identified by elementId a suffix class is concatonated to the already existing class with, a space in between. If no suffix class is passed or it is "" nothing will change.  */
+function addSuffixClass(elementId, suffixClass = "") {
+	if (0 < suffixClass.length) {
+		document.getElementById(elementId).className = document.getElementById(elementId).className + " " + suffixClass; //set to selected class
+	}
+}
+
+/* For the element identified by elementId that has a compound class (like "mainClass suffixClass") the suffix class is removed from the element and returned by this function for storage if required. For elements that already have only a mainClass with no space and suffixClass, nothing happens and "" is returned. */
+function getAndRemoveSuffixClass(elementId) {
+	var combinationClass = document.getElementById(elementId).className.split(" ");
+	if(1 < combinationClass.length) { //check that suffix class exists
+		var mainClass = classCombination[0];
+		var suffixClass = classCombination[1];
+		document.getElementById(elementId).className = mainClass; //set class to mainClass only (suffixClass is gone)
+		return suffixClass;
+	}
+	else { //no suffix class so return ""
+		return "";
+	}
+}
 
 function toggleClickDown() {
 	if (autoClickDwnFromCalOrButPnl) { //toggle autoClickDwnFromCalOrButPnl to false
@@ -645,14 +746,45 @@ function strToHex(strng){
     return result
 }
 
+document.addEventListener("keydown", function(event) {
+	if (event.code =="ControlLeft") {
+		currentKey = "Control";
+	}
+	else if (event.code =="ShiftLeft") {
+		currentKey = "Shift";
+	}
+	else if (event.code =="AltRight") {
+		altGrLastPressedTime = (new Date).getTime() % 1000000000; //time in milliseconds, truncated to 9 digits from 1970 time, to rollover in 11.574 days (so it can fit in a mariadb INT)
+		currentKey = "AltGr";
+		compoundNum = 0;
+	}
+	else {
+		currentKey = event.which || event.keyCode; //an effort to capture the key number for different operating systems/browsers. different number for uppercase/lowercase
+	}
+})
 
+document.addEventListener("keyup", function(event) {
+  	if ((event.code =="ControlLeft") && (currentKey == "Control")) {
+		currentKey = "None";
+	}
+	else if ((event.code =="ShiftLeft") && (currentKey == "Shift")) {
+		currentKey = "None";
+	}
+	else if ((event.code =="AltRight") && (currentKey == "AltGr")) {
+		currentKey = "None";
+		compoundNum = 0;
+	}
+	else {
+		currentKey = "None";
+	}
+})
 
-function keyPressDetect(event) { //this function is called by the system whenever a nonm-special key (like shift or control) is pressed
-	currentKey = event.which || event.keyCode; //an effort to capture the key number for different operating systems/browsers. different number for uppercase/lowercase
+function keyPressDetectDEPR(event) { //this function is called by the system whenever a non-special key (like shift or control) is pressed
+	//currentKey = event.which || event.keyCode; //an effort to capture the key number for different operating systems/browsers. different number for uppercase/lowercase
 }
 
-function keyUpDetect(event) {
-	currentKey = "none";
+function keyUpDetectDEPR(event) {
+	//currentKey = "none";
 }
 
 /* 
@@ -743,11 +875,25 @@ function setOneStrClassUnsetRest(baseId, onClass, offClass, itemKeysCsv, itemKey
     }
 }
 
+/* Converts passed date string, $date, (which is in the form "07-04-2020") by reversing it, removing the separator "-"s, and returning "20200407" which can be used directly for comparisons such as > < ==. */
+function reverseDateNumsOnly(date) {
+	var dateAry = date.split("-");
+	return dateAry[2]+dateAry[1]+dateAry[0]; 
+}
+
+/* Converts passed date string, $date, (which is in the form "07-04-2020" or "2020-04-07") by removing the separator "-"s, and returning "07042020" or "20200407" which can be used directly for comparisons such as > < ==. */
+function dateNumsOnly(date) {
+	var dateAry = date.split("-");
+	return dateAry[0]+dateAry[1]+dateAry[2]; 
+}
+
 /* highlights all the rows that use the displayed document. Does lots of additional things too! */
 function selectTableRowsForDoc(
 	maxColIdx,			//the maximum column index that needs to be highlighted (starts at 0)
+	rowSel,				//if true indicates row should be selected, false indicates row should be unselected
+	colClssAry,			// array of suffix classes that are all used to difine the color of cells and rows
 	elementId,			//id of clicked element
-	chosenClassAry,		//sets background colour to indicate element has been chosen - tailored to each cell depending on array element for column and is a light grey colour
+	rowSelColorClass,		//sets background colour to indicate element has been chosen - tailored to each cell depending on array element for column and is a light grey colour
 	columnCsv,			//cvs of all column numbers that have been set to filter, i.e. "2, 5"
 	filterClass,		//sets filtered columns in selected rows to the filter colour - pale yellow
 	filterClassRightAlign, //sets filtered columns in selected rows to the filter colour - pale yellow, but with right alignment for withdrawn and  paidin cells
@@ -759,49 +905,45 @@ function selectTableRowsForDoc(
 	docLineCountDispId,
 	from
 	) {
-var greenBase = "green";
-var green = " "+greenBase;
-
 	var columnAry = columnCsv.split(",");
 	var currentDocRnd = document.getElementById(elementId.split("-")[0]+"-docRnd").name; //get the random that is associated with the current doc
 	var recsAry = document.getElementsByName(currentDocRnd); //get an array of all the elements that have the name attribute set to the same random as the current doc 
-	var recsIdsAry = "";
 	for(idx = 0; idx < recsAry.length; idx++) { //loop through all records that have the same doc random
 		var rowId = recsAry[idx].id.split("-")[0]; //get the id of the current element and extract the first integer - the bit before the '-' which is the row id
+		console.log(recsAry[idx].value+" "+rowId);
 		//startTimeout();
 		for(i = 0; i <= maxColIdx; i++) { //loop through all the columns in the row
 		    rowColIdx = rowId+"-"+i; //reconstruct the element id for each element the loop addresses
 		    if (-1 < columnAry.indexOf(i.toString())) { //if column is found in columnAry (derived from columnCsv) it is a filtered column
-		    	if ((displayCellDescrpAry[i] == "MoneyOut") || (displayCellDescrpAry[i] == "MoneyIn")) { //set to filtered colour (usually yellow) with right alignment for withdrawn / paidin cells
-		    		document.getElementById(rowColIdx).className = filterClassRightAlign;
-		    	}
-		    	else { //normal filter class (usually yellow)
-		    		document.getElementById(rowColIdx).className = filterClass; 
-		    	}
+		    	changeSuffixClass(rowColIdx, colClssAry["columnFiltCol"]); 
 		    }
 		    else {
-		    	document.getElementById(rowColIdx).className = chosenClassAry[i]; //+green; //set to selected color
+		    	if (rowSel) {
+		    		changeSuffixClass(rowColIdx, colClssAry["selCol"]);
+		    	}
+		    	else {
+		    		changeSuffixClass(rowColIdx, colClssAry["unselCol"]);
+		    	}
 		    }
 		    if (displayCellDescrpAry[i] == "RcnclDate") { //process if loop is at appropriate column ######EVERYTHING IN THIS IF STATEMENT IS FOR THE RECONCILE COLUMN!! #######
-		    	var endDateObj = new Date(endDate); //create date object from end date string
-		    	var transDateColIdx = displayCellDescrpAry.indexOf("TransDate");
-		    	var transDate = document.getElementById(elementId.split("-")[0]+"-"+transDateColIdx).innerText; //get transaction date from selected row
-		    	var transDateAry = transDate.split("-");
-		    	var transDateReversed = transDateAry[2]+"-"+transDateAry[1]+"-"+transDateAry[0]; //use the date split into an array to reassemble it in reverse (i.e. '2018-09-01')
-		    	var transDateObj = new Date(transDateReversed); //create date object from transaction date string that has been extracted from the transaction cell's innerText
-		    	var recnclDate = document.getElementById(rowColIdx).innerText; //get reconciled date from selected cell		    	
-		    	var recnclDateAry = recnclDate.split("-");
-		    	var recnclDateReversed = recnclDateAry[2]+"-"+recnclDateAry[1]+"-"+recnclDateAry[0]; //use the date split into an array to reassemble it in reverse (i.e. '2018-09-01')
-		    	var recnclDateObj = new Date(recnclDateReversed); //create date object from reconciled date string that has been extracted from the reconciled cell's innerText
-		    	if (recnclDate == "01-01-2000") { //default date so blank display of this by setting font to same color as background
-		    		document.getElementById(rowColIdx).className = chosenClassBlank; //set to ordinary color (usually light grey if selected, white otherwise)
+		    	var endDateRev = dateNumsOnly(endDate); //the endDate just needs the "-"s removed as it is already in the correct order "2020-04-03"
+		    	var transDateRev = reverseDateNumsOnly(document.getElementById(elementId.split("-")[0]+"-"+displayCellDescrpAry.indexOf("TransDate")).innerText);
+		    	var recnclDateRev = reverseDateNumsOnly(document.getElementById(rowColIdx).innerText);
+		    	if (recnclDateRev == "20000101") { //default date so blank display of this by setting font to same color as background
+		    		if (rowSel) {
+			    		changeSuffixClass(rowColIdx, colClssAry["selInvisCol"]);
+			    	}
+			    	else {
+			    		changeSuffixClass(rowColIdx, colClssAry["unselInvisCol"]);
+			    	}
 	    		}
-		     	else if (endDateObj < recnclDateObj) { //if reconciled date is ahead of the end date of the selection of records so set to warning class
-		    		document.getElementById(rowColIdx).className = reconcileWarnClass; //set the reconciled cell to warning class 'reconcileWarnClass' (probably red)
+		     	else if (endDateRev < recnclDateRev) { //if reconciled date is ahead of the end date of the selection of records so set to warning class
+		    		changeSuffixClass(rowColIdx, colClssAry["notRcnclCol"]); //set the reconciled cell to warning class 'reconcileWarnClass' (probably red)
 		    	}
-		    	else if (recnclDateObj < transDateObj) { //if reconciled date is earlier than the transaction date so set to error class
-		    		document.getElementById(rowColIdx).className = reconcileEarlyClass; //set the reconciled cell to early class (probably orangeish)
+		    	else if (recnclDateRev < transDateRev) { //if reconciled date is earlier than the transaction date so set to error class
+		    		changeSuffixClass(rowColIdx, colClssAry["rcnclTooEarlyCol"]); //set the reconciled cell to early class (probably orangeish)
 		    	}
+		    	else {} //do nothing - leave the reconcile date cell whatever background color has been set as it is a normal date
 		    }
 		}
 		//checkTimeout("selectTableRowsForDoc("+from+") col Loop", 0);
@@ -874,25 +1016,21 @@ function selectButPanel(displayCellDescrpAry, butPanelControlAry, elementId, pre
 
 
 /* Applies the appropriate class to a cell that has been selected to give the correct selection colour */
-function selectCell(elementId, standardSelClass, SnglSelEditableClass, rightAlignSelClass, blankClass, displayCellDescrpAry) {
-  var rowId = elementId.split("-")[0];
+function selectCell(elementId, colClssAry, standardSelClass, SnglSelEditableClass, rightAlignSelClass, blankClass, displayCellDescrpAry, cellSelectColorClass, cellSelectEditColorClass) {
   var colId = elementId.split("-")[1];		
   var displayCellDescrp = displayCellDescrpAry[colId];
-  if ((displayCellDescrp == "MoneyOut") || (displayCellDescrp == "MoneyIn")) { //withdrawn or paidin cell so use right align select class
-  	document.getElementById(elementId).className = rightAlignSelClass;
-  }
-  else if ((displayCellDescrp == "Reference") || (displayCellDescrp == "Note")) { //editable string cell so use specific selected editing class
-  	document.getElementById(elementId).className = SnglSelEditableClass;
+  if ((displayCellDescrp == "MoneyOut") || (displayCellDescrp == "MoneyIn") || (displayCellDescrp == "Reference") || (displayCellDescrp == "Note")) { //editable cell
+  	changeSuffixClass(elementId, colClssAry["cellSelEditCol"]);
   }
   else { //use normal select class
-  	document.getElementById(elementId).className = standardSelClass;
+  	changeSuffixClass(elementId, colClssAry["cellSelCol"]);
   }
   if (displayCellDescrp == "RcnclDate") { //reconcile date cell 
   	var recnclDate = document.getElementById(elementId).innerText; //get reconciled date from selected cell
 	if (recnclDate == "01-01-2000") { //if default set to same text and background colour class to make invisible
-		document.getElementById(elementId).className = blankClass;
+		changeSuffixClass(elementId, colClssAry["cellSelInvisCol"]);
 	}
-  }
+  } 
 
 }
 
