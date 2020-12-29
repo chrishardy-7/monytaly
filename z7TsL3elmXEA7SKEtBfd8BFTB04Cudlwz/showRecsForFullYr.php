@@ -30,6 +30,7 @@ $colClssAry = [	"unselCol"				=>	"white",
 				"cellSelCol"			=>	"blue",
 				"cellSelInvisCol"		=>	"blueInvis",
 				"cellSelEditCol"		=>	"blueEdit", 
+				"waitingForServer"		=>	"orange",
 				"rcnclTooEarlyCol"		=>	"orangeWhiteTxt", 
 				"notRcnclCol"			=>	"redWhiteTxt",
 				"columnFiltCol"			=>	"tan",
@@ -137,9 +138,15 @@ if (isClicked("prevStatement")) {
 }
 
 
-
+//saveRestrictionsArray($userId, ["includeFilt"=>["umbrella" => "Furniture Project"], "allowColumnEdit"=>["budget", "docType"]]); //used to set restrictions for individual users - hard code for now, insert user id and uncomment for one page load
 
 //COLUMN FILTER SECTION
+$restrictFilter = new filterColumns("restrictFilter", $tables, ($subCommand == "FromMainMenu")); //create new restriction filter with $nonVolatileArray key of "genFilter" and reset all filters if this page called from main menu
+//$restrictionsAry = recoveredRestrictionsAry($userId);  //recovers restrictions arrays from current user from personSession table. NOW ON INDEX PAGE TO BE ACCESSIBLE FROM ATOMIC PHP AND OTHER PHP CODE
+if (array_key_exists ("includeFilt", $restrictionsAry)) {
+	$restrictFilter->replaceIncludeFiltStrValAry($restrictionsAry["includeFilt"]); //sets restriction filter to values from restriction field in personSession table;
+}
+
 $genFilter = new filterColumns("genFilter", $tables, ($subCommand == "FromMainMenu")); //create new filter with $nonVolatileArray key of "genFilter" and reset all filters if this page called from main menu
 if (sanPost("IncludeFiltIdr")) { //only do this if a filter term has been POSTed
 	$genFilter->setIncludeFilterUsingCellId(sanPost("IncludeFiltIdr"));
@@ -148,8 +155,6 @@ if (sanPost("IncludeFiltIdr")) { //only do this if a filter term has been POSTed
 if (sanPost("ExcludeFiltIdr")) { //only do this if a filter term has been POSTed
 	$genFilter->setExcludeFilterUsingCellId(sanPost("ExcludeFiltIdr"));
 }
-//pr($nonVolatileArray);
-
 
 
 
@@ -308,23 +313,10 @@ if (sanPost("idRforFamily")) {
 	$fam->inputFamId(sanPost("idRforFamily"));
 }
 
-if ($fam->getFiltInhib()) { //detects when single family is being displayed and turns off the normal filter so whole of family can be seen
-	$genFilter->inhibit(); //inhibit general filter
-}
 
+//########################	shortcut button section start
 
-if ($subSubCommand == "Eileen1920") { //sets up pivot table for all of 2019-20 filtered for furniture project and show families selected
-	$genFilter->replaceIncludeFiltStrValAry(["umbrella" => "Furniture Project"]);
-	$genFilter->replaceExcludeFiltStrValAry(["budget" => "Church Main"]);
-	$nonVolatileArray["AllDates"] = FALSE;
-	$nonVolatileArray["masterYear"] = "2020";
-	$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
-	$nonVolatileArray["endYearOffsetPlusMnth"] = "103";
-	$showFamBut->set();
-	$pivotBut->set();
-}
-
-if ($subSubCommand == "Eileen2021") { //same as 2019-20 but for 2020-21 - a lot of duplication!
+if ($subSubCommand == "Restricted2021") { //same as 2019-20 but for 2020-21 - a lot of duplication!
 	$genFilter->replaceIncludeFiltStrValAry(["umbrella" => "Furniture Project"]);
 	$genFilter->replaceExcludeFiltStrValAry(["budget" => "Church Main"]);
 	$nonVolatileArray["AllDates"] = FALSE;
@@ -332,38 +324,44 @@ if ($subSubCommand == "Eileen2021") { //same as 2019-20 but for 2020-21 - a lot 
 	$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
 	$nonVolatileArray["endYearOffsetPlusMnth"] = "103";
 	$showFamBut->set();
+	$fam->rememberShowFamButIsSet();
 	$pivotBut->set();
 }
 
 
-if ($subSubCommand == "Unrestricted1920") { //sets up pivot table for all of 2019-20 filtered for furniture project and show families selected
+if ($subSubCommand == "Unrestricted2021") { //sets up pivot table for all of 2019-20 filtered for furniture project and show families selected
 	$genFilter->replaceIncludeFiltStrValAry(["budget" => "Church Main"]);
 	$nonVolatileArray["AllDates"] = FALSE;
-	$nonVolatileArray["masterYear"] = "2020";
+	$nonVolatileArray["masterYear"] = "2021";
 	$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
 	$nonVolatileArray["endYearOffsetPlusMnth"] = "103";
 	$showFamBut->set();
+	$fam->rememberShowFamButIsSet();
 	$pivotBut->set();
 }
 
 
-if ($subSubCommand == "Bank1920") { //sets up pivot table for all of 2019-20 filtered for furniture project and show families selected
+if ($subSubCommand == "Bank2021") { //sets up pivot table for all of 2019-20 filtered for furniture project and show families selected
 	$genFilter->replaceIncludeFiltStrValAry(["umbrella" => "Bank"]);
 	$nonVolatileArray["AllDates"] = FALSE;
-	$nonVolatileArray["masterYear"] = "2020";
+	$nonVolatileArray["masterYear"] = "2021";
 	$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
 	$nonVolatileArray["endYearOffsetPlusMnth"] = "103";
 }
 
 
 if ($subSubCommand == "EileenReclaim") { //
-	//$nonVolatileArray["AllDates"] = FALSE;
-	//$nonVolatileArray["masterYear"] = "2021";
-	//$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
-	//$nonVolatileArray["endYearOffsetPlusMnth"] = "103";
-	$fam->inputFamId(330);
+	$fam->inputFamId(5694);
 }
 
+//########################	shortcut button section end
+
+
+
+
+if ($fam->getFiltInhib()) { //detects when single family is being displayed and turns off the normal filter so whole of family can be seen
+	$genFilter->inhibit(); //inhibit general filter
+}
 
 include_once("./".$sdir."monthSelProcess.php"); // Ensures empty arrays in $nonVolatileArray exist for holding month and year selections. Takes $subCommand (which will originate from the monthSelSideBar.php script wherever that is included) and uses it to either increment/decrement year or select new (or same) month. Produces start and finish dates that will be used outside this specific script for extracting data for a range of documents from the docCatalog table.
 
@@ -430,11 +428,11 @@ if ($displayBankAcc) {
 }
 else {
 	if ($pivotBut->isSet()) {
-		$recordsPivotArry = getPivotTableAry($startDate, $endDate, $genFilter->getFiltStr(), "", $fam->getCmnd(), "budget, transCatgry"); //for pivot table filters need to be applied as normal
+		$recordsPivotArry = getPivotTableAry($startDate, $endDate, $genFilter->getFiltStr(), "", $fam->getCmnd(), $restrictFilter->getFiltStr(), "budget, transCatgry"); //for pivot table filters need to be applied as normal
 		//pr($recordsPivotArry);
 	}
 	else {
-		$recordsDataArry = sortCompoundRows(getMultDocDataAry($startDate, $endDate, $genFilter->getFiltStr(), "", $fam->getCmnd(), $groupColSelector, $onlyRowsWhereThisFieldNotZero)); //gets records data from allRecords table and then uses sortCompoundRows() to group compound rows together in the correct date position with master first followed by slaves in idR order
+		$recordsDataArry = sortCompoundRows(getMultDocDataAry($startDate, $endDate, $genFilter->getFiltStr(), "", $fam->getCmnd(), $groupColSelector, $restrictFilter->getFiltStr(), $onlyRowsWhereThisFieldNotZero)); //gets records data from allRecords table and then uses sortCompoundRows() to group compound rows together in the correct date position with master first followed by slaves in idR order
 	}
 }
 
@@ -662,8 +660,6 @@ else { //loop through all records that have been retrieved from the allRecords t
 	}
 	else {
 			$displayData = createStndDisplData($recordsDataArry, $genFilter->getInclColIdxsAry(), "displayCellStd", "displayCellRowSel", "displayCellRowSelMoney", "displayCellFilt", "displayMoneyCellFiltClass", "displayCellMoney", "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", $endDate, $download, $allowedToEdit, $allRecordsColNameRndAry, $displayBankAcc, $colClssAry); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scrollable display area
-			//pr($recordsDataArry);
-//pr($displayData["compoundRowsAry"]);
 	}
 
 	$idrArry = $displayData["idrArry"]; //simple indexed array of idRs
@@ -1237,6 +1233,12 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 </div> <!-- end of  enclosing div for everything except the iFrame - it is contained within the .mainContainer div that defines the display screen extents -->
 
 
+	<form id="7EKR03N0CJ" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data">
+    <?php
+    	//this form is submited by javascript 'document.getElementById("7EKR03N0CJ").submit();' which is implemented by JS code as needed to refresh the page with no other changes
+        formValHolder("command", $menuRandomsArray["Show Records For Full Year"]); //this page!
+    ?>
+    </form>
 
 	<form id="xPKThZPMNO8" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data">
     <?php
@@ -1340,6 +1342,10 @@ else {
 	var colClssAry = <?php echo json_encode($colClssAry);?>;
 	var displayStndClassesAry = <?php echo json_encode($displayData["displayStndClassesAry"]);?>;
 	var displayLineSelClassesAry = <?php echo json_encode($displayData["displayLineSelClassesAry"]);?>;
+	var compoundTypeAry = <?php echo json_encode($displayData["compoundTypeAry"]);?>;
+	var compoundGroupIdrAry = <?php echo json_encode($displayData["compoundGroupIdrAry"]);?>;
+	var restrictionsAry = <?php echo json_encode($restrictionsAry);?>;
+	var fieldNameAry = <?php echo json_encode($_fieldNameAry);?>;
 	var bankAccNameAry = ["RBS 8252", "Clyde 5477"];
 
 	// INITIALISATION SECTION TO SET SELECTION TO ROW 0 AND SET UP THE CALENDAR, CATEGORY, ACCOUNT, AND BUDGET SELECTION PANELS TO ROW 0 VALUES. INITIALLY ALL PANELS EXCEPT CALENDAR WILL BE HIDDEN
@@ -1377,6 +1383,8 @@ else {
         	'<?php echo $endDate;?>',
         	currentKey,
         	compoundNum,
+        	compoundTypeAry,
+        	compoundGroupIdrAry,
         	altGrLastPressedTime,
         	createParent,
         	<?php echo json_encode($idrArry);?>, //convert php array of all idRs displayed to javascript array and pass as argument
@@ -1385,7 +1393,8 @@ else {
         	displayCellDescrpAry,
         	allRecordsColNameRndAry,
         	headingAry,
-        	bankAccNameAry
+        	bankAccNameAry,
+        	restrictionsAry
 		);
 	}
 

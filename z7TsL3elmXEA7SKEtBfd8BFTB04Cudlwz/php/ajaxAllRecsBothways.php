@@ -4,7 +4,7 @@ if (empty($_calledFromIndexPage)) { //prevents someone trying to open this page 
 	exit("");
 }
 
-//$thisFileName = "ajaxAllRecsBothways.php";
+//$thisFileName = "ajaxAllRecsBothways.php";        ######## USED BY DATE COLUMNS - Date & Reconciled ########
 //saveMessage($thisFileName);
 
 //USED BY calJavaScrpInteractnLite() PHP FUNCTION VIA ajaxRecordsDateAndCellUpdate() JS FUNCTION

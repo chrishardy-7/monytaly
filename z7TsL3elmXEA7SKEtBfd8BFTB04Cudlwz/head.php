@@ -25,6 +25,7 @@
 	<script type="text/javascript" src="<?php echo $dir?>scripts/jquery.jqplot.min.js"></script>
 	<script type="text/javascript" src="<?php echo $dir?>scripts/jqplot.pieRenderer.min.js"></script>
 	<script type="text/javascript" src="<?php echo $dir?>scripts/pdfDisplay.js"></script>
+	<script src='https://cdn.jsdelivr.net/npm/big.js@6.0.0/big.min.js'></script>
 
 	<script>
 	$(function() {

@@ -24,7 +24,8 @@ $menuRandomsArray = createKeysAndRandomsArray(array(
 	"Add Items",
 	"Edit Flex",
 	"Ajax Atomic",
-	"Update2 Table From Javascript"
+	"Update2 Table From Javascript",
+	"Help Page"
 ), $_menuRndmLngth, $uniqnsChkAryForRndms); //creates new random values for menus - not all generated values will be used via menu buttons, some will be used for doc select buttons etc. to access pages not accessible via menu
 
 

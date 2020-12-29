@@ -58,13 +58,13 @@ include_once("./".$sdir."php/funcsToRdWrTblesForAccCcc.php");
 /* THINGS TO CONSIDER !!!
 	1) What to do if user logs in with different device(s) while session still active on first device. At moment think the second login would simply take over (new session cookie) and expire previous session.
 	2) Email user if password changed
-	3) Email user if there are several unscuccessful login attempts in a given interval, or between successful attempts (could work without cookie - tie to username)
-	4) Facility for usere to review previous login times, dates, durations, ip and browser (include failed attempts to their username, with display of wrong passwords used?). Won't work properly with (1)
+	3) Email user if there are several unscuccessful login attempts in a given interval, or between successful attempts (could work without cookie - tie to suppliedUsername)
+	4) Facility for usere to review previous login times, dates, durations, ip and browser (include failed attempts to their suppliedUsername, with display of wrong passwords used?). Won't work properly with (1)
 	5) Insert a delay before redisplay of login page after any sort of unsuccessful attempt, to put the brakes on any unauthorised someone trying to get in
-	6) Allow only so many unsuccessful login attempts from same IP/Browser or username then put a wait time on to inhibit further logins with same signature.
+	6) Allow only so many unsuccessful login attempts from same IP/Browser or suppliedUsername then put a wait time on to inhibit further logins with same signature.
 	7) Consider use of sanPost only where it can be, to make it harder for someone to just create a URL with the appropriate $_GET data on it to try and find back doors
 	8) Create new user timeout so they will only be albe to use their temporary password for a limited period (say one hour?)
-	9) Check password submitted by add user page and return to page if it doesn't pass muster. Also put lower limit on username number of characters.
+	9) Check password submitted by add user page and return to page if it doesn't pass muster. Also put lower limit on suppliedUsername number of characters.
 	10) be more specific when change password or force new password fails.
 	11) $userData = getUserData($userId); geta array of all user data from table in one go - consider using to speed things up in the future if it seems appropriate (though some of the data changes!)
 */
@@ -123,14 +123,14 @@ if (!$clientSessCookie) { //no session cookie
 	$docNotesRandomsAry = array();
 	$parentDocRefRandomsAry = array();
 
-	$username = sanPost('username');
+	$suppliedUsername = sanPost('username');
 	$password = sanPost('password');
-	if (!(($username) && ($password))) { //if username and password don't exist go to login page
-		$message = "Logged Out -  Either or both username and password not supplied";
+	if (!(($suppliedUsername) && ($password))) { //if suppliedUsername and password don't exist go to login page
+		$message = "Logged Out -  Either or both suppliedUsername and password not supplied";
 		include_once("./".$sdir."login.php");
 		exit("");
 	}
-	$userId = userIdifPasswordMatches($username, $password); //attempt to get user id - 0 should be returned if no matching user
+	$userId = userIdifPasswordMatches($suppliedUsername, $password); //attempt to get user id - 0 should be returned if no matching user
 	$userData = getUserData($userId);
 	$superUser = $userData["superuser"];
 	$allowedToEdit = $superUser; //at the moment only allow super users editing rights
@@ -170,6 +170,7 @@ $userData = getUserData($userId); //determine if user is a superuser
 $superUser = $userData["superuser"];
 $userName = $userData["personName"];
 $allowedToEdit = $superUser; //at the moment only allow super users editing rights
+$restrictionsAry = recoveredRestrictionsAry($userId);  //recovers restrictions arrays from current user from personSession table
 
 $recoveredSessionArrays = recoveredmenuRandomsArray($userId); //get session array of arrays from personSession table
 
@@ -366,12 +367,16 @@ switch ($menuBtnStr) {
 	case "Edit Flex":
 		//resetActivTime($userId);
 		include_once("./".$sdir."editFlex.php");
+		break;
+	case "Help Page":
+		//resetActivTime($userId);
+		include_once("./".$sdir."help.php");
 		break;	
 	case "Ajax both ways with All Records": //USED BY calJavaScrpInteractnLite() (2 off) PHP FUNCTION VIA ajaxRecordsDateAndCellUpdate() JS FUNCTION to change dates in allRecords table
-		include_once("./".$sdir."php/ajaxAllRecsBothways.php");
+		include_once("./".$sdir."php/ajaxAllRecsBothways.php"); //USED BY DATE COLUMNS - Date & Reconciled
 		break;
 	case "Ajax Items 2 ways with All Records": //USED BY butPanelJSInteracStrOnly() (8 off) PHP FUNCTION VIA ajaxRecordsItemAndCellUpdate() JS FUNCTION to change item ids in allRecords table. Also used by clickField() > updateFromSticky() > ajaxRecordsItemAndCellUpdate()
-		include_once("./".$sdir."php/ajaxAllRecsItems2ways.php");
+		include_once("./".$sdir."php/ajaxAllRecsItems2ways.php"); //USED BY Withdrawn/Paidin AND ALL OTHER COLUMNS EXCEPT DIRECT EDITING ONES - Reference/Note
 		break;
 	case "Ajax MoneyIn0ut 2 ways with All Records": //USED BY clickField() > upDatewithdrnPaidin() > upDatewithdrnPaidin()
 		include_once("./".$sdir."php/ajaxAllRecsMoney2ways.php");

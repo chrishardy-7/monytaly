@@ -98,7 +98,7 @@ function doEverything(id, heldKey) {
 		document.getElementById("fn445dya48d").submit(); //calls new (same) page immediately with filter function set
 		return "function exited";
 	}
-	if (heldKey == 101) { //ASCII "e" held down so call filter Exclude send function from this if condition and exit this clickField() function so no other server calls are made
+	if (heldKey == "ControlShift") { //ASCII "e" held down so call filter Exclude send function from this if condition and exit this clickField() function so no other server calls are made
 		document.getElementById("2FNPOyN0Pr4").submit(); //calls new (same) page immediately with filter function set
 		return "function exited";
 	}
@@ -118,7 +118,7 @@ function doEverything(id, heldKey) {
 
     
 	// ########################### LOCAL JAVASCRIPT STUFF - DOES NOT INTERACT WITH SERVER ###################
-	selectTableRowsForDoc(12, false, colClssAry, valGet("seltdRowCellId"), "white", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "", "unselect"); //use the id of the previously clicked cell (stored in formValHolder for "seltdRowCellId") to unselect all the previously selected rows associated with the previous document
+	selectTableRowsForDoc(12, false, colClssAry, compoundTypeAry, valGet("seltdRowCellId"), "white", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "", "unselect"); //use the id of the previously clicked cell (stored in formValHolder for "seltdRowCellId") to unselect all the previously selected rows associated with the previous document
 	
 	if (id.split("-").length == 2) { //only store cell id if it is an actual cell with a hiphon in between the row and column indexes (prevents selectable items in button panels and elsewhere being stored)
 		valSet("seltdRowCellId", id); //stored the newly clicked cell id in formValHolder for "seltdRowCellId" (for use to unselect the row on a later pass of this func)
@@ -126,7 +126,7 @@ function doEverything(id, heldKey) {
 
 	valSet("storeSelectedRecordIdR", id.split("-")[0]); //store the id of the clicked row, which is the idR of the row in allRecords - used by Duplicate Row and Delete Row
 	
-	selectTableRowsForDoc(12, true, colClssAry, id, "grey", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellLineSelRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "docLineCountDispId", "select"); //use the id of the current clicked cell id to select all the rows associated with the current document
+	selectTableRowsForDoc(12, true, colClssAry, compoundTypeAry, id, "grey", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellLineSelRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "docLineCountDispId", "select"); //use the id of the current clicked cell id to select all the rows associated with the current document
 	
 	selectCell(id, colClssAry, "displayCellSnglSel", "displayCellSnglSelEditable", "displayCellSnglSelMoney", "displayCellSnglSelRcnclBlank", displayCellDescrpAry, "blue", "blueEdit");           //use the id of the current clicked cell to set the current cell to edit
 	
@@ -136,14 +136,14 @@ function doEverything(id, heldKey) {
 
 	if (valGet("allowedToEdit") == "Yes") {
 
-		selectButPanel(staticArys["displayCellDescrpAry"], staticArys["butPanelControlAry"], id, butPanelIdSuffix, dummyButPanelId, noEditButPanelId, "dateAndItemSelectRecnclDivId", {}, "Edit"); //use the id of the current clicked cell (freshly stored in formValHolder for "seltdRowCellId") to display the appropriate but panel
+		selectButPanel(staticArys["displayCellDescrpAry"], fieldNameAry, staticArys["butPanelControlAry"], id, butPanelIdSuffix, dummyButPanelId, noEditButPanelId, "dateAndItemSelectRecnclDivId", {}, restrictionsAry, "Edit"); //use the id of the current clicked cell (freshly stored in formValHolder for "seltdRowCellId") to display the appropriate but panel
 	
 		var conditionsObj = {"RcnclDate":{"Account":"General"} }; //conditions opject for panel display or not. See description in valueMatchInObj()
 
-		selectButPanel(staticArys["displayCellDescrpAry"], staticArys["subButPanelControlAry"], id, subButPanelIdSuffix, dummySubButPanelId, noEditButPanelId, "dateAndItemSelectRecnclDivId", conditionsObj, "Edit"); //for subButtons
+		selectButPanel(staticArys["displayCellDescrpAry"], fieldNameAry, staticArys["subButPanelControlAry"], id, subButPanelIdSuffix, dummySubButPanelId, noEditButPanelId, "dateAndItemSelectRecnclDivId", conditionsObj, restrictionsAry, "Edit"); //for subButtons
 	}
 	else {
-		selectButPanel(staticArys["displayCellDescrpAry"], staticArys["butPanelControlAry"], id, butPanelIdSuffix, dummyButPanelId, noEditButPanelId, "dateAndItemSelectRecnclDivId", {}, "No Edit"); //use the id of the current clicked cell (freshly stored in formValHolder for "seltdRowCellId") to display the appropriate but panel
+		selectButPanel(staticArys["displayCellDescrpAry"], fieldNameAry, staticArys["butPanelControlAry"], id, butPanelIdSuffix, dummyButPanelId, noEditButPanelId, "dateAndItemSelectRecnclDivId", {}, restrictionsAry, "No Edit"); //use the id of the current clicked cell (freshly stored in formValHolder for "seltdRowCellId") to display the appropriate but panel
 		//document.getElementById("defaultButPanel").style.display = 'inline';
 	}
 
@@ -191,6 +191,8 @@ function atomicAjaxCall(
 	recEndDate,
 	heldKey,
 	compoundNum,
+	compoundTypeAry,
+	compoundGroupIdrAry,
 	altGrLastPressedTime,
 	createParent,
 	idrArry,
@@ -199,7 +201,8 @@ function atomicAjaxCall(
 	displayCellDescrpAry,
 	allRecordsColNameRndAry,
 	headingAry,
-	bankAccNameAry
+	bankAccNameAry,
+	restrictionsAry //not sure if needed but ready in case
 	) {
 	console.log("HERE ##################################### atomicAjaxCall()");
 	if (atomicAjaxCallCompleted) { //prevents new calls to server before existing one has completed - NOT SURE IF THIS IS THE OPTIMUM PLACE FOR THIS (BUT COULD BE IF ALL SERVER CALLS COME THROUGH HERE!)
@@ -236,18 +239,13 @@ console.log("HERE ##################################### atomicAjaxCall()   PRE-A
 			arry["idRlist"] = [valGet("seltdRowCellId").split("-")[0]]
 		}
 
-		//createa an object array of cell classes before any changes are made by ajax send functions. The array is a javascript object with idRs as value names
-		var savedCellClassesArry = {};
-		arry["idRlist"].forEach(function(value) {
-			savedCellClassesArry[value] = document.getElementById(value+"-"+cellId.split("-")[1]).className; //save original class for re-enstatement later;
-			
-		});
+		savedCellClassesArry = getAryOfClasses(arry["idRlist"], cellId.split("-")[1]);
 
 		arry = setCompoundTransAjaxSend(arry, cellId, heldKey, compoundNum);
 		
 		arry = createParentAjaxSend(arry, cellId, createParent, cellWarnClass); //only executes internally if createParent = "yes" (if this is so stickyAjaxSend() will have already been disabled for families)
 		arry = stickyAjaxSend(arry, itemStr, cellId, idrArry, cellWarnClass, displayCellDescrpAry); //only executes internally if sticky item for this column has been set (i.e. isn't "")
-		arry = withdrawnPaidinAjaxSend(arry, editableCellIdValHldr, moneyCellWarnClass, displayCellDescrpAry, headingAry, bankAccNameAry); //only executes internally if editableCellIdValHldr value is != 0 (i.e. a withdrawn/paidin value has been changed)
+		arry = withdrawnPaidinAjaxSend(arry, editableCellIdValHldr, moneyCellWarnClass, displayCellDescrpAry, headingAry, bankAccNameAry, compoundTypeAry, compoundGroupIdrAry); //only executes internally if editableCellIdValHldr value is != 0 (i.e. a withdrawn/paidin value has been changed)
 		arry = directStrEditAjaxSend(arry, editableCellIdValHldr, cellWarnClass, displayCellDescrpAry, allRecordsColNameRndAry); //only executes internally if editableCellIdValHldr value is != 0 (i.e. a  editable string cell value has been clicked)
 		arry = getBalDataSend(arry, cellId, recStartDate, recEndDate, valGet("runNormalBalFunc")); //executes if runBalFunc = "Yes" (though php on server may return all balances as "0.00" if nonsensical column like date is clicked)
 		arry = docUpdateSend(arry, cellId, accountBankLinksArry, auxButtonTxt); //only executes if currentDocRnd != previousDocRnd or column 8 (reconciliation) has been selected
@@ -261,9 +259,9 @@ console.log("HERE ##################################### atomicAjaxCall()   PRE-A
 		      	var arryBackFromPhp = JSON.parse(xmlhttp.responseText);
 		      	console.log(JSON.stringify(arryBackFromPhp, null, 4));
 
-		      	setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellDescrpAry);
+		      	setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellDescrpAry, compoundTypeAry);
 		      	createParentAjaxReceive(arry, arryBackFromPhp, cellId);
-		      	stickyAjaxReceive(arry, arryBackFromPhp, cellId, itemStr, savedCellClassesArry);
+		      	stickyAjaxReceive(arry, arryBackFromPhp, cellId, savedCellClassesArry);
 		      	withdrawnPaidinAjaxReceive(arry, arryBackFromPhp);
 		      	directStrEditAjaxReceive(	arry,
 		      								arryBackFromPhp
@@ -311,22 +309,42 @@ function setCompoundTransAjaxSend(arry, cellId, heldKey, compoundNum) {
 	return arry;
 }
 
-function setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellDescrpAry) {
+function setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellDescrpAry, compoundTypeAry) {
 	var maxColIdx = displayCellDescrpAry.length - 1; //derive maximum column index from displayCellDescrpAry which holds single word descriptions for each column
+	var familyColKeyStr = String(getKeyFromValue(displayCellDescrpAry, "Family"));
 	if (existsAndTrue(arryBackFromPhp, "PHPsetCompoundTransHasRun")) { //only run if complementary send function has already run
 		compoundNum = arryBackFromPhp["returnCompoundNum"]; //used to set value of this global external to this function (also cleared by both press or release of AltGr keyboard button)
 		var compoundActionAry = arryBackFromPhp["compoundActionAry"];
-		for (let key in compoundActionAry) {
-			if (compoundActionAry[key] == "Created") {
+		for (let key in compoundActionAry) { //loops through all the positions in the returned compoundActionAry
+			if (compoundActionAry[key] == "NewMaster") {
+				compoundTypeAry[key] = "Master"; //change global variable to record new master creation
 				for(i = 0; i <= maxColIdx; i++) { //loop through all the columns in the row
-			    	rowColIdx = cellId.split("-")[0]+"-"+i; //reconstruct the element id for each element the loop addresses
-			    	changeSuffixClass(rowColIdx, "yellowGradient");
+					if ((displayCellDescrpAry[i] == "MoneyOut") || (displayCellDescrpAry[i] == "MoneyIn")) { //check fro this section and use compound colours if necessary
+				    	changeSuffixClass(key+"-"+i, colClssAry["compoundMaster"]);
+				    }
+			    } 
+			}
+			if (compoundActionAry[key] == "NewSlave") {
+				compoundTypeAry[key] = "FinalSlave"; //change global variable to record new master creation
+				for(i = 0; i <= maxColIdx; i++) { //loop through all the columns in the row
+					if ((displayCellDescrpAry[i] == "MoneyOut") || (displayCellDescrpAry[i] == "MoneyIn")) { //check fro this section and use compound colours if necessary
+				    	changeSuffixClass(key+"-"+i, colClssAry["compoundSlaveFinal"]);
+				    }
+			    } 
+			}
+			if (compoundActionAry[key] == "Destroyed") {
+				compoundTypeAry[key] = "None"; //change global variable to record destruction of compound state for this row
+				for(i = 0; i <= maxColIdx; i++) { //loop through all the columns in the row
+					if ((displayCellDescrpAry[i] == "MoneyOut") || (displayCellDescrpAry[i] == "MoneyIn")) { //check fro this section and use compound colours if necessary
+				    	var adjacentClass = getSuffixClass(key+"-"+familyColKeyStr); //get selection class for row from the family cell in the row (not normally selectable)
+				    	changeSuffixClass(key+"-"+i, adjacentClass);
+				    }
 			    } 
 			}
 		  	
 		}
-		//consoleAry(compoundActionAry);
 	}
+	//consoleAry(compoundTypeAry);
 }
 
 function createParentAjaxSend(arry, cellId, createParent, cellWarnClass) {
@@ -369,7 +387,7 @@ function stickyAjaxSend(arry, itemStr, cellId, idrArry, cellWarnClass, displayCe
 	}
 	if (displayCellDescrpAry[colId] == 'Family') { //if a child update - also uses different checking and update code in writeReadAllRecordsItem() php function
 		if ((valGet("stickyActive-"+cellId.split("-")[1]) == "yes")) { //check to make sure flag indicates a sticky itemStr for this column has been set so the function should be run 
-			arry["itemStr"] = itemStr.replace(/\D/g,''); //removes all characters execpt numbers 0-9 - returns empty string "" if no numeric characters are in itemStr
+			arry["itemStr"] = itemStr.replace(/\D/g,''); //removes all characters except numbers 0-9 - returns empty string "" if no numeric characters are in itemStr
 			arry["cellId"] = cellId;
 			arry["stickyOrgClass"] = document.getElementById(cellId).className; //save original class for re-enstatement later
 			arry["idRlist"].forEach(function(value) { //cycle through all the cell idRs selected by 'shift' click
@@ -381,7 +399,7 @@ function stickyAjaxSend(arry, itemStr, cellId, idrArry, cellWarnClass, displayCe
 	return arry;
 }
 
-function stickyAjaxReceive(arry, arryBackFromPhp, cellId, itemStr, savedCellClassesArry) {
+function stickyAjaxReceive(arry, arryBackFromPhp, cellId, savedCellClassesArry) {
 	if (existsAndTrue(arryBackFromPhp, "PHPwriteReadAllRecordsItemHasRun")) { //only run if complementary send function has already run
 		console.log("In stickyAjaxReceive() !");
 		var column = cellId.split("-")[1];
@@ -411,57 +429,27 @@ function stickyAjaxReceive(arry, arryBackFromPhp, cellId, itemStr, savedCellClas
 	}
 }
 
-function withdrawnPaidinAjaxSend(arry, editableCellIdValHldr, moneyWarnClass, displayCellDescrpAry, headingAry, bankAccNameAry) {
-	var editableCellId = valGet(editableCellIdValHldr); 
-	var colId = editableCellId.split("-")[1]; //get the column number that was clicked
+/*   */
+function withdrawnPaidinAjaxSend(arry, editableCellIdValHldr, moneyWarnClass, displayCellDescrpAry, headingAry, bankAccNameAry, compoundTypeAry, compoundGroupIdrAry) {
+	var cellId = valGet(editableCellIdValHldr); 
+	var colId = cellId.split("-")[1]; //get the column number that was clicked
 	if ((displayCellDescrpAry[colId] == "MoneyOut") || (displayCellDescrpAry[colId] == "MoneyIn")) { //withdrawn or paidin cell so run this function		
 		valSet(editableCellIdValHldr, 0); //resets the id value holder pointed to by editableCellIdValHldr
-		if (editableCellId != 0) { //the cell that was previously in focus before the current cell that triggered this atomicAjaxCall was an editable one, and may have a new value in it
-			var accountName = document.getElementById(editableCellId.split("-")[0]+"-"+getKeyFromValue(headingAry, "Account")).innerText //gets the name from the Account column
+		if (cellId != 0) { //the cell that was previously in focus before the current cell that triggered this atomicAjaxCall was an editable one, and may have a new value in it
+			var accountName = document.getElementById(cellId.split("-")[0]+"-"+getKeyFromValue(headingAry, "Account")).innerText //gets the name from the Account column
 			var isBankAcc = false;
 			if (-1 < bankAccNameAry.indexOf(accountName)) { //if the name from the account column is one of names that have been designated as a bank account
 				isBankAcc = true;
 			}
-			var value = document.getElementById(editableCellId).innerText; //get money value held in the cell
-			var recordId = editableCellId.split("-")[0]; //row in allRecords table that needs to be updated			
 			if (displayCellDescrpAry[colId] == 'MoneyOut') {
-				var withdrnId = editableCellId;
-				var paidinId = editableCellId.split("-")[0]+"-"+(parseInt(editableCellId.split("-")[1]) + 1);
-				var setWithdrawnFmtd = getTwoDecPlacesAndSan(document.getElementById(withdrnId).innerText, true); //formatted withdrawn value from textbox
-			    if (isBankAcc) { //it's a bank account so allow figure in both withdrawn and paidin
-			    var setPaidinFmtd = getTwoDecPlacesAndSan(document.getElementById(paidinId).innerText); //formatted paidin value from textbox
-				    if (setPaidinFmtd.length == 0) {
-				    	setPaidinFmtd = "0.00";
-				    }
-				}
-				else { //not a bank account so clear other value as only withdrawn OR paidin allowed
-					var setPaidinFmtd = "0.00"; //formatted paidin value set to 0.00 because the new value that has been entered is in the withdrawn textbox
-				}
-
+				var withdrnId = cellId;
+				var paidinId = cellId.split("-")[0]+"-"+(parseInt(cellId.split("-")[1]) + 1);
 			}
 			if (displayCellDescrpAry[colId] == 'MoneyIn') {
-				var withdrnId = editableCellId.split("-")[0]+"-"+(parseInt(editableCellId.split("-")[1]) - 1);
-				var paidinId = editableCellId;
-			    var setPaidinFmtd = getTwoDecPlacesAndSan(document.getElementById(paidinId).innerText, true); //formatted paidin value from textbox
-			    if (isBankAcc) { //it's a bank account so allow figure in both withdrawn and paidin
-				    var setWithdrawnFmtd = getTwoDecPlacesAndSan(document.getElementById(withdrnId).innerText); //formatted withdrawn value from textbox
-				    if (setWithdrawnFmtd.length == 0) {
-				    	setWithdrawnFmtd = "0.00";
-				    }
-				}
-				else { //not a bank account so clear other value as only withdrawn OR paidin allowed
-					var setWithdrawnFmtd = "0.00"; //formatted withdrawn value set to 0.00 because the new value that has been entered is in the paidin textbox
-				}
+				var withdrnId = cellId.split("-")[0]+"-"+(parseInt(cellId.split("-")[1]) - 1);
+				var paidinId = cellId;
 			}
-			arry["withdrnId"] = withdrnId;
-			arry["paidinId"] = paidinId;
-			arry["withdrnOrgClass"] = document.getElementById(withdrnId).className; //save original class for re-enstatement later
-			arry["paidinOrgClass"] = document.getElementById(paidinId).className; //save original class for re-enstatement later
-			document.getElementById(withdrnId).className = moneyWarnClass; //set the withdrawn textbox class to warning until it has been properly updated with data back from the table 
-			document.getElementById(paidinId).className = moneyWarnClass; //set the paidin textbox class to warning until it has been properly updated with data back from the table 
-			arry["moneyIdR"] = recordId;
-			arry["withdrawn"] = setWithdrawnFmtd;
-			arry["paidin"] = setPaidinFmtd;
+			arry["compoundGroupAry"] = compoundGroupAry(cellId, withdrnId, paidinId, compoundGroupIdrAry, colClssAry, isBankAcc); //create an array of cellIds corresponding to the compound group of withdrawn values potentially affected by the withdrawn or paidin edit
 			arry["withdrawnPaidinAjaxSendHasRun"] = true;
 		}
 	}
@@ -470,37 +458,38 @@ function withdrawnPaidinAjaxSend(arry, editableCellIdValHldr, moneyWarnClass, di
 
 function withdrawnPaidinAjaxReceive(arry, arryBackFromPhp) {
 	if (existsAndTrue(arryBackFromPhp, "PHPupdateWithdrawnPaidinHasRun")) { //only run if complementary send function has already run
-	    var returnedWithdrawnFmtd = getTwoDecPlacesAndSan(arryBackFromPhp["withdrawn"]); //formatted returned withdrawn value
-	    var returnedPaidinFmtd = getTwoDecPlacesAndSan(arryBackFromPhp["paidin"]); //formatted returned paidin value
-	    if (valGet("allowedToEdit") == "Yes") { //only check for match of sent and return data before removing warning class if editing rights are given - with no editing rights the current table values will always be returned and the table will remain unaltered
-	        if ((returnedWithdrawnFmtd == getTwoDecPlacesAndSan(arry["withdrawn"])) && (returnedPaidinFmtd == getTwoDecPlacesAndSan(arry["paidin"]))) { //check that the returned data matches that sent before removing the warning class from the display cell
-	          document.getElementById(arry["withdrnId"]).className = arry["withdrnOrgClass"];
-	          document.getElementById(arry["paidinId"]).className = arry["paidinOrgClass"];
-	        }
-	    }
-	    else {
-	    	document.getElementById(arry["withdrnId"]).className = arry["withdrnOrgClass"];
-	        document.getElementById(arry["paidinId"]).className = arry["paidinOrgClass"];
-	    }
-	    document.getElementById(arry["withdrnId"]).innerText = returnedWithdrawnFmtd;
-	    document.getElementById(arry["paidinId"]).innerText = returnedPaidinFmtd;
+		var compoundGroupAry = arry["compoundGroupAry"];
+		var withdrawnAry = compoundGroupAry["withdrawnAry"];
+		var paidinAry = compoundGroupAry["paidinAry"];
+
+		var compoundGroupAryBack = arryBackFromPhp["compoundGroupAryBack"];
+		var idrAry = compoundGroupAryBack["idrAry"];
+		var withdrawnColId = compoundGroupAryBack["withdrawnColId"];
+		var paidinColId = compoundGroupAryBack["paidinColId"];
+		var updatedWithdrawnAry = compoundGroupAryBack["updatedWithdrawnAry"];
+		var updatedPaidInAry = compoundGroupAryBack["updatedPaidInAry"];
+		var withdrnOrgSuffixClassAry = compoundGroupAryBack["withdrnOrgSuffixClassAry"];
+		var paidinOrgSuffixClassAry = compoundGroupAryBack["paidinOrgSuffixClassAry"];
+		chkAndUpdtValueAndClasSfx(idrAry, withdrawnColId, updatedWithdrawnAry, withdrawnAry, withdrnOrgSuffixClassAry);
+		chkAndUpdtValueAndClasSfx(idrAry, paidinColId, updatedPaidInAry, paidinAry, paidinOrgSuffixClassAry);
 	}
 }
 
 
 function directStrEditAjaxSend(arry, editableCellIdValHldr, cellWarnClass, displayCellDescrpAry, allRecordsColNameRndAry) {
-	editableCellId = valGet(editableCellIdValHldr);
-	var colId = editableCellId.split("-")[1]; //get the column number that was clicked
+	cellId = valGet(editableCellIdValHldr);
+	var colId = cellId.split("-")[1]; //get the column number that was clicked
 	if ((displayCellDescrpAry[colId] == "Reference") || (displayCellDescrpAry[colId] == "Note")) { //an editable cell so run this function		
 		valSet(editableCellIdValHldr, 0); //resets the id value holder pointed to by editableCellIdValHldr
-		if (editableCellId != 0) { //the cell that was previously in focus before the current cell that triggered this atomicAjaxCall was an editable one, and may have a new value in it
-			var value = document.getElementById(editableCellId).innerText; //get string value held in the cell
-			var recordId = editableCellId.split("-")[0]; //row in allRecords table that needs to be updated
+		if (cellId != 0) { //the cell that was previously in focus before the current cell that triggered this atomicAjaxCall was an editable one, and may have a new value in it
+			var value = document.getElementById(cellId).innerText; //get string value held in the cell
+			var recordId = cellId.split("-")[0]; //row in allRecords table that needs to be updated
 			var allrecordsColNameRnd = allRecordsColNameRndAry[colId]; //random alphanumeric that corresponds to the column (field) name that needs to be updated - will be decoded by php on server		
-			arry["editableCellId"] = editableCellId; //save the id of the ecitable cell for use when the update confirmation comes back from the table on the server
-			arry["editableCellOrgClass"] = document.getElementById(editableCellId).className; //save original class for re-enstatement later
-			document.getElementById(editableCellId).className = cellWarnClass; //set the editable cell class to warning until it has been properly updated with data back from the table 
+			arry["cellId"] = cellId; //save the id of the ecitable cell for use when the update confirmation comes back from the table on the server
+			arry["editableCellOrgClass"] = document.getElementById(cellId).className; //save original class for re-enstatement later
+			document.getElementById(cellId).className = cellWarnClass; //set the editable cell class to warning until it has been properly updated with data back from the table 
 			arry["editableCellIdR"] = recordId;
+			arry["editableCellId"] = cellId;
 			arry["allrecordsColNameRnd"] = allrecordsColNameRnd;
 			arry["editableCellVal"] = sanitiseText(value);
 			arry["directStrEditAjaxSendHasRun"] = true;
@@ -571,6 +560,7 @@ function docUpdateSend(arry, docUpdateCellId, accountBankLinksArry, auxButtonTxt
 	//arry["accountIsRelevant"] = "No"; //set flag to default "No" that indicates to updateDocFilename() that the account is relevant (i.e. "General") when request is to display a reconciling bank statement
 	var accountName = document.getElementById(docUpdateCellId.split("-")[0]+"-5").innerText; //get value of account cell at column 5
 	if (accountBankLinksArry.hasOwnProperty(accountName)) {
+		//alert("ACCOUNT!");
 		//arry["accountIsRelevant"] = "Yes"; //the selected row is a valid account in terms of showing a bank statement for reconciling purposes
 		arry["bankAccName"] = accountBankLinksArry[accountName];
 	}
@@ -596,11 +586,295 @@ function docUpdateReceive(arry, arryBackFromPhp) {
 	}
 }
 
-//                                                                                                         #########
-//                                                                                                         #########
+//                                                                                                 #################
+//                                                                                                 #################
+//                                                                                                 #################
 //################################## END OF FUNCTIONS FOR ATOMIC AJAX CALL #########################################
-//                                                                                                         #########
-//                                                                                                         #########
+//                                                                                                 #################
+//                                                                                                 #################
+//                                                                                                 #################
+
+
+/* Uses passed cell ids, amount, array if compound numbers linked to idRs, colour suffix class array, and bank account flag to calculate amount values for withdrawn and paidin to maintain a consistant sum for all cells in the compound group. Returns an object (array) with subarrays of idRs, colIds, amounts and original class suffixes (which this function replaces with "waitingForServer" ones) in the form:
+{
+    "idrAry": [
+        "348",
+        "351",
+        "495"
+    ],
+    "withdrawnColId": "3",
+    "paidinColId": "4",
+    "withdrawnAry": [
+        3,
+        0,
+        0
+    ],
+    "paidinAry": [
+        0,
+        12,
+        53.77
+    ],
+    "withdrnOrgSuffixClassAry": [
+        "yellowGradientHardBot",
+        "green",
+        "greenGradientHardTop"
+    ],
+    "paidinOrgSuffixClassAry": [
+        "yellowGradientHardBot",
+        "green",
+        "greenGradientHardTop"
+    ]
+}
+} */
+function compoundGroupAry(cellId, withdrnId, paidinId, compoundGroupIdrAry, colClssAry, isBankAcc) {
+	var compoundNumIdrAry = getcompoundNumIdrAry(compoundGroupIdrAry, withdrnId.split("-")[0] ); //indexed subarray of idRs grouped by a common compound number with the edit cell idR extracted from withdrnId
+	var keyOfEditIdr = getKeyFromValue(compoundNumIdrAry, withdrnId.split("-")[0]);
+	var withdrawnAry = compoundNumIdrAry.map(getCellValues, {cellId: withdrnId}); //map via compoundNumIdrAry() to get an array of withdrawn ammounts in the compound group
+	var paidinAry = compoundNumIdrAry.map(getCellValues, {cellId: paidinId});
+
+	var withdrnOrgSuffixClassAry = compoundNumIdrAry.map(changeAndSaveClassSuffixes, {cellId: withdrnId, colClssAry: colClssAry}); //map via compoundNumIdrAry() to save (original) and replace class suffix
+	var paidinOrgSuffixClassAry = compoundNumIdrAry.map(changeAndSaveClassSuffixes, {cellId: paidinId, colClssAry: colClssAry});
+
+	var amountsAry = {"cellId":cellId, "idrAry":compoundNumIdrAry, "withdrawnColId":withdrnId.split("-")[1], "paidinColId":paidinId.split("-")[1], "withdrawnAry":withdrawnAry, "paidinAry":paidinAry, "withdrnOrgSuffixClassAry":withdrnOrgSuffixClassAry, "paidinOrgSuffixClassAry":paidinOrgSuffixClassAry, "isBankAcc":isBankAcc};
+	function getCellValues(value) {
+		var colId = this.cellId.split("-")[1];
+		var rowId = value;
+	  	return Number(sanTwoDecPlcs(document.getElementById(rowId+"-"+colId).innerText)); //get cell value
+	}
+	function changeAndSaveClassSuffixes(value) {
+		var colId = this.cellId.split("-")[1];
+		var rowId = value;
+		return changeSuffixClass((rowId+"-"+colId), this.colClssAry["waitingForServer"]); //save original suffix for assembly into an array and replace it with temporary "waitingForServer" one
+	}
+	applyAmountRules(amountsAry); //amountsAry is passed by reference so can be modified within function an doesn't need to be returned (THIS IS THE CASE FOR MANY ajax FUNCTIONS BUT RETURNS ARE USED FOR CLARITY TO INDICATE WHAT'S GOING ON !)
+	return amountsAry;
+}
+
+
+
+
+function applyAmountRules(amountsAry) {
+	var isBankAcc = amountsAry["isBankAcc"];
+	var editCellId = amountsAry["cellId"];
+	var editColId = editCellId.split("-")[1];
+	var editIdR = editCellId.split("-")[0];
+	if (editColId == amountsAry["withdrawnColId"]) { //creates col id for other pair of the column that is being edited, 
+		editColName = "withdrawnColId";
+		otherColName = "paidinColId";
+	}
+	else {
+		editColName = "paidinColId";
+		otherColName = "withdrawnColId";
+	}
+	var idrAry = amountsAry["idrAry"];
+	var keyOfEditIdr = getKeyFromValue(idrAry, editIdR);
+	var withdrawnAry = amountsAry["withdrawnAry"]; //reflects existing and edited cell
+	var paidinAry = amountsAry["paidinAry"]; //reflects existing and edited cell
+	var withdrawnResultsAry = []; //created to receive amount values modified by rules
+	var paidinResultssAry = []; //created to receive amount values modified by rules
+	if (keyOfEditIdr == 0) { //editing either the master of a compound group, or a single transaction on it's own - if master then it can take any value and slaves will be processed below according to rules
+		if ((isBankAcc) && (idrAry.length == 1)) { //editing a single line bank account row so both withdrawn and paidin can contain values - no other rows to consider
+			//do nothing - the entered value and any existing value of the other cell of the pair can go to the server for updating the table
+		}
+		else { //normal edit of a master of a compound group, or a single transaction on it's own
+			if (withdrawnAry[0] == paidinAry[0]) { //master edit on other side with same value has forced change of sides
+				swapAllExceptKeyOfEditIdr(withdrawnAry, paidinAry, keyOfEditIdr); //swap values from one side to another except that at index keyOfEditIdr
+				if (editColName == "withdrawnColId") {
+					amountsAry["paidinAry"][0] = 0; //zero paidin master because it will still have original matching value in it
+				}
+				else {
+					amountsAry["withdrawnAry"][0] = 0; //zero withdrawn master because it will still have original matching value in it
+				}
+				alert("Changing Sides!");
+			}
+			else {
+				var slaveDivisor = (idrAry.length -1); //number to divide first slave by
+				if (editColName == "withdrawnColId") { //withdrawn cell is the one edited
+					withdrawnResultsAry[0] = withdrawnAry[0]; //simply copy value received from edited cell to results array witn no changes
+					paidinResultssAry[0] = 0; //clear other side of pair
+					var valueLeftForNextSlave = withdrawnAry[0]; //start with value of master
+					for (var slaveIdx = 1; slaveIdx < idrAry.length; slaveIdx++) { //loop through all withdrawn slaves
+						withdrawnResultsAry[slaveIdx] = smartMoneyDiv(valueLeftForNextSlave, slaveDivisor); //set slave to current valueLeftForNextSlave divided by current slaveDivisor (rounded to 2 dec places)
+						valueLeftForNextSlave -= withdrawnResultsAry[slaveIdx];
+						slaveDivisor--;
+						paidinResultssAry[slaveIdx] = 0; //clear other side of pair
+					}
+					sortNumAryDesPosAndNeg(withdrawnResultsAry);
+				}
+				else { //paidin cell is the one edited
+					paidinResultssAry[0] = paidinAry[0]; //simply copy value received from edited cell to results array witn no changes
+					withdrawnResultsAry[0] = 0; //clear other side of pair
+					var valueLeftForNextSlave = paidinAry[0]; //start with value of master
+					for (var slaveIdx = 1; slaveIdx < idrAry.length; slaveIdx++) { //loop through all withdrawn slaves
+						paidinResultssAry[slaveIdx] = smartMoneyDiv(valueLeftForNextSlave, slaveDivisor); //set slave to current valueLeftForNextSlave divided by current slaveDivisor (rounded to 2 dec places)
+						valueLeftForNextSlave -= paidinResultssAry[slaveIdx];
+						slaveDivisor--;
+						withdrawnResultsAry[slaveIdx] = 0; //clear other side of pair
+					}
+					sortNumAryDesPosAndNeg(paidinResultssAry);
+				}
+				amountsAry["withdrawnAry"] = withdrawnResultsAry; //assign the results to original amounts subarray here so that if isBankAcc is imposed the original amounts will remain for double entry
+				amountsAry["paidinAry"] = paidinResultssAry;
+			}
+		}
+	}
+	else { //editing a slave
+		if (idrAry.length < 3) { //only one master and one slave so editing single slave (id = 1)
+			alert("Can't change single slave!");
+			withdrawnResultsAry[0] = withdrawnAry[0]; //simply copy master value witn no changes
+			paidinResultssAry[0] = paidinAry[0]; //simply copy master value witn no changes
+			withdrawnResultsAry[1] = withdrawnAry[0]; //simply copy value received from edited slave to results array witn no changes
+			paidinResultssAry[1] = paidinAry[0]; //simply copy value received from edited slave to results array witn no changes
+			amountsAry["withdrawnAry"] = withdrawnResultsAry; //assign the results to original amounts subarray here so that if isBankAcc is imposed the original amounts will remain for double entry
+			amountsAry["paidinAry"] = paidinResultssAry;
+		}
+		else { //more than one slave so apply rules to alter them
+			
+			if (editColName == "withdrawnColId") { //withdrawn slave is the one edited
+				if (0 < paidinAry[0]) { //slave edit has forced change of sides
+					swapAllExceptKeyOfEditIdr(withdrawnAry, paidinAry, keyOfEditIdr)
+					alert("Changing Sides!");
+				}
+				withdrawnResultsAry[0] = withdrawnAry[0]; //simply copy master value witn no changes
+				paidinResultssAry[0] = paidinAry[0]; //simply copy master value witn no changes
+				applySlaveRules(withdrawnAry, keyOfEditIdr, withdrawnResultsAry, paidinResultssAry);
+			}
+			else { //paidin cell is the one edited
+				if (0 < withdrawnAry[0]) {
+					swapAllExceptKeyOfEditIdr(withdrawnAry, paidinAry, keyOfEditIdr)
+					alert("Changing Sides!");
+				}
+				withdrawnResultsAry[0] = withdrawnAry[0]; //simply copy master value witn no changes
+				paidinResultssAry[0] = paidinAry[0]; //simply copy master value witn no changes
+				applySlaveRules(paidinAry, keyOfEditIdr, paidinResultssAry, withdrawnResultsAry);
+			}
+			amountsAry["withdrawnAry"] = withdrawnResultsAry; //assign the results to original amounts subarray here so that if isBankAcc is imposed the original amounts will remain for double entry
+			amountsAry["paidinAry"] = paidinResultssAry;
+		}
+	}
+}
+
+/* Swaps all values from one array to the other, except at index position keyOfEditIdr.  */
+function swapAllExceptKeyOfEditIdr(sourceAry1, sourceAry2, keyOfEditIdr) {
+	for (var slaveIdx = 0; slaveIdx < sourceAry1.length; slaveIdx++) {
+		if (slaveIdx == keyOfEditIdr)  { //slave matching keyOfEditIdr
+			//leave arrays as they are at thie position
+		}
+		else { //slave that is none of the above
+			var sourceAry1Temp = sourceAry1[slaveIdx]; //swap paid in and withdrawn (two lines below as well)
+			sourceAry1[slaveIdx] = sourceAry2[slaveIdx]; 
+			sourceAry2[slaveIdx] = sourceAry1Temp;
+		}
+	}
+}
+
+/* Applies the rules by taking the values from the source array and creating an editedResultsAry from the original [].  */
+function applySlaveRules(sourceAry, keyOfEditIdr, editedResultsAry, zeroedResultsAry) {
+	//var editedResultsAry = [];
+	//var zeroedResultsAry = [];
+	var sumOfAllExceptTwo = getsumOfAllExceptTwo(sourceAry, keyOfEditIdr); //gets sum of all the rest of the slaves except the two that will be changed
+	for (var slaveIdx = 1; slaveIdx < sourceAry.length; slaveIdx++) {
+		if (slaveIdx == keyOfEditIdr)  { //slave matching keyOfEditIdr
+			editedResultsAry[slaveIdx] = sourceAry[slaveIdx]; //set editedResultsAry to edited value
+		}
+		else if ((slaveIdx - 1) == keyOfEditIdr) { //slave below slave matching keyOfEditIdr
+			editedResultsAry[slaveIdx] = sourceAry[0] - (sumOfAllExceptTwo + sourceAry[slaveIdx - 1]); //
+		}
+		else if (((slaveIdx + 1) == keyOfEditIdr) && ((slaveIdx + 2) == sourceAry.length)) { //slave above slave matching keyOfEditIdr (which is at last position)
+			editedResultsAry[slaveIdx] = sourceAry[0] - (sumOfAllExceptTwo + sourceAry[slaveIdx + 1]); //
+		}
+		else { //slave that is none of the above
+			editedResultsAry[slaveIdx] = sourceAry[slaveIdx]; //set editedResultsAry to edited value
+		}
+		zeroedResultsAry[slaveIdx] = 0; //clear other side of pair
+	}
+}
+
+
+/* Sorts and array in numerically, in terms of absolute value disrigarding sign. e.g. [7,2,5] becomes [7,5,2] and [-4,-8,-3] becomes [-8,-4,-3]. The array doesn't need to be returned as it is passed by reference. */
+function sortNumAryDesPosAndNeg(aryToSort) {
+	aryToSort.sort(function(a, b){return Math.abs(b) - Math.abs(a)});
+}
+
+
+/* Returns the sum of the values in all cellValuesAry positions greater than index 0, except the one indexed by keyOfEditIdr and the one below it (or above it if it's the last one). keyOfEditIdr index values of 0 or greater than the last index in the array will return 0. */
+function getsumOfAllExceptTwo(cellValuesAry, keyOfEditIdr) {
+	var acruedSlaveValues = 0;
+	if 	((cellValuesAry.length <= keyOfEditIdr) || (keyOfEditIdr == 0)) { 
+		return 0;
+	}
+	for (var slaveIdx = 1; slaveIdx < cellValuesAry.length; slaveIdx++) { //loop through all array except index 0
+		if (slaveIdx == keyOfEditIdr)  { //slave matching keyOfEditIdr
+			//do nothing
+		}
+		else if ((slaveIdx - 1) == keyOfEditIdr) { //slave below slave matching keyOfEditIdr
+			//do nothing
+		}
+		else if (((slaveIdx + 1) == keyOfEditIdr) && ((slaveIdx + 2) == cellValuesAry.length)) { //slave above slave matching keyOfEditIdr (which is at last slave)
+			//do nothing
+		}
+		else { //slave that is none of the above
+			acruedSlaveValues += cellValuesAry[slaveIdx]; //acrue the values of all except the one indexed by keyOfEditIdr and the one below it (or above it if it's the last one)
+		}
+	}
+	return (acruedSlaveValues);
+}
+
+
+function smartMoneyDiv(dividend, divisor) {
+	if (dividend == 0) {
+		return 0;
+	}
+	else {
+		if (dividend < 0) { //dividend is -ve
+			console.log((dividend / divisor) + 0.003);
+			return Number ( (-( ((-dividend / divisor) + 0.003) .toFixed(2) )).toFixed(2)  ); 
+		}
+		else {
+			console.log((dividend / divisor) + 0.003);			
+			return Number(((dividend / divisor) + 0.003).toFixed(2));
+		}
+	}
+}
+
+
+/* Returns the indexed subarray of idRs grouped by a common compound number with the passed idR. If no match is found (say if idR is not part of a compound group) a one item array of idR is returned  */
+function getcompoundNumIdrAry(compoundGroupIdrAry, idR) {
+	for (let key in compoundGroupIdrAry) { //loop through all objects (indexed subarrays) in the compoundGroupIdrAry
+		subarray = compoundGroupIdrAry[key]; //extract each subarry as the loop iterates
+		for (var i = 0; i < subarray.length; i++) { //go through each position in the current subarray
+			if (subarray[i] == idR) { //if given idR matches a subarray value (idR)
+				return compoundGroupIdrAry[key]; //use the key of the subarray to return the indexed subarray of idRs in teh compound group
+			}
+		}
+	}
+	return [idR]; //no matching idR found (idR is not part of a compound group?) so simiply return the search idR itself
+}
+
+function chkAndUpdtValueAndClasSfx (idrAry, colId, updatedValueAry, origValueAry, orgSuffixClassAry) {
+	//alert("In chkAndUpdtValueAndClasSfx !");
+	for (var i = 0; i < idrAry.length; i++) { //loop through all idr indexes (same index will be used for updatedValueAry and orgSuffixClassAry)
+		cellId = idrAry[i]+"-"+colId;
+		var updatedValueFmtd = sanTwoDecPlcs(updatedValueAry[i]);
+		var origValueFmtd = sanTwoDecPlcs(origValueAry[i]);
+		if (updatedValueFmtd == origValueFmtd) {
+			document.getElementById(cellId).innerText = updatedValueFmtd;
+			changeSuffixClass(cellId, orgSuffixClassAry[i]);
+		}
+	}
+}
+
+
+
+/* Goes down column of cells, determined by array of row idRs and colId, copying classes to an array indexed by idR and returns the array. */
+function getAryOfClasses(idrAry, colId) {
+	var savedCellClassesArry = {};
+	idrAry.forEach(function(idR) { //loop through all rows
+		savedCellClassesArry[idR] = document.getElementById(idR+"-"+colId).className; //save class
+		
+	});
+	return savedCellClassesArry;
+}
 
 
 function setSeveralClasses(elementId, arrayOfClasses) {
@@ -618,6 +892,17 @@ function setSeveralClasses(elementId, arrayOfClasses) {
 }
 
 
+
+/* For the element identified by elementId any preexisting OldsuffixClass of a compound class (like "mainClass oldSuffixClass") is returned. If there is no preexisting OldsuffixClass "" is returned.  */
+function getSuffixClass(elementId) {
+	var combinationClass = document.getElementById(elementId).className.split(" ");
+	if (2 == combinationClass.length) { //a preexisting oldSuffixClass exists
+		return combinationClass[1];
+	}
+	else { //no preexisting oldSuffixClass so return ""
+		return "";
+	}
+}
 
 /* For the element identified by elementId any preexisting OldsuffixClass of a compound class (like "mainClass oldSuffixClass") is returned for storage (if required) and replaced by the passed newSuffixClass. If there is no preexisting OldsuffixClass "" is returned, and the mainClass is suffixed with a space followed by the passed newSuffixClass to create a new compound class. If newSuffixClass is not passed or it is "" any preexisting OldsuffixClass is removed along with its preceding space.  */
 function changeSuffixClass(elementId, newSuffixClass = "") {
@@ -747,7 +1032,10 @@ function strToHex(strng){
 }
 
 document.addEventListener("keydown", function(event) {
-	if (event.code =="ControlLeft") {
+	if (((event.code =="ControlLeft") && (currentKey == "Shift")) || ((event.code =="ShiftLeft") && (currentKey == "Control"))) {
+		currentKey = "ControlShift";
+	}
+	else if (event.code =="ControlLeft") {
 		currentKey = "Control";
 	}
 	else if (event.code =="ShiftLeft") {
@@ -761,9 +1049,13 @@ document.addEventListener("keydown", function(event) {
 	else {
 		currentKey = event.which || event.keyCode; //an effort to capture the key number for different operating systems/browsers. different number for uppercase/lowercase
 	}
+
 })
 
-document.addEventListener("keyup", function(event) {
+document.addEventListener("keyup", function(event) { //the if and if elses are a bit redundent as currentKey is always set to "None" on keyup!
+	if (currentKey == "AltGr") { //AltGr key has just been released
+		document.getElementById("7EKR03N0CJ").submit(); //calls new (same) page immediately (refresh to impose compound order for newly created)
+	}
   	if ((event.code =="ControlLeft") && (currentKey == "Control")) {
 		currentKey = "None";
 	}
@@ -892,6 +1184,7 @@ function selectTableRowsForDoc(
 	maxColIdx,			//the maximum column index that needs to be highlighted (starts at 0)
 	rowSel,				//if true indicates row should be selected, false indicates row should be unselected
 	colClssAry,			// array of suffix classes that are all used to difine the color of cells and rows
+	compoundTypeAry,	//array of row types for compound rows - like Master, Slave, FinalSlave, None
 	elementId,			//id of clicked element
 	rowSelColorClass,		//sets background colour to indicate element has been chosen - tailored to each cell depending on array element for column and is a light grey colour
 	columnCsv,			//cvs of all column numbers that have been set to filter, i.e. "2, 5"
@@ -910,7 +1203,7 @@ function selectTableRowsForDoc(
 	var recsAry = document.getElementsByName(currentDocRnd); //get an array of all the elements that have the name attribute set to the same random as the current doc 
 	for(idx = 0; idx < recsAry.length; idx++) { //loop through all records that have the same doc random
 		var rowId = recsAry[idx].id.split("-")[0]; //get the id of the current element and extract the first integer - the bit before the '-' which is the row id
-		console.log(recsAry[idx].value+" "+rowId);
+		//console.log(recsAry[idx].value+" "+rowId);
 		//startTimeout();
 		for(i = 0; i <= maxColIdx; i++) { //loop through all the columns in the row
 		    rowColIdx = rowId+"-"+i; //reconstruct the element id for each element the loop addresses
@@ -918,12 +1211,33 @@ function selectTableRowsForDoc(
 		    	changeSuffixClass(rowColIdx, colClssAry["columnFiltCol"]); 
 		    }
 		    else {
-		    	if (rowSel) {
-		    		changeSuffixClass(rowColIdx, colClssAry["selCol"]);
+		    	if ((displayCellDescrpAry[i] == "MoneyOut") || (displayCellDescrpAry[i] == "MoneyIn")) { //check fro this section and use compound colours if necessary
+		    		if (compoundTypeAry[rowId] == "Master") {
+				    	changeSuffixClass(rowColIdx, colClssAry["compoundMaster"]);
+		    		}
+		    		else if (compoundTypeAry[rowId] == "Slave") {
+				    	changeSuffixClass(rowColIdx, colClssAry["compoundSlave"]);
+		    		}
+		    		else if (compoundTypeAry[rowId] == "FinalSlave") {
+				    	changeSuffixClass(rowColIdx, colClssAry["compoundSlaveFinal"]);
+		    		}
+		    		else {
+		    			if (rowSel) { //not compound rows so use normal select or unselect colours
+				    		changeSuffixClass(rowColIdx, colClssAry["selCol"]);
+				    	}
+				    	else {
+				    		changeSuffixClass(rowColIdx, colClssAry["unselCol"]);
+				    	}
+		    		}
 		    	}
 		    	else {
-		    		changeSuffixClass(rowColIdx, colClssAry["unselCol"]);
-		    	}
+			    	if (rowSel) { //not compound rows so use normal select or unselect colours
+			    		changeSuffixClass(rowColIdx, colClssAry["selCol"]);
+			    	}
+			    	else {
+			    		changeSuffixClass(rowColIdx, colClssAry["unselCol"]);
+			    	}
+			    }
 		    }
 		    if (displayCellDescrpAry[i] == "RcnclDate") { //process if loop is at appropriate column ######EVERYTHING IN THIS IF STATEMENT IS FOR THE RECONCILE COLUMN!! #######
 		    	var endDateRev = dateNumsOnly(endDate); //the endDate just needs the "-"s removed as it is already in the correct order "2020-04-03"
@@ -986,16 +1300,16 @@ function cellMatchInObj(dispCellDescrpAry, elementId, conditionsObj) {
 }
 
 
-/* First all button panels are made invisible and then, for the selected cell, the relevent identifier from the butPanelControlAry is used to unhide the specified button panel. Unless the test with conditionsObj succeeds or there is no relevant data for the current column (see description in cellMatchInObj() function) only the panel referenced by dummyButPanelId will displayed. If "None" is the identifier the panel referenced by dummyButPanelId will be displayed. */
-function selectButPanel(displayCellDescrpAry, butPanelControlAry, elementId, prefix, dummyButPanelId, noEditButPanelId, outerContainerForPanel, conditionsObj, edit) {
+/* First all button panels are made invisible and then, for the selected cell, the relevent identifier from the butPanelControlAry is used to unhide the specified button panel. Unless the test with conditionsObj succeeds or there is no relevant data for the current column (see description in cellMatchInObj() function) only the panel referenced by dummyButPanelId will displayed. If "None" is the identifier the panel referenced by dummyButPanelId will be displayed. Facilitates granular overriding of general no-edit directive for specific button panels (e.g. budget column) for specific users. */
+function selectButPanel(displayCellDescrpAry, fieldNameAry, butPanelControlAry, elementId, prefix, dummyButPanelId, noEditButPanelId, outerContainerForPanel, conditionsObj, restrictionsAry, edit) {
 	startTimeout();
 	document.getElementById(outerContainerForPanel).style.display = 'inline'; //makes containing div visible (it is hidden by default so display area sits at the left for 'non-editing' users)
+	document.getElementById(noEditButPanelId).style.display = 'none';
 	for (index = 0; index < butPanelControlAry.length; index++) { //start by hiding all button panels
 		document.getElementById(prefix+butPanelControlAry[index]).style.display = 'none';
 	}
-	if (edit == "Edit") {
+	if ((edit == "Edit") || (subAryHasValue(restrictionsAry, "allowColumnEdit", fieldNameAry[elementId.split("-")[1]])  )){ //only allow display of button panel for current column if edit is set, OR the subarry of restrictionsAry selected by "allowColumnEdit" contains column (field) name derived from fieldNameAry by indexing with column number (this allows granular setting of edit privilages to be applied to chosen columns when a general - default condition - no editing directive has been enforced)
 		panelIdStrValue = butPanelControlAry[elementId.split("-")[1]]; //extract the panel to be displayed id string value using the second integer of id, the bit after the first '-', as an index
-		//console.log("butPanelIdToDisplay = "+panelIdStrValue)
 		var objTestResult = cellMatchInObj(displayCellDescrpAry, elementId, conditionsObj);
 		if ((panelIdStrValue != "None") && ((objTestResult == "Match Success") || (objTestResult == "Nothing To Test")) ) { //the butPanelControlAry value indexed by elementId is not "None" and cellMatchInObj() passes test
 			document.getElementById(prefix+panelIdStrValue).style.display = 'inline';
@@ -1148,6 +1462,21 @@ function ajaxUpdateDocFileName(
 }
 
 
+/* If the array and key exist, tests the subarray designated by key to see if it contains the value $valueToTestFor. If conditions are met returns true, otherwise false.   */
+function subAryHasValue(ary, key, valueToTestFor) {
+     if (ary.hasOwnProperty(key)) {
+        if (Object.values(ary[key]).indexOf(valueToTestFor) > -1) {
+		   return true;
+		}
+		else {
+			return false;
+		}
+     }
+     else {
+        return false;
+     }
+}
+
 /* sets the value displayed by the element identified by id to 2 decimal places. Up to 4 decimal places will be shown if more figures are entered. nothing is shown if value is 0. */
 function twoDecPlaces(id) {
   unitCostVal = document.getElementById(id).value.toString(); //convert number to string so it can be used by the string replace method.
@@ -1169,7 +1498,7 @@ function twoDecPlaces(id) {
 function getTwoDecPlacesAndSan(value, showZeroAsFloatStr = false) {
   unitCostVal = value.toString(); //convert number to string so it can be used by the string replace method.
   unitCostVal = Number(unitCostVal.replace(/[^0-9.-]/g,'')); //use string replace with reg expression to replace anything but 0-9 and '.' and '-' with '' (nothing). Removes unwanted £ symbols etc. Convert back to Number (doesn't deal with stupid things like two decimal points - these will produce NaN and be caught in updateWithdrawnPaidin() on the server by simply not updating the allRecords table)
-  
+
   unitCostVal = unitCostVal.toFixed(4); //set to 4 decimal places (0.01p) to cope with surface mount components etc. that have fractional penny values.
   if (unitCostVal.toString().charAt(unitCostVal.toString().length-1) == "0") { //these two if statements remove trailing zeros beyond 2 decimal places but allow up to 4 decimal places for none zero decimals.
     unitCostVal = Number(unitCostVal).toFixed(3);
@@ -1182,6 +1511,17 @@ function getTwoDecPlacesAndSan(value, showZeroAsFloatStr = false) {
   } 
   return unitCostVal; //return cost value on form with cleaned value (£s etc removed).
 } 
+
+/* Returns the passed value as a string set to 2 decimal places. Nothing is shown if value is 0. */
+function sanTwoDecPlcs(value) {
+  unitCostVal = value.toString(); //convert number to string so it can be used by the string replace method.
+  unitCostVal = Number(unitCostVal.replace(/[^0-9.-]/g,'')); //use string replace with reg expression to replace anything but 0-9 and '.' and '-' with '' (nothing). Removes unwanted £ symbols etc. Convert back to Number (doesn't deal with stupid things like two decimal points - these will produce NaN and be caught in updateWithdrawnPaidin() on the server by simply not updating the allRecords table)
+  unitCostVal = unitCostVal.toFixed(2); //set to 2 decimal places (1.77)
+  if (unitCostVal == 0) {
+    unitCostVal = ""; //set to "" so 0.0000 isn't seen if there is no value set
+  } 
+  return unitCostVal; //return cost value on form with cleaned value (£s etc removed).
+}
 
 
 /* sets the class of element identified by Id to theClass. */

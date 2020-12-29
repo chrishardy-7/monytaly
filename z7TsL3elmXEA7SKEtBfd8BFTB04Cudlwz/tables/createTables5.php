@@ -82,6 +82,7 @@ $stmt = $conn->prepare('CREATE TABLE IF NOT EXISTS personSession (
     forcePwChange           BOOLEAN         NOT NULL DEFAULT TRUE,   
     customSessionCookie    	VARCHAR(200) 	NOT NULL DEFAULT "",
     superuser               BOOLEAN         NOT NULL DEFAULT FALSE,
+    restrictions			VARCHAR(500)    NOT NULL DEFAULT "",
     loggedIn				BOOLEAN			NOT NULL DEFAULT FALSE,
     clientFingerprint       VARCHAR(200)    NOT NULL DEFAULT "",
     serialMenuArray         MEDIUMBLOB      NOT NULL DEFAULT "",

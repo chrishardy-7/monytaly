@@ -5,49 +5,68 @@
 
 
 
-/* Returns an array of record rows and sorted so any compound rows are grouped together inserted in the correct date position, with the Master first in its original position followed by any slaves (which will be in idR order). Any compound rows with the same compound number should already all have the same date from when they were set as compound in the allRecords table, because this was forced by the PHP function setCompoundTrans(). (SHOULD ALSO CONSIDER INCORPORATING THIS FORCING ACTION TO KEEP DATES IN SYNC IN OTHER PHP FUNCTIONS THAT ATTEMPT TO CHANGE THEM !!) */
+/* Returns an array of record rows and sorted so any compound rows are grouped together inserted in the correct date position, with the Master first in its original position followed by any slaves (which will be in idR order). Any compound rows with the same compound number should already all have the same date from when they were set as compound in the allRecords table, because this was forced by the PHP function setCompoundTrans(). An extra field, "compoundType", is added to each subarry to indicate the kind of compound row - Master, Slave or FinalSlave. (SHOULD ALSO CONSIDER INCORPORATING THIS FORCING ACTION TO KEEP DATES IN SYNC IN OTHER PHP FUNCTIONS THAT ATTEMPT TO CHANGE THEM !!) */
 function sortCompoundRows($recordsDataArry) {
-	$nonSlaveRowsAry = [];
+	$masterCompoundAry = [];
+	$compoundDoneFlagAry = [];
 	$slaveCompoundAry = [];
 	$outputAry = [];
 	foreach ($recordsDataArry as $row) { //loop through all record rows one at a time
-		if ((0 < $row["compound"]) && (($row["compound"] != $row["idR"]))) { //if a row is a slave compound one
-			$slaveCompoundAry[] = $row; //concatonate compound slave to $slaveCompoundAry
+		if ($row["compound"] == $row["idR"]) { //row is a master compound one because compuond number same as idR
+			$masterCompoundAry[] = $row; //concatonate compound master to $masterCompoundAry
 		}
-		else {
-			$nonSlaveRowsAry[] = $row;
+		else if ((0 < $row["compound"]) && (($row["compound"] != $row["idR"]))) { //row is a slave compound one because compuond number not 0 and not same as idR
+			$slaveCompoundAry[] = $row; //concatonate compound slave to $slaveCompoundAry
 		}
 	}
     $slaveSortedAry = sortTwoDimAryForTwoSubArys($slaveCompoundAry, "compound", "idR"); //sort $slaveCompoundAry into first compound then idR order
-    $slaveAryLength = count($slaveSortedAry);
-    $slaveAryIdx = 0;
-	foreach ($nonSlaveRowsAry as $nonSlaveRow) {
-		if (0 < $nonSlaveRow["compound"]) { //this is a compound master so add it and  any associated slaves before going on to next nonslave row
-			$outputAry[] = $nonSlaveRow;
-			foreach ($slaveSortedAry as $slaveIdx=>$slaveRow) { //go through all slave rows and where there is a match of compound number add them
-				if ($slaveRow["compound"] == $nonSlaveRow["compound"]) {
-					$outputAry[] = $slaveRow;
-				}
-			}
-		}
-		else { //ordinary row date is less than or equal to current compound row so just keep adding ordinery rows
-			$outputAry[] = $nonSlaveRow;
-		}
+    //$mergedCompoundary = mergeAlternate($masterCompoundAry, $slaveCompoundAry, "compound");
+    foreach ($recordsDataArry as $recordsDataRow) {
+    	if (0 < $recordsDataRow["compound"]) { //this is a compound row (could be either master or slave)
+	    	if (!array_key_exists($recordsDataRow["compound"], $compoundDoneFlagAry)) { //if this compound number set hasn't already been added to $outputAry
+	    		foreach ($masterCompoundAry as $masterCompoundrow) {
+	    			if ($masterCompoundrow["compound"] == $recordsDataRow["compound"]) { //if the current iteration of $masterCompoundrow has same compound number as the current row in $recordsDataRow
+	    				$masterCompoundrow["compoundType"] = "Master"; //add new compound type key/value to subarray
+	    				$outputAry[] = $masterCompoundrow;
+	    			}
+	    		}
 
-	}
+	    		foreach ($slaveCompoundAry as $slaveCompoundIdx => $slaveCompoundrow) {
+	    			if ($slaveCompoundrow["compound"] == $recordsDataRow["compound"]) { //if the current iteration of $masterCompoundrow has same compound number as the current row in $recordsDataRow
+	    				if (($slaveCompoundIdx < count($slaveCompoundAry)) && ($slaveCompoundAry[$slaveCompoundIdx + 1]["compound"] == $recordsDataRow["compound"])) { //if next row is same compound number
+	    					$slaveCompoundrow["compoundType"] = "Slave"; //add new compound type key/Slave value to subarray
+	    				}
+	    				else {
+	    					$slaveCompoundrow["compoundType"] = "FinalSlave"; //add new compound type key/FinalSlave value to subarray
+	    				}
+	    				$outputAry[] = $slaveCompoundrow;
+	    			}
+	    		}
+
+	    		$compoundDoneFlagAry[$recordsDataRow["compound"]] = "AlreadyAdded"; //flag to inhibit adding compound rows that have already been added when a matching compound number is found later in 
+	    	}
+	    }
+	    else { //this is a normal row
+	    	$recordsDataRow["compoundType"] = "sNone";
+	    	$outputAry[] = $recordsDataRow;
+	    }
+
+    }
+    //pr($outputAry);
 	return $outputAry;
 } 
 
 
-/* Merges groups of subarrays from $masterAry and $slaveAry alternately into the returned array of subarrays in order values pointed to by $subArykey. Subarrays from $masterAry with the first found key value are copied to the merged array first then subarrays with the same key value from $slaveAry. This happens alternately until all the subarrays in $masterAry and $slaveAry have been traversed. */
+/* Merges groups of subarrays from $masterAry and $slaveAry alternately into the returned array of subarrays in order of values pointed to by $subArykey. Subarrays from $masterAry with the first found key value are copied to the merged array first then subarrays with the same key value from $slaveAry. This happens alternately until all the subarrays in $masterAry and $slaveAry have been traversed. If slaves exist without a master they are added on their own */
 function mergeAlternate($masterAry, $slaveAry, $subaryKey) {
     $mergeAry = [];
     $slaveAryIdx = 0;
     foreach ($masterAry as $masterRow) { 
-        $mergeAry[] = $masterRow; //just copy to mergeAry
-        while ($masterRow[$subaryKey] == $slaveAry[$slaveAryIdx][$subaryKey]) {
-        	$mergeAry[] = $slaveAry[$slaveAryIdx]; //just copy current matching slave row to mergeAry
-        	$slaveAryIdx++;
+        $mergeAry[] = $masterRow; //just add to mergeAry
+        foreach ($slaveAry as $slaveRow) {
+        	if ($masterRow[$subaryKey] == $slaveRow[$subaryKey]) { //if slave compound number same as master compound number
+        		$mergeAry[] = $slaveRow; //add slave row
+        	}
         }
 	}
 	return $mergeAry;
@@ -730,7 +749,10 @@ function createStndDisplData(
     $displayLineSelClassesAry = array();
     $fileNameRands = array();
     $idrArry = array();
-    $compoundRowsAry = []; //used to hold idRs of all compound lines. each idR key will have a corresponding value that is either "Master" or "Slave"
+    $compoundTypeAry = []; //used to hold idRs of all compound lines. each idR key will have a corresponding value that is either "Master" or "Slave"
+    $previousLoopCompoundNum = -1; //initial setting so first loop iteration will always be seen as a new group - whether an actual group or just 0
+    $tempCompoundIdrAry = [];
+    $compoundGroupIdrAry = [];
     
 
     $totalWithdrawn = 0;
@@ -864,24 +886,6 @@ function createStndDisplData(
         $displayRowsAry = array();
         $displayRowsClassesAry = array();
 
-        $compoundRowStatus = "None";
-        if (0 < $singleRecArry["compound"]) { //this row is part of a compound set of rows
-            if ($singleRecArry["compound"] == $singleRecArry["idR"]) { //the compound row is a master
-            	$compoundRowStatus = "Master";
-                $compoundRowsAry[$singleRecArry["idR"]] = "Master";
-            }
-            else { //the compound row is a slave
-            	if (($recordsIdx < $recordsDataAryLength) && ($recordsDataArry[$recordsIdx + 1]["compound"] == $singleRecArry["compound"])) { //if next row is same compound number
-	            	$compoundRowStatus = "Slave";
-	                $compoundRowsAry[$singleRecArry["idR"]] = "Slave";
-                }
-                else { //the next row is not part of current compound group so make this the final slave in teh group
-                	$compoundRowStatus = "FinalSlave";
-	                $compoundRowsAry[$singleRecArry["idR"]] = "FinalSlave";
-                }
-            }
-        }
-
 
 //##############################
 //##############################
@@ -898,21 +902,34 @@ function createStndDisplData(
 
 
 //green experimental settings are near top of function
-
-        if ($compoundRowStatus == "Master") {
+//pr($singleRecArry["compound"]);
+        if ($singleRecArry["compoundType"] == "Master") {
         	$colorSuffixClass = $colClssAry["compoundMaster"];
+        	$compoundTypeAry[$singleRecArry["idR"]] = "Master";
         }
-        else if ($compoundRowStatus == "Slave") {
+        else if ($singleRecArry["compoundType"] == "Slave") {
         	$colorSuffixClass = $colClssAry["compoundSlave"];
+        	$compoundTypeAry[$singleRecArry["idR"]] = "Slave";
         }
-        else if ($compoundRowStatus == "FinalSlave") {
+        else if ($singleRecArry["compoundType"] == "FinalSlave") {
         	$colorSuffixClass = $colClssAry["compoundSlaveFinal"];
+        	$compoundTypeAry[$singleRecArry["idR"]] = "FinalSlave";
         }
         else {
         	$colorSuffixClass = $colClssAry["unselCol"];
+        	$compoundTypeAry[$singleRecArry["idR"]] = "None";
         }
 
-        //pr($colorSuffixClass);
+        if ($previousLoopCompoundNum != $singleRecArry["compound"]) { //a new compound group has started (or 0s after initial $previousLoopCompoundNum was set to -1 or a compound group has ended)
+            $tempCompoundIdrAry = []; //reset ready to accumulate new list of idRs for current compound number
+        }
+        $tempCompoundIdrAry[] = $singleRecArry["idR"]; //add new idR to temp compound array
+        if (0 < $singleRecArry["compound"]) { //a compound row (these rows will be in compound number groups e.g. 34,34,34,0,0,0,0,0,0 77,77,77 with as sorted by getMultDocDataAry() )
+            $compoundGroupIdrAry[$singleRecArry["compound"]] = $tempCompoundIdrAry; //add temp compound array to $compoundGroupIdrAry at position keyed by current compound number
+        }
+        $previousLoopCompoundNum = $singleRecArry["compound"];
+
+
 
         $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
         $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; 
@@ -982,7 +999,8 @@ function createStndDisplData(
         //continue loading data for current row starting at next column
         $displayRowsAry[] = aryValueOrZeroStr($umbrellaListAry, $singleRecArry["umbrella"]);
         $displayRowsAry[] = aryValueOrZeroStr($docTypeListAry, $singleRecArry["docType"]);
-        $displayRowsAry[] = $singleRecArry["recordNotes"];
+        //$displayRowsAry[] = $singleRecArry["recordNotes"];
+$displayRowsAry[] = $singleRecArry["idR"];
         
 
         //set values and prefixes for family cell (12) - if neither of these criteria are met it defaults to "" (set above)
@@ -1071,10 +1089,9 @@ function createStndDisplData(
     $returnAry["staticArys"] = $staticArys;
     $returnAry["idrArry"] = $idrArry;
     $returnAry["rowsAry"] = $rowsAry;
-    $returnAry["compoundRowsAry"] = $compoundRowsAry;
+    $returnAry["compoundTypeAry"] = $compoundTypeAry;
+    $returnAry["compoundGroupIdrAry"] = $compoundGroupIdrAry;
     
-    //$returnAry["linesDiff"] = ($index -1) - $bankStmtLines;
-
     return $returnAry;
 }
 
@@ -1082,8 +1099,15 @@ function createStndDisplData(
 
 
 
-
-
+/* If the array and key exist, tests the subarray designated by key to see if it contains the value $valueToTestFor. If conditions are met returns TRUE, otherwise FALSE.   */
+function subAryContains($array, $key, $valueToTestFor) {
+     if (array_key_exists($key, $array)) {
+        return in_array($valueToTestFor, $array[$key]);
+     }
+     else {
+        return FALSE;
+     }
+}
 
 
 /* Iterates through the characters in $sourceStr substituting $replacementStr for every occurence of $targetStr returning the result. If target empty or not found source is returned unchanged. */
@@ -2319,9 +2343,9 @@ function subButPanelJSreconcile(
     {
     ?>
     <div class=<?php echo $outerDivClass;?>  id=<?php echo $uniqueId;?>> <!-- submenu outer container to hold reconciliation setup buttons  -->
-        <button class=<?php echo $butClass;?> type="button" onclick="atomicCall(false, 'Earlier Statement')"><i class="fas fa-arrow-left"></i></button>
-        <button class=<?php echo $butClass;?> type="button" onclick="atomicCall(false, 'Later Statement')"><i class="fas fa-arrow-right"></i></button>     
-        <button class=<?php echo $butClass;?> type="button" onclick="atomicCall(false, 'Reset accWorkedOn')"><i class="fas fa-trash"></i></button>
+        <button class=<?php echo $butClass;?> type="button" onclick="atomicCall('Earlier Statement')"><i class="fas fa-arrow-left"></i></button>
+        <button class=<?php echo $butClass;?> type="button" onclick="atomicCall('Later Statement')"><i class="fas fa-arrow-right"></i></button>     
+        <button class=<?php echo $butClass;?> type="button" onclick="atomicCall('Reset accWorkedOn')"><i class="fas fa-trash"></i></button>
     </div>
     <script> //dummy function no longer needed as it now isn't called by JS selectButPanel()
         function <?php echo $uniqueId;?>initButPanel(cellId) {

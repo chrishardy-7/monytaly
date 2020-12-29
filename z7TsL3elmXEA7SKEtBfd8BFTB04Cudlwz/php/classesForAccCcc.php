@@ -106,6 +106,7 @@ class persistVar {
 }
 
 
+/*   */
 class familyCommand {
 	public $name;
 	public $editFamButSet;
@@ -118,6 +119,10 @@ class familyCommand {
 		if (!nonVolAryKeyExists($name) || $reset) { //if $nonVolatileArray key doesn't exist, or reset is true, create an array entry - 0
 	    	setNonVolAryItem($name, 0);
 	    }
+	}
+
+	function rememberShowFamButIsSet() {
+		$this->showFamButSet = TRUE;
 	}
 
 	function inputFamId($value) { //inputs the current clicked family id
@@ -143,7 +148,7 @@ class familyCommand {
 		}
 	}
 
-	function justFam() {
+	function justFam() { //not sure where/if this is used
 		if ($this->editFamButSet || $this->showFamButSet) {
 			return FALSE;
 		}
@@ -325,7 +330,7 @@ class filterColumns {
 	    }
 	}
 
-	function setIncludeFilterUsingCellId($cellId) {
+	function setIncludeFilterUsingCellId($cellId) { //uses the clicked cell id (this is only active during CNTRL hold) to set an include only filter corresponding to the item in the clicked row/column i.e. "umbrella" column and item in row "Furniture Project"
 		$cellIdAry = explode("-", $cellId);
 		$recRowId = $cellIdAry[0];
 		$colID = $cellIdAry[1];
@@ -350,7 +355,7 @@ class filterColumns {
 		setNonVolAryItem($this->nonVolFiltAryKey."Include", $this->includeFiltersAry);
 	}
 
-	function setExcludeFilterUsingCellId($cellId) {
+	function setExcludeFilterUsingCellId($cellId) { //uses the clicked cell id (this is only active during CNTRL hold) to set an exclude filter corresponding to the item in the clicked row/column i.e. "umbrella" column and item in row "Furniture Project"
 		$cellIdAry = explode("-", $cellId);
 		$recRowId = $cellIdAry[0];
 		$colID = $cellIdAry[1];
@@ -373,10 +378,10 @@ class filterColumns {
 		$filtStr = "";
 		if (!$this->inhibitFilt) { //only return valid filter if inhibit is not TRUE, otherwise return ""
 			foreach ($this->includeFiltersAry as $curInclKey => $curInclFieldValue) { //construct Include filter string
-				$filtStr .= " AND ".$curInclKey." = ".$curInclFieldValue;
+				$filtStr .= " AND ".$curInclKey." = ".$curInclFieldValue." ";
 			}
 			foreach ($this->excludeFiltersAry as $curExclKey => $curExclFieldValue) { //construct Include filter string
-				$filtStr .= " AND ".$curExclKey." NOT IN (".$curExclFieldValue.")";
+				$filtStr .= " AND ".$curExclKey." NOT IN (".$curExclFieldValue.") ";
 			}
 		}
 		return $filtStr;

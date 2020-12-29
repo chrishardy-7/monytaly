@@ -9,7 +9,7 @@ a, abbr, acronym, address, big, cite, code,
 del, dfn, em, img, ins, kbd, q, s, samp,
 small, strike, strong, sub, sup, tt, var,
 b, u, i, center,
-dl, dt, dd, ol, ul, li,
+dl, dt, dd, ol, /* ul, */ li,
 fieldset, form, label, legend,
 table, caption, tbody, tfoot, thead, tr, th, td,
 article, aside, canvas, details, embed, 
@@ -32,9 +32,12 @@ footer, header, hgroup, menu, nav, section {
 body {
     line-height:  1;
 }
+
 ol, ul {
-    list-style:  none;
+   /* list-style:  none; */
+   
 }
+
 blockquote, q {
     quotes:  none;
 }
@@ -325,8 +328,9 @@ input: focus, textarea: focus, select: focus {
 }
 
 .yellowGradientHardBot {
+  /*  font-weight:  bold; */
     background-color: yellow;
-    background-image: linear-gradient(to bottom, white, yellow 15px);
+    background-image: linear-gradient(to bottom, white, #FFFF00 15px);
     cursor:  pointer;
     -webkit-user-select:  none;  /* Chrome all / Safari all */
     -moz-user-select:  none;     /* Firefox all */
@@ -356,6 +360,15 @@ input: focus, textarea: focus, select: focus {
 .greenGradientHardTop {
     background-color: #80FF80;
     background-image: linear-gradient(to top, white, #80FF80 15px);
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.orange {
+    background-color: #FFD030;
     cursor:  pointer;
     -webkit-user-select:  none;  /* Chrome all / Safari all */
     -moz-user-select:  none;     /* Firefox all */
@@ -430,7 +443,7 @@ input: focus, textarea: focus, select: focus {
 }
 
 .grey {
-    background-color: #E0E0E0;
+    background-color: #E8E8E8;
     cursor:  pointer;
     -webkit-user-select:  none;  /* Chrome all / Safari all */
     -moz-user-select:  none;     /* Firefox all */

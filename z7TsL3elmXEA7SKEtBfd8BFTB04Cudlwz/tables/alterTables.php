@@ -10,7 +10,7 @@ try {
 //$stmt = $conn->prepare('ALTER TABLE cccc CHANGE zzzz zzzz VARCHAR(5000) NOT NULL');
 //$stmt->execute(array());
 
-//$stmt = $conn->prepare('ALTER TABLE xxxx ADD COLUMN ssssss INT NOT NULL DEFAULT 0 AFTER vvvvv');
+//$stmt = $conn->prepare('ALTER TABLE fffff ADD COLUMN xxxx VARCHAR(500) NOT NULL DEFAULT "" AFTER jjjj');
 //$stmt->execute(array());
 
 //$stmt = $conn->prepare('ALTER TABLE zzz ADD COLUMN private BOOLEAN NOT NULL DEFAULT FALSE AFTER uploadPersId');
