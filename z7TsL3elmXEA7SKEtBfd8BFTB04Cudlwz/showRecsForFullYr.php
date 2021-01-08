@@ -436,10 +436,7 @@ else {
 	}
 }
 
-
-
-
-
+//pr($recordsDataArry);
 
 $headingAry = array("Date", "Pers / Org", "Trans Cat", "Withdrawn", "PaidIn", "Account", "Budget", "Reference", "Reconciled", "Umbrella", "Doc Type", "Note", "Family"); //names of columns used for display
 $colKeyForDownldAry = array("recordDate", "persOrgStr", "categoryStr", "amountWithdrawn", "amountPaidIn", "accountStr", "budgetStr", "reference", "reconciledDateForDownld", "umbrellaStr", "docVarietyStr", "note", "familyStatus"); //the names of teh columns in the allRecords table that will be used for the download function
@@ -666,6 +663,7 @@ else { //loop through all records that have been retrieved from the allRecords t
 }
 
 //pr($displayData);
+//pr($displayData["compoundGroupIdrAry"]);
 
 
 $lineCount = $index;
@@ -915,21 +913,34 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 
 				foreach ($displayData["rowsAry"] as $rowIdx => $curRow) { //ROW LOOP
 					$rowId = $displayData["idrArry"][$rowIdx];
+					$hidden = $displayData["compoundHiddenAry"][$rowId];
 					nameAndValHolder($rowId."-docRnd", $curRow["fileNameRand"], "7777777"); //assign to name holder the random for the current doc file name 
 					?>
 					<div style="float:left;">
-						<div style="display:flex; flex-direction:row; align-items: stretch; ">
+						<?php
+						if ($pivotBut->isSet()) { //do version without rowId for pivot table
+							?> <div style="display:flex; flex-direction:row; align-items: stretch; "> <?php
+						}
+						else { //for initially hidden compound rows use display:none
+							if ($hidden) {
+								?> <div id=<?php echo $rowId;?> style="display:none; flex-direction:row; align-items: stretch; "> <?php
+							}
+							else {
+								?> <div id=<?php echo $rowId;?> style="display:flex; flex-direction:row; align-items: stretch; "> <?php
+							}
+						}
+						?>
 							<?php
 							foreach ($curRow["displayRowsAry"] as $colIdx => $cellData) { //COLUMN LOOP
 								$cellClass = $curRow["displayRowsClassesAry"][$colIdx];
 								if ($pivotBut->isSet()) {
-									$cellIdr = $curRow["displayRowIdsAry"][$colIdx];
+									$cellId = $curRow["displayRowIdsAry"][$colIdx];
 								}
 								else {
-									$cellIdr = $rowId."-".$colIdx;
+									$cellId = $rowId."-".$colIdx;
 								}
 								?>
-								<div id=<?php echo $cellIdr;?> class=<?php echo '\''.$cellClass.'\'';?> <?php echo $displayData["displayCellCntrlStrAry"][$colIdx];?>>
+								<div id=<?php echo $cellId;?> class=<?php echo '\''.$cellClass.'\'';?> <?php echo $displayData["displayCellCntrlStrAry"][$colIdx];?>>
 									<?php echo nl2br($cellData);?>
 								</div>
 								<?php
@@ -1321,7 +1332,6 @@ else {
 ?>
 
 
-
 <script type="text/javascript">
 	//var currentKey = "none"; //holds the keyboard key that is currently held down - for use when a cell is clicked to know if a particular command (like create new parent) has been selected
 	var createParent = "no"; //flag to indicate to JS functions that create new parent is in operation
@@ -1344,8 +1354,10 @@ else {
 	var displayLineSelClassesAry = <?php echo json_encode($displayData["displayLineSelClassesAry"]);?>;
 	var compoundTypeAry = <?php echo json_encode($displayData["compoundTypeAry"]);?>;
 	var compoundGroupIdrAry = <?php echo json_encode($displayData["compoundGroupIdrAry"]);?>;
+	var compoundHiddenAry = <?php echo json_encode($displayData["compoundHiddenAry"]);?>;
 	var restrictionsAry = <?php echo json_encode($restrictionsAry);?>;
 	var fieldNameAry = <?php echo json_encode($_fieldNameAry);?>;
+	var pivotButIsSet = <?php echo json_encode($pivotBut->isSet());?>;
 	var bankAccNameAry = ["RBS 8252", "Clyde 5477"];
 
 	// INITIALISATION SECTION TO SET SELECTION TO ROW 0 AND SET UP THE CALENDAR, CATEGORY, ACCOUNT, AND BUDGET SELECTION PANELS TO ROW 0 VALUES. INITIALLY ALL PANELS EXCEPT CALENDAR WILL BE HIDDEN

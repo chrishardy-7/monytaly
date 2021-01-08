@@ -1060,7 +1060,16 @@ function getMultDocDataAry($recStartDate, $recEndDate, $filterStr, $order, $fami
                 $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, SUM(amountWithdrawn) AS sumAmountWithdrawn, amountPaidIn, SUM(amountPaidIn) AS sumAmountPaidIn, statusR, recordNotes FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND statusR = "Live"'.$groupByStr.' ORDER BY sumAmountWithdrawn DESC');
             }
             else {
-                $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, amountPaidIn, statusR, recordNotes FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND statusR = "Live" ORDER BY '.$order.' recordDate, fileName');
+                $stmt = $conn->prepare('SELECT * FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) 
+                    '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND statusR = "Live" 
+                    ORDER BY '.$order.' recordDate, fileName');
+
+              /*  $stmtCompoundHidden = $conn->prepare('SELECT * FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) AND (0 < compound)
+                    AND statusR = "Live" AND (idR NOT IN 
+                    (SELECT idR FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) AND (0 < compound) 
+                    '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND statusR = "Live"))
+                    ORDER BY '.$order.' recordDate, fileName'); */
+
             }
         }
         elseif ($familyChoice == "All") { //show all records including general, parents and children
@@ -1068,7 +1077,14 @@ function getMultDocDataAry($recStartDate, $recEndDate, $filterStr, $order, $fami
                 $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, SUM(amountWithdrawn) AS sumAmountWithdrawn, amountPaidIn, SUM(amountPaidIn) AS sumAmountPaidIn, statusR, recordNotes FROM allRecords WHERE (((:recStartDate <= recordDate) AND (recordDate <= :recEndDate) AND (parent = 0)) OR ((:recStartDate <= parentDate) AND (parentDate <= :recEndDate))) '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND statusR = "Live"'.$groupByStr.' ORDER BY sumAmountWithdrawn DESC');
             }
             else {
-                $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, amountPaidIn, statusR, recordNotes FROM allRecords WHERE (((:recStartDate <= recordDate) AND (recordDate <= :recEndDate) AND (parent = 0)) OR ((:recStartDate <= parentDate) AND (parentDate <= :recEndDate))) '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND statusR = "Live" ORDER BY '.$order.' recordDate, fileName');
+                $stmt = $conn->prepare('SELECT * FROM allRecords WHERE (((:recStartDate <= recordDate) AND (recordDate <= :recEndDate) AND (parent = 0)) OR ((:recStartDate <= parentDate) AND (parentDate <= :recEndDate))) '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND statusR = "Live" ORDER BY '.$order.' recordDate, fileName');
+
+              /*  $stmtCompoundHidden = $conn->prepare('SELECT * FROM allRecords WHERE (((:recStartDate <= recordDate) AND (recordDate <= :recEndDate) AND (parent = 0)) OR ((:recStartDate <= parentDate) AND (parentDate <= :recEndDate))) AND (0 < compound) AND statusR = "Live" AND (idR NOT IN 
+
+                    (SELECT idR FROM allRecords WHERE (((:recStartDate <= recordDate) AND (recordDate <= :recEndDate) AND (parent = 0)) OR ((:recStartDate <= parentDate) AND (parentDate <= :recEndDate))) '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND (0 < compound) AND statusR = "Live")
+
+                    )
+                    ORDER BY '.$order.' recordDate, fileName'); */
             }
         }
         else { //show only parents and children of the family id passed as a numeric argument in $familyChoice
@@ -1077,7 +1093,14 @@ function getMultDocDataAry($recStartDate, $recEndDate, $filterStr, $order, $fami
                 $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, SUM(amountWithdrawn) AS sumAmountWithdrawn, amountPaidIn, SUM(amountPaidIn) AS sumAmountPaidIn, statusR, recordNotes FROM allRecords WHERE parent = '.$familyChoice.' '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND statusR = "Live"'.$groupByStr.' ORDER BY sumAmountWithdrawn DESC'); //order by doc filename first so split docs don't occur - may mean docs appear in wierd order
             }
             else {
-                $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, amountPaidIn, statusR, recordNotes FROM allRecords WHERE parent = '.$familyChoice.' '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND statusR = "Live" ORDER BY '.$order.' fileName, recordDate'); //order by doc filename first so split docs don't occur - may mean docs appear in wierd order
+                $stmt = $conn->prepare('SELECT * FROM allRecords WHERE parent = '.$familyChoice.' '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND statusR = "Live" ORDER BY '.$order.' fileName, recordDate'); //order by doc filename first so split docs don't occur - may mean docs appear in weird order
+
+             /*   $stmtCompoundHidden = $conn->prepare('SELECT * FROM allRecords WHERE parent = '.$familyChoice.' AND (0 < compound) AND statusR = "Live" AND (idR NOT IN 
+
+                    (SELECT idR FROM allRecords WHERE parent = '.$familyChoice.' '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND (0 < compound) AND statusR = "Live")
+
+                    )
+                    ORDER BY '.$order.' recordDate, fileName'); */
             }
         }
 
@@ -1092,12 +1115,44 @@ function getMultDocDataAry($recStartDate, $recEndDate, $filterStr, $order, $fami
         }
         */
 
-        $stmt->execute(array('recStartDate' => $recStartDate, 'recEndDate' => $recEndDate));    
+           
         $docsDetailsAry = [];
         $recordsAry = [];
+
+        $stmt->execute(array('recStartDate' => $recStartDate, 'recEndDate' => $recEndDate)); 
         while ($rowFromTable = $stmt->fetch(PDO::FETCH_ASSOC)) { //load all transaction records into recordsAry
+            $rowFromTable["compoundHidden"] = FALSE;
             $recordsAry[] = $rowFromTable;
         }
+
+        //section that extracts as csv all idRs of compound rows from the main $stmt query, whether master or slave. Also extracts as csv the compound number associated with each of these compound groups
+        $compoundIdrAry = [];
+        $compoundIdrAryIdx = 0;
+        $compoundNumAry = [];
+        $compoundNumAryIdx = 0;
+        foreach ($recordsAry as $singleRow) {
+            if (0 < $singleRow["compound"]) {
+                $compoundIdrAry[$compoundIdrAryIdx] = $singleRow["idR"];
+                $compoundIdrAryIdx++;
+            }
+            if ((0 < $singleRow["compound"]) & !in_array($singleRow["compound"], $compoundNumAry)) {
+                $compoundNumAry[$compoundNumAryIdx] = $singleRow["compound"];
+                $compoundNumAryIdx++;
+            }
+        }
+        $compoundIdrCsv = implode(",", $compoundIdrAry);
+        $compoundNumCsv = implode(",", $compoundNumAry);
+
+        if (($compoundNumCsv != "") && ($compoundIdrCsv != "")) { //if compound records exist from main queries (above) then run the subsidiary query to find compound rows that should be added to main rows but hidden until revealed by click on a row that forms part of a compound group
+            $stmtCompoundHidden = $conn->prepare('SELECT * FROM allRecords WHERE compound IN ('.$compoundNumCsv.') AND idR NOT IN ('.$compoundIdrCsv.') AND statusR = "Live" ORDER BY '.$order.' recordDate, fileName');
+            $stmtCompoundHidden->execute(array());
+            while ($rowFromTableHidden = $stmtCompoundHidden->fetch(PDO::FETCH_ASSOC)) { //load all transaction records into recordsAry
+                $rowFromTableHidden["compoundHidden"] = TRUE;
+                $recordsAry[] = $rowFromTableHidden;
+            }
+        }
+//pr($recordsAry);
+
         if ($familyOnly && !$groupBy) { //only the family identified will be returned and not as a group, so process to put parent first at the top of the list followed by other linked parent doc transactions
             //the following sort routines assume the data from the allRecords table is already sorted in ascending doc filename then trasaction date !!!
             $parentDocName = "";

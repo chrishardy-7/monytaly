@@ -28,7 +28,7 @@ function clickField(event) {
 	console.log("Clicked Id = "+id);
 
 //alert(compound.mastIdr);
-	if (id.split("-")[1] == "piv") {
+	if (id.split("-")[1] == "piv") { //click comes from pivot table
 		document.getElementById("pivCellId").value = id;
 		document.getElementById("pivCellVal").value = document.getElementById(id).innerText;
 		if ((id.split("-")[0] == "surplus") || (id.split("-")[0] == "bal") || (id.split("-")[0] == "spacer")) { //if any of these rows clicked do nothing as it would be meaningless
@@ -41,22 +41,25 @@ function clickField(event) {
 		return "function exited";
 	}
 
-	if (id.split("-")[0] == "sticky") { //a cell in the sticky row has been clicked, cancel sticky function
-		inrSet(id, ""); //clear the clicked sticky cell 
-		valSet("stickyActive-"+id.split("-")[1], "no"); //clears value holder flag to indicate that the sticky value has been cleared
-		return "function exited";
+	if(!pivotButIsSet) { //click comes from normal rows display, none of this section is needed for the pivot table
+		if (id.split("-")[0] == "sticky") { //a cell in the sticky row has been clicked, cancel sticky function
+			inrSet(id, ""); //clear the clicked sticky cell 
+			valSet("stickyActive-"+id.split("-")[1], "no"); //clears value holder flag to indicate that the sticky value has been cleared
+			return "function exited";
+		}
+
+		if (id.split("-")[0] == "heading") { //a cell in the heading row has been clicked clicked
+			groupSet(id);
+			return "function exited";
+		}
+
+		if (id.split("-").length != 2) { //if the mouse is clicked anywhere other than on a valid cell and id is a word instead of (e.g.) 23-74 exit this function to prevent later errors (fixes lock-up problem)
+			return;
+		}
+
+		doEverything(id, currentKey); //currentKey comes from function keyPressDetect()
 	}
 
-	if (id.split("-")[0] == "heading") { //a cell in the heading row has been clicked clicked
-		groupSet(id);
-		return "function exited";
-	}
-
-	if (id.split("-").length != 2) { //if the mouse is clicked anywhere other than on a valid cell and id is a word instead of (e.g.) 23-74 exit this function to prevent later errors (fixes lock-up problem)
-		return;
-	}
-
-	doEverything(id, currentKey); //currentKey comes from function keyPressDetect()
 }
 
 function doEverything(id, heldKey) {
@@ -81,6 +84,7 @@ function doEverything(id, heldKey) {
     	return "function exited";
 	}
 
+
 	allowSetSticky = true; //enable sticky again in case it had been inhibited by 
     valSet("mouseClickPreviousTime", msTime);
     valSet("IncludeFiltIdr", id); //stored the newly clicked cell id in formValHolder for "IncludeFiltIdr" (gets sent as filter term when cntrl click is done)
@@ -89,7 +93,6 @@ function doEverything(id, heldKey) {
     valSet("behindBankStatementIdR", id.split("-")[0]); //same for if previous or next buttons are clicked first
     valSet("aheadBankStatementIdR", id.split("-")[0]);
     // ########################### LOCAL JAVASCRIPT STUFF - END ###################
-
 
 
 
@@ -114,10 +117,10 @@ function doEverything(id, heldKey) {
 	// ########################### STATEMENTS ALL ACCESS THE SERVER AND DATABASE (AND REFRESH PAGE) - END #####################
 
 
-
-
-    
 	// ########################### LOCAL JAVASCRIPT STUFF - DOES NOT INTERACT WITH SERVER ###################
+
+	showHideCompoundRows(valGet("seltdRowCellId"), compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, "Hide");
+
 	selectTableRowsForDoc(12, false, colClssAry, compoundTypeAry, valGet("seltdRowCellId"), "white", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "", "unselect"); //use the id of the previously clicked cell (stored in formValHolder for "seltdRowCellId") to unselect all the previously selected rows associated with the previous document
 	
 	if (id.split("-").length == 2) { //only store cell id if it is an actual cell with a hiphon in between the row and column indexes (prevents selectable items in button panels and elsewhere being stored)
@@ -126,13 +129,12 @@ function doEverything(id, heldKey) {
 
 	valSet("storeSelectedRecordIdR", id.split("-")[0]); //store the id of the clicked row, which is the idR of the row in allRecords - used by Duplicate Row and Delete Row
 	
+	showHideCompoundRows(id, compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, "Show");
+
 	selectTableRowsForDoc(12, true, colClssAry, compoundTypeAry, id, "grey", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellLineSelRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "docLineCountDispId", "select"); //use the id of the current clicked cell id to select all the rows associated with the current document
 	
 	selectCell(id, colClssAry, "displayCellSnglSel", "displayCellSnglSelEditable", "displayCellSnglSelMoney", "displayCellSnglSelRcnclBlank", displayCellDescrpAry, "blue", "blueEdit");           //use the id of the current clicked cell to set the current cell to edit
 	
-
-
-
 
 	if (valGet("allowedToEdit") == "Yes") {
 
@@ -155,17 +157,29 @@ function doEverything(id, heldKey) {
 	}
 	// ########################### LOCAL JAVASCRIPT STUFF - END ###################
 	
-
-
-
-
-
 	// ########################### STATEMENTS ALL ACCESS THE SERVER AND DATABASE #####################
 
 	atomicCall(""); //function that combines updateFromSticky(id, valueStr), displayBalances(id), upDatewithdrnPaidin(id), newDocFileName(id) in one atomic to prevent race conditions
 	valSet("previousCellId", valGet("seltdRowCellId")); //store current row so that it is available next click (used with shift to copy sticky value to a range of selected cells)
 	// ########################### STATEMENTS ALL ACCESS THE SERVER AND DATABASE - END #####################
 
+}
+
+/* Makes visible/invisible rows that exist but are hidden by default in the current display view because they are excluded by filter settings. The criteria for controlling a row's visibility is that it has a matching compound number. showHide parameter determines whether the row will be be made visible or invisible by calling this function. */
+function showHideCompoundRows(rowId, compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, showHide) {
+	if (compoundTypeAry[rowId.split("-")[0]] != "None") {
+		var compoundNumIdrAry = getcompoundNumIdrAry(compoundGroupIdrAry, rowId.split("-")[0]); //indexed subarray of idRs grouped by a common compound number with the edit cell idR extracted from withdrnId
+		for (var i = 0; i < compoundNumIdrAry.length; i++) { //loop through all idRs of compound group belonging to clicked cell
+			if (compoundHiddenAry[compoundNumIdrAry[i]] == true) { //only process if row belongs to the list of compounds hidden by default (filtered)
+				if (showHide == "Show") {
+					document.getElementById(compoundNumIdrAry[i]).style.display = 'flex';
+				}
+				else {
+					document.getElementById(compoundNumIdrAry[i]).style.display = 'none';
+				}
+			}
+		}
+	}
 }
 
 
@@ -595,7 +609,7 @@ function docUpdateReceive(arry, arryBackFromPhp) {
 //                                                                                                 #################
 
 
-/* Uses passed cell ids, amount, array if compound numbers linked to idRs, colour suffix class array, and bank account flag to calculate amount values for withdrawn and paidin to maintain a consistant sum for all cells in the compound group. Returns an object (array) with subarrays of idRs, colIds, amounts and original class suffixes (which this function replaces with "waitingForServer" ones) in the form:
+/* Uses passed cell ids, amount, array of compound numbers linked to idRs, colour suffix class array, and bank account flag to calculate amount values for withdrawn and paidin to maintain a consistant sum for all cells in the compound group. Returns an object (array) with subarrays of idRs, colIds, amounts and original class suffixes (which this function replaces with "waitingForServer" ones) in the form:
 {
     "idrAry": [
         "348",

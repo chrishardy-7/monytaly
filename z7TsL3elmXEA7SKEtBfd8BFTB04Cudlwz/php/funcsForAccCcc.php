@@ -15,7 +15,7 @@ function sortCompoundRows($recordsDataArry) {
 		if ($row["compound"] == $row["idR"]) { //row is a master compound one because compuond number same as idR
 			$masterCompoundAry[] = $row; //concatonate compound master to $masterCompoundAry
 		}
-		else if ((0 < $row["compound"]) && (($row["compound"] != $row["idR"]))) { //row is a slave compound one because compuond number not 0 and not same as idR
+		else if ((0 < $row["compound"]) && (($row["compound"] != $row["idR"]))) { //row is a slave compound one because compound number not 0 and not same as idR
 			$slaveCompoundAry[] = $row; //concatonate compound slave to $slaveCompoundAry
 		}
 	}
@@ -31,9 +31,9 @@ function sortCompoundRows($recordsDataArry) {
 	    			}
 	    		}
 
-	    		foreach ($slaveCompoundAry as $slaveCompoundIdx => $slaveCompoundrow) {
+	    		foreach ($slaveSortedAry as $slaveCompoundIdx => $slaveCompoundrow) {
 	    			if ($slaveCompoundrow["compound"] == $recordsDataRow["compound"]) { //if the current iteration of $masterCompoundrow has same compound number as the current row in $recordsDataRow
-	    				if (($slaveCompoundIdx < count($slaveCompoundAry)) && ($slaveCompoundAry[$slaveCompoundIdx + 1]["compound"] == $recordsDataRow["compound"])) { //if next row is same compound number
+	    				if (($slaveCompoundIdx < (count($slaveSortedAry) - 1)) && ($slaveSortedAry[$slaveCompoundIdx + 1]["compound"] == $recordsDataRow["compound"])) { //if $slaveCompoundIdx is at least 1 below the index of the last row and the  next row is same compound number
 	    					$slaveCompoundrow["compoundType"] = "Slave"; //add new compound type key/Slave value to subarray
 	    				}
 	    				else {
@@ -47,12 +47,10 @@ function sortCompoundRows($recordsDataArry) {
 	    	}
 	    }
 	    else { //this is a normal row
-	    	$recordsDataRow["compoundType"] = "sNone";
+	    	$recordsDataRow["compoundType"] = "None";
 	    	$outputAry[] = $recordsDataRow;
 	    }
-
     }
-    //pr($outputAry);
 	return $outputAry;
 } 
 
@@ -143,8 +141,9 @@ function createPivotDisplData(
 
     $dataExists = FALSE;
 
-    $rowsAry = 			[];
-    $rowsNameAry = 		[];
+    $rowsAry = 			  [];
+    $rowsNameAry = 		  [];
+    $compoundHiddenAry =  [];
 
     $headingsAry = 						[];
     $headingsTotalBroughtFwdSumAry = 	[];
@@ -251,6 +250,7 @@ function createPivotDisplData(
     
 
     foreach ($rowsNameAry as $rowIdx => $rowName) { //ROW LOOP - goes through all the predetermined pivot table row names creating and populate 2 dimensional array with summed spend data
+        $compoundHiddenAry[$singleRecArry["idR"]] = FALSE;
     	$rowContainsSpendData = FALSE; //flag that will be set to true if any cells in the row being created contain anything other than 0
         $rowNameTableIdx = $tables->getKey($columnForRows, $rowName); //gets table index of heading name. If name is "" (empty), 0 is returned in keeping with allRecords column data
         $rowTempAry = [$rowName]; //create row name at index 0
@@ -413,6 +413,7 @@ function createPivotDisplData(
     $returnAry["headerAry"][] = ["headerRowsAry"=> $spacerRowAry,                    "headerRowsClassesAry"=>$headingsSpacerClassesAry, 			"headerCellIdsAry"=>$headsSpacerCellIdsAry]; 
 
     $returnAry["rowsAry"] = $rowsAry; //add row data
+    $returnAry["compoundHiddenAry"] = $compoundHiddenAry; //all positions default to "false" designating row is not hidden - needed to fool flex/none display attribute in php display section into always flex
     
     return $returnAry;
 }
@@ -749,7 +750,8 @@ function createStndDisplData(
     $displayLineSelClassesAry = array();
     $fileNameRands = array();
     $idrArry = array();
-    $compoundTypeAry = []; //used to hold idRs of all compound lines. each idR key will have a corresponding value that is either "Master" or "Slave"
+    $compoundTypeAry = []; //used to hold idRs of all compound lines. Each idR key will have a corresponding value that is either "Master" or "Slave"
+    $compoundHiddenAry = []; //used to hold TRUE for a row that should be normally hidden (e.g. compound rows that are not normally visible because they are exluded by a filter action), FALSE if an ordinary or visible compound row that should normally be displayed. Each idR key will have a corresponding value that is either "Master" or "Slave"
     $previousLoopCompoundNum = -1; //initial setting so first loop iteration will always be seen as a new group - whether an actual group or just 0
     $tempCompoundIdrAry = [];
     $compoundGroupIdrAry = [];
@@ -901,6 +903,8 @@ function createStndDisplData(
 //##############################
 
 
+        $compoundHiddenAry[$singleRecArry["idR"]] = $singleRecArry["compoundHidden"];
+
 //green experimental settings are near top of function
 //pr($singleRecArry["compound"]);
         if ($singleRecArry["compoundType"] == "Master") {
@@ -999,9 +1003,8 @@ function createStndDisplData(
         //continue loading data for current row starting at next column
         $displayRowsAry[] = aryValueOrZeroStr($umbrellaListAry, $singleRecArry["umbrella"]);
         $displayRowsAry[] = aryValueOrZeroStr($docTypeListAry, $singleRecArry["docType"]);
-        //$displayRowsAry[] = $singleRecArry["recordNotes"];
-$displayRowsAry[] = $singleRecArry["idR"];
-        
+        $displayRowsAry[] = $singleRecArry["recordNotes"];
+       
 
         //set values and prefixes for family cell (12) - if neither of these criteria are met it defaults to "" (set above)
         if ($singleRecArry["idR"] == $singleRecArry["parent"]) { //parent value same as index so this is an actual parent: show family num with "OOO " prefix
@@ -1089,6 +1092,7 @@ $displayRowsAry[] = $singleRecArry["idR"];
     $returnAry["staticArys"] = $staticArys;
     $returnAry["idrArry"] = $idrArry;
     $returnAry["rowsAry"] = $rowsAry;
+    $returnAry["compoundHiddenAry"] = $compoundHiddenAry;
     $returnAry["compoundTypeAry"] = $compoundTypeAry;
     $returnAry["compoundGroupIdrAry"] = $compoundGroupIdrAry;
     
