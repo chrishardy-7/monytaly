@@ -62,6 +62,58 @@
  */
 
 
+/* Writes all values from $inputArry["writeValuesAry"] to rows in all records identified by the keys in $inputArry["writeValuesAry"]. The properties of each key are an array whose keys (indexes) are converted to allRecords table field (column) names like "accWorkedOn", "budget" etc before use. Index 13 is used for compound number and index 14 is used as reconcileDocId  (neither are displayed columns in the GUI). Where table fields are based on indexes to other tables (like 'budget') these indexes are retrieved based on the value passed, e.g. budget cell value of "Capability" = index of 11, so 11 is written to the allRecords table. Values of "" for these index related fields will be written as 0 (which doesn't actually exist in the tables from which the indexes are retrieved) as it is used to denote empty/clear in the allRecords table. After writing all values will be read back from allRecords and unconverted where necessary before being sent back to the client using $outputArry["aryBackFromWriteReadRows"]. This will be used in cell update confirmation on the client. */
+function writeReadRows($inputArry, $outputArry, $_fieldNameAry, $tables, $allowedToEdit) {
+    global $conn;
+    if (array_key_exists("clearRowExcptRecDateAjaxSend", $inputArry)) { //only do update if the calling JS function has run
+
+        foreach ($inputArry["writeValuesAry"] as $idR=>$rowOfCells) { //ROW loop through all idRs doing combined UPDATE followed by SELECT for each row
+            $fieldNamesAry = []; //array to hold field names e.g. Array( [0]=>budget [1]=>umbrella )
+            $fieldNamesAryQm = []; //array to hold field names with question marks e.g. Array( [0]=>budget=? [1]=>umbrella=? )
+            $fieldValuesAry = []; //array to hold values used in $stmt->execute()
+            $convertedFieldVal = []; //array to hold values of each row of reads to be fed back to client
+            foreach ($rowOfCells as $colIndex=>$cellValue) { //COLUMN loop to format data for UPDATE and SELECT
+                $fieldName = $_fieldNameAry[$colIndex];
+                if (($fieldName == "recordDate") || ($fieldName == "amountWithdrawn") || ($fieldName == "amountPaidIn") || ($fieldName == "referenceInfo") || ($fieldName == "reconciledDate") || ($fieldName == "recordNotes") || ($fieldName == "parent") || ($fieldName == "compound") || ($fieldName == "reconcileDocId")) { //just a string/numeric that needs to be used directly to update table fields, without conversion
+                    $fieldVal = $cellValue;
+                }
+                else { //string value that needs to be converted to index from tables before being used to update the table fields
+                    $fieldVal = $tables->getKey($fieldName, $cellValue); //get index of current cell from table of cell values. e.g. budget value of "Capability" = index of 11
+                }
+                $fieldNamesAry[] = $fieldName; //add to array so it can be imploded to create csv list for inclusion in mariadb SELECT query used in read back section
+                $fieldNamesAryQm[] = $fieldName."=?"; //add to array with = ? after each name so it can be imploded to create csv list for inclusion in mariadb UPDATE query
+                $fieldValuesAry[] = $fieldVal;
+            } //end of COLUMN loop
+            $fieldNamesCsv = implode(",", $fieldNamesAry); //convert array of fieldnames into a csv string for insertion into UPDATE query
+            $fieldNamesQmCsv = implode(",", $fieldNamesAryQm); //convert array of fieldnames, each with "=?" suffixed, into a csv string for insertion into UPDATE query
+            $fieldValuesAry[] = $idR;
+            try { //UPDATE and SELECT section
+                $stmt = $conn->prepare("UPDATE allRecords SET ".$fieldNamesQmCsv." WHERE idR = ?"); //update all fields in $fieldNamesQmCsv for current row
+                $stmt->execute($fieldValuesAry);
+                //READ BACK 
+                $stmtRead = $conn->prepare("SELECT ".$fieldNamesCsv." FROM allRecords WHERE idR = :idR");
+                $stmtRead->execute(array('idR' => $idR));
+                $row = $stmtRead->fetch(PDO::FETCH_ASSOC);
+                //READ BACK CONVERT SECTION
+                foreach ($row as $readFieldName=>$readFieldValue) {
+                    if (($readFieldName == "recordDate") || ($readFieldName == "amountWithdrawn") || ($readFieldName == "amountPaidIn") || ($readFieldName == "referenceInfo") || ($readFieldName == "reconciledDate") || ($readFieldName == "recordNotes") || ($readFieldName == "parent") || ($readFieldName == "compound") || ($readFieldName == "reconcileDocId")) { //just a string/numeric that needs to be used directly to feed back to client, without conversion
+                        $convertedFieldVal[] = $readFieldValue;
+                    }
+                    else { //index readFieldValue that needs to be converted to string using tables before being used to feed back to client
+                        $convertedFieldVal[] = $tables->getStrValue($readFieldName, $readFieldValue); //convert index of current field e.g. 11, to budget value of "Capability"
+                    }
+                }
+                $outputArry["aryBackFromWriteReadRows"][$idR] = $convertedFieldVal; //add current reaad back row to array going back to client
+            } catch(PDOException $e) {
+              $outputArry["REPORT"] = 'ERROR: '.$e->getMessage();
+              }
+        } //end of ROW loop
+        $outputArry["PHPwriteReadRowHasRun"] = TRUE; //flag that indicates this PHP function has run and that the receiving JS function should run to handle the returned data 
+    }
+    return $outputArry;
+}
+
+
 /* Creates master or slave compound rows by holding down AltGr button and clicking anywhere on row. If a master has already been created and the remains held down any nomber of slave rows can be created. With the initial AltGr button press held the slaves can be toggled by reclicking them. reclicking the master will delete it and any slaves linked to it. A new AltGr press and hold and clicks on existing slaves will delete them and if clicked again will create a new different master. A new AltGr press and hold amd clicks on a master will delete it and all linked slaves. masters and slaves compound rows are designated by the number set in the compound field. If not 0 it is compound. if it equals the idR of the row it is a master. The slave number shows which master (idR) it is linked to. $outputArry["compoundActionAry"] conveys information about what has been created or destroyed back to the client.    */
 function setCompoundTrans($inputArry, $outputArry, $allowedToEdit) { 
     global $conn;
@@ -2273,7 +2325,7 @@ function updateTable($tableName, $fieldName, $value, $whereField, $whereValue) {
     return $outputArry;
 } */
 
-/* Updates withdrawn and paidin amounts in allRecords table with values passed in $inputArry["withdrawn"] and $inputArry["paidin"] at row pointed to by $inputArry["moneyIdR"]. Modifies $outputArry by adding $outputArry["withdrawn"] and $outputArry["paidin"] read back from the table at the same row as a confirmation that the update occurred. Any existing values in $outputArry will be passed unchanged. If $inputArry["moneyIdR"] doesn't exist this function does nothing but return the $outputArry. If $allowedToEdit is FALSE the data is not written to the table but it is still read back and returned in $outputArry.  */
+/* Updates withdrawn and paidin amounts in allRecords table with values passed in $inputArry. This may be just one row or several rows as indicated by idrAry. All changes are read back from updated table and sent back to calling JS funcion in $outputArry. A general principle of passing all modifying data like paidinOrgSuffixClassAry through this php function is applied so that the calling function will only succesfully update the live cells and give confidence that they reflect the state of the table on the server if this php function has succesfully executed. If $allowedToEdit is FALSE the data is not written to the table but it is still read back and returned in $outputArry.  */
 function updateWithdrawnPaidin($inputArry, $outputArry, $allowedToEdit) {
     global $conn;
     $updatedAmountWithdrawnAry = [];
@@ -2284,15 +2336,15 @@ function updateWithdrawnPaidin($inputArry, $outputArry, $allowedToEdit) {
         $withdrawnAry = $compoundGroupAry["withdrawnAry"];
         $paidinAry = $compoundGroupAry["paidinAry"];
         try {
-            if ($allowedToEdit) { //only allow updateing if permissions exist
-                foreach ($idrAry as $idrIdx=>$idR) { //loops through all positions of withdrawn, paidin and idR arrays and UPDATES allRecords table
+            if ($allowedToEdit) { //only allow updating if permissions exist
+                foreach ($idrAry as $idrIdx=>$idR) { //loops through all rows indicated by idrAry of withdrawn, paidin and idR arrays and UPDATES allRecords table
                     $withdrawnValue = $withdrawnAry[$idrIdx]; //uses $idR index
                     $paidinValue = $paidinAry[$idrIdx]; //uses $idR index
                     $stmt = $conn->prepare('UPDATE allRecords SET amountWithdrawn = ?, amountPaidIn = ? WHERE idR = ?');
                     $stmt->execute(array($withdrawnValue, $paidinValue, $idR));
                 }
             }
-            foreach ($idrAry as $idR) { //loops through all positions of withdrawn, paidin and idR arrays and UPDATES allRecords table
+            foreach ($idrAry as $idR) { //loops through all rows indicated by idrAry of withdrawn, paidin and idR arrays and SELECTS values from allRecords table
                 $stmt = $conn->prepare('SELECT amountWithdrawn, amountPaidIn FROM allRecords WHERE idR = ?');
                 $stmt->execute(array($idR));
                 $row = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -2333,7 +2385,7 @@ function userIdifPasswordMatches($username, $password) {
       }
 }
 
-/* Updates either the item id or actual item string (depending on what type of data the field holds) in the allRecords table field pointed to by $cellId. After updating, the data is read back from the table and if need be converted to a string again and returned to the calling command. Item lists from the database are used to create arrays to generate required ids and recover strings. This function is quite complex an dicludes code to create new children and parents.  */
+/* Updates either the item id or actual item string (depending on what type of data the field holds) in the allRecords table field pointed to by $cellId. After updating, the data is read back from the table and if need be converted to a string again and returned to the calling command. Item lists from the database are used to create arrays to generate required ids and recover strings. This function is quite complex and includes code to create new children and parents.  */
 function writeReadAllRecordsItem($inputArry, $outputArry, $allowedToEdit) {
     global $conn;
     //$outputArry["parentAndNotChildless"] = "no";

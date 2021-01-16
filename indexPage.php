@@ -86,7 +86,7 @@ $_cmndRndmLngth = 7;
 $_onTheHoofRandsLength = 5;
 $_filenameRandLength = 5;
 $_ImagickExceptionVisibility = TRUE;
-$_fieldNameAry = array("recordDate", "personOrOrg", "transCatgry", "amountWithdrawn", "amountPaidIn", "accWorkedOn", "budget", "referenceInfo", "reconciledDate", "umbrella", "docType", "recordNotes", "parent"); //fieldNames for column ids (0 - 11), the array would need to be changed if the column order (and therefore the cell ids) on the display page changes!!
+$_fieldNameAry = array("recordDate", "personOrOrg", "transCatgry", "amountWithdrawn", "amountPaidIn", "accWorkedOn", "budget", "referenceInfo", "reconciledDate", "umbrella", "docType", "recordNotes", "parent", "compound", "reconcileDocId"); //fieldNames for column ids (0 - 11). index 12 is used to reference none displayed 'compound' number and it is thought that in routines that don't index it nothing untoward will happen. The array would need to be changed if the column order (and therefore the cell ids) on the display page changes!!
 $_commitLoopCountMax = 30;
 $_saveMessageEnabled = FALSE;
 
@@ -372,17 +372,11 @@ switch ($menuBtnStr) {
 		//resetActivTime($userId);
 		include_once("./".$sdir."help.php");
 		break;	
-	case "Ajax both ways with All Records": //USED BY calJavaScrpInteractnLite() (2 off) PHP FUNCTION VIA ajaxRecordsDateAndCellUpdate() JS FUNCTION to change dates in allRecords table
-		include_once("./".$sdir."php/ajaxAllRecsBothways.php"); //USED BY DATE COLUMNS - Date & Reconciled
+	case "Ajax both ways with All Records": //USED BY calJavaScrpInteractnLite() (2 off - Date & Reconciled) PHP FUNCTION VIA ajaxRecordsDateAndCellUpdate() JS FUNCTION to change dates in allRecords table
+		include_once("./".$sdir."php/ajaxAllRecsBothways.php"); 
 		break;
 	case "Ajax Items 2 ways with All Records": //USED BY butPanelJSInteracStrOnly() (8 off) PHP FUNCTION VIA ajaxRecordsItemAndCellUpdate() JS FUNCTION to change item ids in allRecords table. Also used by clickField() > updateFromSticky() > ajaxRecordsItemAndCellUpdate()
 		include_once("./".$sdir."php/ajaxAllRecsItems2ways.php"); //USED BY Withdrawn/Paidin AND ALL OTHER COLUMNS EXCEPT DIRECT EDITING ONES - Reference/Note
-		break;
-	case "Ajax MoneyIn0ut 2 ways with All Records": //USED BY clickField() > upDatewithdrnPaidin() > upDatewithdrnPaidin()
-		include_once("./".$sdir."php/ajaxAllRecsMoney2ways.php");
-		break;
-	case "Ajax Get Balance Data": //USED BY clickField() > displayBalances(id) > ajaxGetAndDisplayBals()
-		include_once("./".$sdir."php/ajaxGetBalData.php");
 		break;
 	case "Update Doc File Name": //USED BY clickField() > newDocFileName(id) > ajaxUpdateDocFileName()
 		//resetActivTime($userId);

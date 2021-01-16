@@ -17,8 +17,8 @@ $newMasterYrSelected = FALSE;
 if (!array_key_exists ("masterYear", $nonVolatileArray)) { //create empty masterYear if it doesn't already exist (should only run once on first call to this page!)
 	$nonVolatileArray["AllDates"] = FALSE; //flag that will be set if "ALL" button is clicked - all other buttons will be deselected but date selection stored so "ALL" can be toggled off to go back to selection
 	$nonVolatileArray["masterYear"] = $_masterYear; //set to current year (i.e. 2019) set in index.php
-	$nonVolatileArray["startYearOffsetPlusMnth"] = "0".date("m"); //set prefix to 0 if $_masterYear (indexPage.php) is set to the next year (e.g. if it is set to 2021 and we are at Aug 2020) otherwise set to 1
-	$nonVolatileArray["endYearOffsetPlusMnth"] = "0".date("m"); //  "     "   etc.
+	$nonVolatileArray["startYearOffsetPlusMnth"] = "1".date("m"); //set prefix to 0 if $_masterYear (indexPage.php) is set to the next year (e.g. if it is set to 2021 and we are at Aug 2020) otherwise set to 1
+	$nonVolatileArray["endYearOffsetPlusMnth"] = "1".date("m"); //  "     "   etc.
 }
 
 $newDateSelected = FALSE; //cancels family display in showRecsForFullYr.php if set to TRUE

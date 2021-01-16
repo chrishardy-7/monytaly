@@ -7,7 +7,7 @@ if (empty($_calledFromIndexPage)) { //prevents someone trying to open this page 
 //$thisFileName = "ajaxAtomic.php";
 //saveMessage($thisFileName);
 
-/* This function is intended to be called from Javascript. Using the input array a value is written to the table the same field is read and echoed back to the calling javascript function using the output array, as a confirmation that the operation has suceeded. */
+/* This function is intended to be called from Javascript. Using the input array value(s) are written to the allRecords table, the same field(s) are read and echoed to the calling javascript function using the output array, as a confirmation that the operation has succeeded. THESE FUNCTIONS ARE ONLY USED TO CHANGE MONEY/STRING VALUES AND INDICATORS USED FOR FAMILY AND COMPOUND ROWS EXCEPT IN COPYING STICKY VALUES. ALL NORMAL CHANGES TO FIELDS IN THE allRecords TABLE THAT ARE INDEXES OF OTHER TABLES SUCH AS budgets ARE DONE THROUGH JAVASCRIPT CALLS FROM THE BUTTON PANELS AND PROCESSED THROUGH SEPARATE SPECIFIC PHP FILES. */
 
 //these objects are instantiated to allow the use of their respective 'get and 'isSet' methods by the functions and if statements on this page - buttons will not be drawn!
 $showFamBut = new toggleBut("Show Families", "fas fa-plus-square", "subMenuBtn", "subMenuBtnSel", FALSE);
@@ -24,15 +24,17 @@ $outputArry["NAME"] = "arryBackFromPhp";
 
 saveMessage("In ajaxAtomic!");
 
-$outputArry = setCompoundTrans($inputArry, $outputArry, $allowedToEdit);
+$outputArry = writeReadRows($inputArry, $outputArry, $_fieldNameAry, $tables, $allowedToEdit); //clears row when called via ajax routine clearRowAjaxSend (originating from 'Clear' button)
 
-$outputArry = createNewParent($inputArry, $outputArry, $allowedToEdit);
+$outputArry = setCompoundTrans($inputArry, $outputArry, $allowedToEdit); //creates/deletes compound rows in allRecords table when AltGr is held
 
-$outputArry = writeReadAllRecordsItem($inputArry, $outputArry, $allowedToEdit);
+$outputArry = createNewParent($inputArry, $outputArry, $allowedToEdit); //creates new parent in allRecords table when 'P' is held
 
-$outputArry = updateWithdrawnPaidin($inputArry, $outputArry, $allowedToEdit);
+$outputArry = writeReadAllRecordsItem($inputArry, $outputArry, $allowedToEdit); //copies sticky value to clicked cell(s) in allRecords table - either single row or multiple rows (if Shift is held)
 
-$outputArry = updateEditableItem($inputArry, $outputArry, $allowedToEdit); //for updating reference or notes cell
+$outputArry = updateWithdrawnPaidin($inputArry, $outputArry, $allowedToEdit); //updates withdrawn and paidin values in allrecords table - either single row or auto calc for multiple rows (for compound sections)
+
+$outputArry = updateEditableItem($inputArry, $outputArry, $allowedToEdit); //updates reference or notes cell in allRecords table
 
 if ($fam->justFam()) { //a specific family has been chosen to display and neither Show Families or Family Edit have been selected so remove all column filters so family can be displayed complete
 	$outputArry = getFilterStrAllBalData($inputArry, $outputArry, "", $fam->getCmnd()); //uses reconciled dates for calculation

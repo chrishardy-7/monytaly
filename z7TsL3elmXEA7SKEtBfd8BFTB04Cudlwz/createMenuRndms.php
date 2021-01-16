@@ -18,8 +18,6 @@ $menuRandomsArray = createKeysAndRandomsArray(array(
 	"Show Records For Full Year",
 	"Ajax both ways with All Records",
 	"Ajax Items 2 ways with All Records",
-	"Ajax MoneyIn0ut 2 ways with All Records",
-	"Ajax Get Balance Data",
 	"Update Doc File Name",
 	"Add Items",
 	"Edit Flex",

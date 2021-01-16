@@ -19,7 +19,7 @@ class dataBaseTables {
 		$this->docTypeListAry    = getDocVarietyData();
 	}
 
-	function getStrValue($table, $key) { //returns the string value, selected by $key, from the identified table - "" is returned if the table identifier is a rogue or $key is 0
+	function getStrValue($table, $key) { //returns the string value, selected by $key, from the identified table - "" is returned if the table identifier is a rogue or $key is 0. e.g getStrValue("budget", 30) would return "VAF Apr20".
 		switch ($table) {
 			case "personOrOrg":
 				return aryValueOrZeroStr($this->orgPersonsListAry, $key);
@@ -38,7 +38,7 @@ class dataBaseTables {
 		}
 	}
 
-	function getKey($table, $value) { //returns the key as an integer of the first value found in the identified table - 0 is returned if the table identifier is a rogue or $value is not found
+	function getKey($table, $value) { //returns the key as an integer index for the first value found in the identified table - 0 is returned if the table identifier is a rogue or $value is not found. e.g getKey("budget", "VAF Apr20") would return 30.
 		switch ($table) {
 			case "personOrOrg":
 				$key = array_search($value, $this->orgPersonsListAry);

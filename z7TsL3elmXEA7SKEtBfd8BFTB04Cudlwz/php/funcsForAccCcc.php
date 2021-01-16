@@ -742,6 +742,7 @@ function createStndDisplData(
     global $_filenameRandLength;
 
     $index = 0;
+    $transactonCount = 0;
     $rowsAry = array();
     $returnAry = array();
     $displayCellDescrpAry = array();
@@ -885,8 +886,9 @@ function createStndDisplData(
     
     $recordsDataAryLength = count($recordsDataArry);
     foreach ($recordsDataArry as $recordsIdx=>$singleRecArry) { //loop through all persOrgs selected for display creating indexed array of values like "idR", "persOrgCategory" for each row to be displayed
-        $displayRowsAry = array();
-        $displayRowsClassesAry = array();
+        if (!(($download) && ($singleRecArry["compoundHidden"] == TRUE))) { //in download mode, if the row is a compound one that is normally hidden unless a member of the compound is clicked, don't create it
+            $displayRowsAry = array();
+            $displayRowsClassesAry = array();
 
 
 //##############################
@@ -903,153 +905,156 @@ function createStndDisplData(
 //##############################
 
 
-        $compoundHiddenAry[$singleRecArry["idR"]] = $singleRecArry["compoundHidden"];
+            $compoundHiddenAry[$singleRecArry["idR"]] = $singleRecArry["compoundHidden"];
 
-//green experimental settings are near top of function
-//pr($singleRecArry["compound"]);
-        if ($singleRecArry["compoundType"] == "Master") {
-        	$colorSuffixClass = $colClssAry["compoundMaster"];
-        	$compoundTypeAry[$singleRecArry["idR"]] = "Master";
-        }
-        else if ($singleRecArry["compoundType"] == "Slave") {
-        	$colorSuffixClass = $colClssAry["compoundSlave"];
-        	$compoundTypeAry[$singleRecArry["idR"]] = "Slave";
-        }
-        else if ($singleRecArry["compoundType"] == "FinalSlave") {
-        	$colorSuffixClass = $colClssAry["compoundSlaveFinal"];
-        	$compoundTypeAry[$singleRecArry["idR"]] = "FinalSlave";
-        }
-        else {
-        	$colorSuffixClass = $colClssAry["unselCol"];
-        	$compoundTypeAry[$singleRecArry["idR"]] = "None";
-        }
-
-        if ($previousLoopCompoundNum != $singleRecArry["compound"]) { //a new compound group has started (or 0s after initial $previousLoopCompoundNum was set to -1 or a compound group has ended)
-            $tempCompoundIdrAry = []; //reset ready to accumulate new list of idRs for current compound number
-        }
-        $tempCompoundIdrAry[] = $singleRecArry["idR"]; //add new idR to temp compound array
-        if (0 < $singleRecArry["compound"]) { //a compound row (these rows will be in compound number groups e.g. 34,34,34,0,0,0,0,0,0 77,77,77 with as sorted by getMultDocDataAry() )
-            $compoundGroupIdrAry[$singleRecArry["compound"]] = $tempCompoundIdrAry; //add temp compound array to $compoundGroupIdrAry at position keyed by current compound number
-        }
-        $previousLoopCompoundNum = $singleRecArry["compound"];
-
-
-
-        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
-        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; 
-        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
-        $displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass;
-        $displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass;
-        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
-        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
-        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
-
-                //set appropriate class for reconcile date display to indicate status (by default it is already set in class sections above to $standardCellClass)
-        if ($endDate < $singleRecArry["reconciledDate"]) { //reconcile date is later than the end of the latest displayed month so show as unreconciled (usually red)
-            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["notRcnclCol"];    //$unRecncldClass;
-        }
-        elseif ($singleRecArry["reconciledDate"] < $singleRecArry["recordDate"]) { //reconcile date is earlier than the transaction date so either...
-            if ($singleRecArry["reconciledDate"] == "2000-01-01") { //blank the date as it is the default value (usually by setting the font and the background to the same colour)
-                $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselInvisCol"];
+            if ($singleRecArry["compoundType"] == "Master") {
+            	$colorSuffixClass = $colClssAry["compoundMaster"];
+            	$compoundTypeAry[$singleRecArry["idR"]] = "Master";
             }
-            else { //set a warning colour to indicate the reconcile date has been set to a date earlier than the transaction date but not the default date (usually orange)
-                $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["rcnclTooEarlyCol"];
+            else if ($singleRecArry["compoundType"] == "Slave") {
+            	$colorSuffixClass = $colClssAry["compoundSlave"];
+            	$compoundTypeAry[$singleRecArry["idR"]] = "Slave";
+            }
+            else if ($singleRecArry["compoundType"] == "FinalSlave") {
+            	$colorSuffixClass = $colClssAry["compoundSlaveFinal"];
+            	$compoundTypeAry[$singleRecArry["idR"]] = "FinalSlave";
+            }
+            else {
+            	$colorSuffixClass = $colClssAry["unselCol"];
+            	$compoundTypeAry[$singleRecArry["idR"]] = "None";
             }
 
-        }
-        else { //none of above apply so set to standard class to just show plain date
+            if ($previousLoopCompoundNum != $singleRecArry["compound"]) { //a new compound group has started (or 0s after initial $previousLoopCompoundNum was set to -1 or a compound group has ended)
+                $tempCompoundIdrAry = []; //reset ready to accumulate new list of idRs for current compound number
+            }
+            $tempCompoundIdrAry[] = $singleRecArry["idR"]; //add new idR to temp compound array
+            if (0 < $singleRecArry["compound"]) { //a compound row (these rows will be in compound number groups e.g. 34,34,34,0,0,0,0,0,0 77,77,77 with as sorted by getMultDocDataAry() )
+                $compoundGroupIdrAry[$singleRecArry["compound"]] = $tempCompoundIdrAry; //add temp compound array to $compoundGroupIdrAry at position keyed by current compound number
+            }
+            $previousLoopCompoundNum = $singleRecArry["compound"];
+
+
+
             $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
-        }
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; 
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
+            $displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass;
+            $displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass;
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
 
-        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
-        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
-        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
-        $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
-
-        
-
-        foreach ($IncludeFiltIdxAry as $colIdx) { //set filter class for those columns that have been filtered - shouldn't (don't know if it is explicitly prevented) be used for reconciled date column
-            if (($displayCellDescrpAry[$colIdx] == "MoneyOut") || ($displayCellDescrpAry[$colIdx] == "MoneyIn")) { //needs right alignment because withdrawn or paidin cell
-                $displayRowsClassesAry[$colIdx] = $moneyCellClass." ".$colClssAry["columnFiltCol"];
+                    //set appropriate class for reconcile date display to indicate status (by default it is already set in class sections above to $standardCellClass)
+            if ($endDate < $singleRecArry["reconciledDate"]) { //reconcile date is later than the end of the latest displayed month so show as unreconciled (usually red)
+                $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["notRcnclCol"];    //$unRecncldClass;
             }
-            else { //ordinary cell so normal left alignment
-                $displayRowsClassesAry[$colIdx] = $standardCellClass." ".$colClssAry["columnFiltCol"];
+            elseif ($singleRecArry["reconciledDate"] < $singleRecArry["recordDate"]) { //reconcile date is earlier than the transaction date so either...
+                if ($singleRecArry["reconciledDate"] == "2000-01-01") { //blank the date as it is the default value (usually by setting the font and the background to the same colour)
+                    $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselInvisCol"];
+                }
+                else { //set a warning colour to indicate the reconcile date has been set to a date earlier than the transaction date but not the default date (usually orange)
+                    $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["rcnclTooEarlyCol"];
+                }
+
             }
-        }
-
-        
-        //load data for current row starting at the left column (0)
-        $recDateAry = explode("-", $singleRecArry["recordDate"]); 
-        $displayRowsAry[] = $recDateAry[2]."-".$recDateAry[1]."-".$recDateAry[0]; //create date in reverse format to that stored in allRecords table - i.e. display like 23-03-2019
-        $displayRowsAry[] = aryValueOrZeroStr($orgPersonsListAry, $singleRecArry["personOrOrg"]);
-        $displayRowsAry[] = aryValueOrZeroStr($transCatListAry, $singleRecArry["transCatgry"]);
-        $displayRowsAry[] = fourThreeOrTwoDecimals($singleRecArry["amountWithdrawn"]); //format both withdrawn and paidin to two decimal places with single leading zero for amounts < £1.00
-        $displayRowsAry[] = fourThreeOrTwoDecimals($singleRecArry["amountPaidIn"]);
-        $displayRowsAry[] = aryValueOrZeroStr($accountListAry, $singleRecArry["accWorkedOn"]);
-        $displayRowsAry[] = aryValueOrZeroStr($budgetListAry, $singleRecArry["budget"]);
-        $displayRowsAry[] = $singleRecArry["referenceInfo"];
-        
-        $reconcileDate = $singleRecArry["reconciledDate"];
-        $reconcileDateAry = explode("-", $reconcileDate);
-        
-        if (($download) && ($reconcileDate == "2000-01-01")) { //for downloads set reconcile date to blank "" if it is the default of "2000-01-01" (for the on-screen display this isn't done - the date is made invisible by the class instead, by setting the text and background colour the same, or to some other colour to indicate not reconciled etc.)
-            $displayRowsAry[] = "";
-
-        }
-        else {
-            $displayRowsAry[] = $reconcileDateAry[2]."-".$reconcileDateAry[1]."-".$reconcileDateAry[0]; //create date in reverse format to that stored in allRecords table - i.e. display like 23-03-2019
-        }
-
-        //continue loading data for current row starting at next column
-        $displayRowsAry[] = aryValueOrZeroStr($umbrellaListAry, $singleRecArry["umbrella"]);
-        $displayRowsAry[] = aryValueOrZeroStr($docTypeListAry, $singleRecArry["docType"]);
-        $displayRowsAry[] = $singleRecArry["recordNotes"];
-       
-
-        //set values and prefixes for family cell (12) - if neither of these criteria are met it defaults to "" (set above)
-        if ($singleRecArry["idR"] == $singleRecArry["parent"]) { //parent value same as index so this is an actual parent: show family num with "OOO " prefix
-            $displayRowsAry[] = "OOO ".$singleRecArry["parent"];
-        }
-        elseif (0 < $singleRecArry["parent"]) { //parent value < 0 so this is a child: show family num with "% " prifix
-            $displayRowsAry[] = "% ".$singleRecArry["parent"];
-        }
-        else{
-            $displayRowsAry[] = ""; //default to show nothing for family status
-        }
-
-        //totals use dfor test purposes at moment - may not continue with them as system becomes proven
-        $totalWithdrawn = $totalWithdrawn + $singleRecArry["amountWithdrawn"]; //accumulates total amount withdrawn for the displayed page
-        $totalPaidIn = $totalPaidIn + $singleRecArry["amountPaidIn"]; //accumulates total amount paidin for the displayed page
-
-        if ($displayBankAcc) { //special section to create display values when bank statement reconcilliation mode is being used
-            if ($index == 0) { //this row displays single bank statement for reconcilation checks
-                $bankStmtWithdrawn = $singleRecArry["amountWithdrawn"]; //amount withdrawn for the bank statement
-                $bankStmtPaidIn = $singleRecArry["amountPaidIn"]; //amount paidin for the bank statement
-                $bankStmtLines = $singleRecArry["referenceInfo"]; //referenceInfo is used to hold number of lines in the bankstatement
-                $bankStmtBal = $bankStmtPaidIn - $bankStmtWithdrawn;
+            else { //none of above apply so set to standard class to just show plain date
+                $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
             }
-            elseif (0 < $index) { //all these other rows display transactions associated with the bank statement so do accumulations (but only if further rows exist!)
-                $totalRecncldDocsWithdrawn += $singleRecArry["amountWithdrawn"]; //accumulates total amount withdrawn for the displayed transactions associated with bank statement
-                $totalRecncldDocsPaidIn += $singleRecArry["amountPaidIn"]; //accumulates total amount paidin for the displayed transactions associated with bank statement
-            }
+
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
+
             
-        
+
+            foreach ($IncludeFiltIdxAry as $colIdx) { //set filter class for those columns that have been filtered - shouldn't (don't know if it is explicitly prevented) be used for reconciled date column
+                if (($displayCellDescrpAry[$colIdx] == "MoneyOut") || ($displayCellDescrpAry[$colIdx] == "MoneyIn")) { //needs right alignment because withdrawn or paidin cell
+                    $displayRowsClassesAry[$colIdx] = $moneyCellClass." ".$colClssAry["columnFiltCol"];
+                }
+                else { //ordinary cell so normal left alignment
+                    $displayRowsClassesAry[$colIdx] = $standardCellClass." ".$colClssAry["columnFiltCol"];
+                }
+            }
+
+            
+            //load data for current row starting at the left column (0)
+            $recDateAry = explode("-", $singleRecArry["recordDate"]); 
+            $displayRowsAry[] = $recDateAry[2]."-".$recDateAry[1]."-".$recDateAry[0]; //create date in reverse format to that stored in allRecords table - i.e. display like 23-03-2019
+            $displayRowsAry[] = aryValueOrZeroStr($orgPersonsListAry, $singleRecArry["personOrOrg"]);
+            $displayRowsAry[] = aryValueOrZeroStr($transCatListAry, $singleRecArry["transCatgry"]);
+            $displayRowsAry[] = fourThreeOrTwoDecimals($singleRecArry["amountWithdrawn"]); //format both withdrawn and paidin to two decimal places with single leading zero for amounts < £1.00
+            $displayRowsAry[] = fourThreeOrTwoDecimals($singleRecArry["amountPaidIn"]);
+            $displayRowsAry[] = aryValueOrZeroStr($accountListAry, $singleRecArry["accWorkedOn"]);
+            $displayRowsAry[] = aryValueOrZeroStr($budgetListAry, $singleRecArry["budget"]);
+            $displayRowsAry[] = $singleRecArry["referenceInfo"];
+            
+            $reconcileDate = $singleRecArry["reconciledDate"];
+            $reconcileDateAry = explode("-", $reconcileDate);
+            
+            if (($download) && ($reconcileDate == "2000-01-01")) { //for downloads set reconcile date to blank "" if it is the default of "2000-01-01" (for the on-screen display this isn't done - the date is made invisible by the class instead, by setting the text and background colour the same, or to some other colour to indicate not reconciled etc.)
+                $displayRowsAry[] = "";
+
+            }
+            else {
+                $displayRowsAry[] = $reconcileDateAry[2]."-".$reconcileDateAry[1]."-".$reconcileDateAry[0]; //create date in reverse format to that stored in allRecords table - i.e. display like 23-03-2019
+            }
+
+            //continue loading data for current row starting at next column
+            $displayRowsAry[] = aryValueOrZeroStr($umbrellaListAry, $singleRecArry["umbrella"]);
+            $displayRowsAry[] = aryValueOrZeroStr($docTypeListAry, $singleRecArry["docType"]);
+            $displayRowsAry[] = $singleRecArry["recordNotes"];
+           
+
+            //set values and prefixes for family cell (12) - if neither of these criteria are met it defaults to "" (set above)
+            if ($singleRecArry["idR"] == $singleRecArry["parent"]) { //parent value same as index so this is an actual parent: show family num with "OOO " prefix
+                $displayRowsAry[] = "OOO ".$singleRecArry["parent"];
+            }
+            elseif (0 < $singleRecArry["parent"]) { //parent value < 0 so this is a child: show family num with "% " prifix
+                $displayRowsAry[] = "% ".$singleRecArry["parent"];
+            }
+            else{
+                $displayRowsAry[] = ""; //default to show nothing for family status
+            }
+
+            //totals use dfor test purposes at moment - may not continue with them as system becomes proven
+            $totalWithdrawn = $totalWithdrawn + $singleRecArry["amountWithdrawn"]; //accumulates total amount withdrawn for the displayed page
+            $totalPaidIn = $totalPaidIn + $singleRecArry["amountPaidIn"]; //accumulates total amount paidin for the displayed page
+
+            if ($displayBankAcc) { //special section to create display values when bank statement reconcilliation mode is being used
+                if ($index == 0) { //this row displays single bank statement for reconcilation checks
+                    $bankStmtWithdrawn = $singleRecArry["amountWithdrawn"]; //amount withdrawn for the bank statement
+                    $bankStmtPaidIn = $singleRecArry["amountPaidIn"]; //amount paidin for the bank statement
+                    $bankStmtLines = $singleRecArry["referenceInfo"]; //referenceInfo is used to hold number of lines in the bankstatement
+                    $bankStmtBal = $bankStmtPaidIn - $bankStmtWithdrawn;
+                }
+                elseif (0 < $index) { //all these other rows display transactions associated with the bank statement so do accumulations (but only if further rows exist!)
+                    $totalRecncldDocsWithdrawn += $singleRecArry["amountWithdrawn"]; //accumulates total amount withdrawn for the displayed transactions associated with bank statement
+                    $totalRecncldDocsPaidIn += $singleRecArry["amountPaidIn"]; //accumulates total amount paidin for the displayed transactions associated with bank statement
+                }
+                
+            
+            }
+
+            $rowsAry[$index]["displayRowsAry"] = $displayRowsAry;
+            $rowsAry[$index]["displayRowsClassesAry"] = $displayRowsClassesAry;
+            //idR is now a main key with it's own index - think this following line is no longer needed
+            //$rowsAry[$index]["idR"] = $singleRecArry["idR"]; //idR for current row (identifies displayed rows with allRecords table rows - used to create unique id for each cell for doing updates of table)
+            $rowsAry[$index]["fileName"] = $singleRecArry["fileName"]; //doc file name for current row. There will be repeats of same filename if  the same doc is associated with more than one record
+
+            if (!array_key_exists($singleRecArry["fileName"], $fileNameRands)) { //if a filename random alphanumeric hasn't already been created and stored
+                $fileNameRands[$singleRecArry["fileName"]] = getRandNoSave($_filenameRandLength); //create and store a random for the current file name
+            }
+            $rowsAry[$index]["fileNameRand"] = $fileNameRands[$singleRecArry["fileName"]]; //use the random that has just/previously been created and stored for the current file name
+            
+            $idrArry[] = $singleRecArry["idR"]; //idR for current row (identifies displayed rows with allRecords table rows
+
+            if ($singleRecArry["compoundHidden"] == FALSE) { //only increment transaction count (to be displayed line 1 bottom right) if the row is not normally hidden by filter action.
+                $transactonCount++;
+            }
+
+            $index++;
         }
-
-        $rowsAry[$index]["displayRowsAry"] = $displayRowsAry;
-        $rowsAry[$index]["displayRowsClassesAry"] = $displayRowsClassesAry;
-        //idR is now a main key with it's own index - think this following line is no longer needed
-        //$rowsAry[$index]["idR"] = $singleRecArry["idR"]; //idR for current row (identifies displayed rows with allRecords table rows - used to create unique id for each cell for doing updates of table)
-        $rowsAry[$index]["fileName"] = $singleRecArry["fileName"]; //doc file name for current row. There will be repeats of same filename if  the same doc is associated with more than one record
-
-        if (!array_key_exists($singleRecArry["fileName"], $fileNameRands)) { //if a filename random alphanumeric hasn't already been created and stored
-            $fileNameRands[$singleRecArry["fileName"]] = getRandNoSave($_filenameRandLength); //create and store a random for the current file name
-        }
-        $rowsAry[$index]["fileNameRand"] = $fileNameRands[$singleRecArry["fileName"]]; //use the random that has just/previously been created and stored for the current file name
-        
-        $idrArry[] = $singleRecArry["idR"]; //idR for current row (identifies displayed rows with allRecords table rows
-
-        $index++;
     }
 
     //CONSIDER REMOVING THESE INDIVIDUAL ARRAYS AND LEAVING JUST THE STATIC ONES - NEED TO CHEQUE THE REST OF THE CODE TO ENSURE THEY ARE NO LONGER NEEDED !
@@ -1088,7 +1093,7 @@ function createStndDisplData(
         $returnAry["balDiff"] = $bankStmtBal - $totalRecncldDocsBal;
     }
     
-    $returnAry["transCount"] = $index;
+    $returnAry["transCount"] = $transactonCount;
     $returnAry["staticArys"] = $staticArys;
     $returnAry["idrArry"] = $idrArry;
     $returnAry["rowsAry"] = $rowsAry;
@@ -2347,8 +2352,8 @@ function subButPanelJSreconcile(
     {
     ?>
     <div class=<?php echo $outerDivClass;?>  id=<?php echo $uniqueId;?>> <!-- submenu outer container to hold reconciliation setup buttons  -->
-        <button class=<?php echo $butClass;?> type="button" onclick="atomicCall('Earlier Statement')"><i class="fas fa-arrow-left"></i></button>
-        <button class=<?php echo $butClass;?> type="button" onclick="atomicCall('Later Statement')"><i class="fas fa-arrow-right"></i></button>     
+        <button class=<?php echo $butClass;?> type="button" onclick="atomicCall('Earlier Statement')"><i class="fas fa-arrow-up"></i></button>
+        <button class=<?php echo $butClass;?> type="button" onclick="atomicCall('Later Statement')"><i class="fas fa-arrow-down"></i></button>     
         <button class=<?php echo $butClass;?> type="button" onclick="atomicCall('Reset accWorkedOn')"><i class="fas fa-trash"></i></button>
     </div>
     <script> //dummy function no longer needed as it now isn't called by JS selectButPanel()

@@ -12,6 +12,8 @@ var fromClickCellCmnd = false;
 var autoClickDwnFromCalOrButPnl = false;
 var millisecStartTime = 0; //global variable for startTimeout() and checkTimeout()
 var checkTimeoutFunction = "Console"; //controls checkTimeout() - "Alert", "Console" or "Off"
+var checkTimeoutIndentNum = 0; //holds running count of number of indents to be applied to console display of check timeouts
+var checkTimeoutNamesAry = [];
 var currentKey = "none"; //stores value of current key - either "none", "Control" etc. or a code number (e.g. 112 = "p"). Shift key produces "Shift" and not the code number for an uppercase (e.g. 80 = "P")
 var altGrLastPressedTime = 0;
 var compoundNum = 0;
@@ -25,7 +27,10 @@ function clickField(event) {
 	fromClickCellCmnd = false;
 	var id = event.target.id;
 
-	console.log("Clicked Id = "+id);
+	var tab = "      ";
+	console.log(tab+"Clicked Id = "+id);
+	console.log("OOOOOOO");
+	console.log("iiiiiii");
 
 //alert(compound.mastIdr);
 	if (id.split("-")[1] == "piv") { //click comes from pivot table
@@ -159,7 +164,7 @@ function doEverything(id, heldKey) {
 	
 	// ########################### STATEMENTS ALL ACCESS THE SERVER AND DATABASE #####################
 
-	atomicCall(""); //function that combines updateFromSticky(id, valueStr), displayBalances(id), upDatewithdrnPaidin(id), newDocFileName(id) in one atomic to prevent race conditions
+	atomicCall(""); //function that combines updateFromSticky(id, valueStr), displayBalances(id), newDocFileName(id) in one atomic to prevent race conditions
 	valSet("previousCellId", valGet("seltdRowCellId")); //store current row so that it is available next click (used with shift to copy sticky value to a range of selected cells)
 	// ########################### STATEMENTS ALL ACCESS THE SERVER AND DATABASE - END #####################
 
@@ -217,7 +222,9 @@ function atomicAjaxCall(
 	headingAry,
 	bankAccNameAry,
 	restrictionsAry //not sure if needed but ready in case
-	) {
+	) { 
+	
+
 	console.log("HERE ##################################### atomicAjaxCall()");
 	if (atomicAjaxCallCompleted) { //prevents new calls to server before existing one has completed - NOT SURE IF THIS IS THE OPTIMUM PLACE FOR THIS (BUT COULD BE IF ALL SERVER CALLS COME THROUGH HERE!)
 console.log(fileRndm);
@@ -255,13 +262,17 @@ console.log("HERE ##################################### atomicAjaxCall()   PRE-A
 
 		savedCellClassesArry = getAryOfClasses(arry["idRlist"], cellId.split("-")[1]);
 
-		arry = setCompoundTransAjaxSend(arry, cellId, heldKey, compoundNum);
 		
-		arry = createParentAjaxSend(arry, cellId, createParent, cellWarnClass); //only executes internally if createParent = "yes" (if this is so stickyAjaxSend() will have already been disabled for families)
-		arry = stickyAjaxSend(arry, itemStr, cellId, idrArry, cellWarnClass, displayCellDescrpAry); //only executes internally if sticky item for this column has been set (i.e. isn't "")
-		arry = withdrawnPaidinAjaxSend(arry, editableCellIdValHldr, moneyCellWarnClass, displayCellDescrpAry, headingAry, bankAccNameAry, compoundTypeAry, compoundGroupIdrAry); //only executes internally if editableCellIdValHldr value is != 0 (i.e. a withdrawn/paidin value has been changed)
-		arry = directStrEditAjaxSend(arry, editableCellIdValHldr, cellWarnClass, displayCellDescrpAry, allRecordsColNameRndAry); //only executes internally if editableCellIdValHldr value is != 0 (i.e. a  editable string cell value has been clicked)
-		arry = getBalDataSend(arry, cellId, recStartDate, recEndDate, valGet("runNormalBalFunc")); //executes if runBalFunc = "Yes" (though php on server may return all balances as "0.00" if nonsensical column like date is clicked)
+		arry = clearRowExcptRecDateAjaxSend(arry, cellId, colClssAry, auxButtonTxt, compoundTypeAry);
+		
+		
+		arry = setCompoundTransAjaxSend(arry, cellId, heldKey, compoundNum, auxButtonTxt); //only executes internally if heldKey == "AltGr"
+		arry = createParentAjaxSend(arry, cellId, createParent, cellWarnClass, auxButtonTxt); //only executes internally if createParent = "yes" (if this is so stickyAjaxSend() will have already been disabled for families)
+		arry = stickyAjaxSend(arry, itemStr, cellId, idrArry, cellWarnClass, displayCellDescrpAry, auxButtonTxt); //only executes internally if sticky item for this column has been set (i.e. isn't "")
+		arry = withdrawnPaidinAjaxSend(arry, editableCellIdValHldr, moneyCellWarnClass, displayCellDescrpAry, headingAry, bankAccNameAry, compoundTypeAry, compoundGroupIdrAry, auxButtonTxt, colClssAry); //only executes internally if editableCellIdValHldr value is != 0 (i.e. a withdrawn/paidin value has been changed)	
+		arry = directStrEditAjaxSend(arry, editableCellIdValHldr, cellWarnClass, displayCellDescrpAry, allRecordsColNameRndAry, auxButtonTxt); //only executes internally if editableCellIdValHldr value is != 0 (i.e. a  editable string cell value has been clicked)
+
+		arry = getBalDataSend(arry, cellId, recStartDate, recEndDate, valGet("runNormalBalFunc"), auxButtonTxt); //executes if runBalFunc = "Yes" (though php on server may return all balances as "0.00" if nonsensical column like date is clicked)
 		arry = docUpdateSend(arry, cellId, accountBankLinksArry, auxButtonTxt); //only executes if currentDocRnd != previousDocRnd or column 8 (reconciliation) has been selected
 			
 		console.log(JSON.stringify(arry, null, 4));
@@ -273,7 +284,8 @@ console.log("HERE ##################################### atomicAjaxCall()   PRE-A
 		      	var arryBackFromPhp = JSON.parse(xmlhttp.responseText);
 		      	console.log(JSON.stringify(arryBackFromPhp, null, 4));
 
-		      	setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellDescrpAry, compoundTypeAry);
+		      	clearRowExcptRecDateAjaxReceive(arry, arryBackFromPhp, cellId, colClssAry);
+		      	setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellDescrpAry, compoundTypeAry, colClssAry);
 		      	createParentAjaxReceive(arry, arryBackFromPhp, cellId);
 		      	stickyAjaxReceive(arry, arryBackFromPhp, cellId, savedCellClassesArry);
 		      	withdrawnPaidinAjaxReceive(arry, arryBackFromPhp);
@@ -299,7 +311,7 @@ console.log("HERE ##################################### atomicAjaxCall()   PRE-A
 		xmlhttp.open("POST", pathToPhpFile, true);
 		xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 		xmlhttp.send("command="+fileRndm+"&arryJsonStr="+JSON.stringify(arry)+"&random="+random);
-		atomicAjaxCallCompleted = false; //set to false to prevent other attempts at sending ajax data until the current one has completed and this flag hasbeen set to true by return from server above
+		atomicAjaxCallCompleted = false; //set to false to prevent other attempts at sending ajax data until the current one has completed and this flag has been set to true by return from server above
 		console.log("HERE ##################################### atomicAjaxCall()   POST-AJAX SENDS");
 		//alert("End Of atomicAjaxCall");
 	}
@@ -313,8 +325,86 @@ console.log("HERE ##################################### atomicAjaxCall()   PRE-A
 //                                                                                                         #########
 
 
-function setCompoundTransAjaxSend(arry, cellId, heldKey, compoundNum) {
-	if (heldKey == "AltGr") { //only run if "AltGr" is held down
+function clearRowExcptRecDateAjaxSend(arry, cellId, colClssAry, auxButtonTxt, compoundTypeAry) {
+	if (auxButtonTxt == "Clear") { //only run if Clear button has been clicked
+		var idR = cellId.split("-")[0];
+		if (document.getElementById(idR+"-12").innerText.split(" ")[0] == "OOO") { //row is a parent of family so show alert and inhibit clear action and return from function
+			alert("Clear will not work Parent rows !");
+			return arry;
+		}
+		if ((compoundTypeAry[idR] == "Master") || (compoundTypeAry[idR] == "Slave") || (compoundTypeAry[idR] == "FinalSlave")) { //one of several compound row types so show alert and inhibit clear action and return from function
+			alert("Clear will not work on Compound rows !");
+			return arry;
+		}
+		else { //not compound so press on
+			var recordDate = document.getElementById(idR+"-0").innerText;
+			var newValues = [reverseDate(recordDate), "", "", "0", "0", "", "", "", reverseDate("01-01-2000"), "", "", "", "0", "0", "0"] //these values include 13:compound and 14:reconcileDocId that are used on the server to reset table values, but not used here to change any cell values as these display cells don't exist. fileName (for the associated document) is not changed on the server either, so the row still has some meaning before deciding to change the date to 01-01-2000 to finally delete it
+			for (var i = 1; i < 13; i++) { //iterate each cell except 0:Date which must remain unchanged in case the row may still be required before deciding to change the date to 01-01-2000 to finally delete it
+				//document.getElementById(idR+"-"+i).innerText = newValues[i];
+				changeSuffixClass((idR+"-"+i), colClssAry["waitingForServer"]);
+			}
+			arry["writeValuesAry"] = {[idR]: newValues};
+			arry["clearCellId"] = cellId;
+			arry["clearRowExcptRecDateAjaxSend"] = true;
+		}
+	}
+	return arry;
+}
+
+function clearRowExcptRecDateAjaxReceive(arry, arryBackFromPhp, OrigCellId, colClssAry) {
+	if (existsAndTrue(arryBackFromPhp, "PHPwriteReadRowHasRun")) { //only run if returning PHP has already run on server
+		var rowId = Object.keys(arryBackFromPhp["aryBackFromWriteReadRows"])[0]; //extract rowId from returned array - PHP writeReadRows() can return several rows if required but only single row used here
+		var origValueAry = arry["writeValuesAry"][rowId];
+		var updatedValueAry = arryBackFromPhp["aryBackFromWriteReadRows"][rowId];	
+		if ((updatedValueAry[14] == 0) && (updatedValueAry[13] == 0)) { //check that reconcileDocId and compound have both been set to 0 before setting other cells
+			for (var i = 12; 0 <= i; i--) { //start at highest index of 13 and count down to 0 (direction doesn't really matter but continues in order of checking from 14, 13)
+				cellId = rowId+"-"+i;
+				if ((i == 0) || (i == 8)) { //a date column so reverse date for comparison and display WOULD BE BETTER IF THESE IF ELSE'S TESTED ROW NAMES IN CASE ORDER IS CHANGED OR ADDITIONS MADE !
+					origValue = reverseDate(origValueAry[i]);
+					updatedValue = reverseDate(updatedValueAry[i]);
+				}
+				else if ((i == 3) || (i == 4)) { //a money column so format for comparison and display
+					origValue = sanTwoDecPlcs(origValueAry[i]);
+					updatedValue = sanTwoDecPlcs(updatedValueAry[i]);
+				}
+				else { //value unchanged
+					origValue = origValueAry[i];
+					updatedValue = updatedValueAry[i];
+				}
+				//var origValue = sanTwoDecPlcs(origValueAry[cellId]);
+				//var updatedValue = sanTwoDecPlcs(updatedValueAry[cellId]);
+
+				if (updatedValue == origValue) {
+					if (i == 12) {
+						if (updatedValue == "0") { //if read back for parent field is 0 (indicating this record is no longer a child) convert to "" for display (mimicking php parsing in showRecsForFullYr.php)
+				    		updatedValue = "";
+				    	}
+				    }
+					document.getElementById(cellId).innerText = updatedValue;
+					if (i == OrigCellId.split("-")[1]) { //column of original cell id matches current loop column so it is a selected cell
+						if (i == 8) { //set to cell selected invisible colour for reconciliation date which will have been reset to 01-01-2000
+							changeSuffixClass(OrigCellId, colClssAry["cellSelInvisCol"]);
+						}
+						else { //just set to normal cell selected colour
+							changeSuffixClass(OrigCellId, colClssAry["cellSelCol"]);
+						}
+					}
+					else { //not a selected cell but selected row
+						if (i == 8) { //set to row selected invisible colour for reconciliation date which will have been reset to 01-01-2000
+							changeSuffixClass(cellId, colClssAry["selInvisCol"]);
+						}
+						else { //just set to normal row selected colour
+							changeSuffixClass(cellId, colClssAry["selCol"]);
+						}
+					}
+				}
+			}
+		} 
+	}
+}
+
+function setCompoundTransAjaxSend(arry, cellId, heldKey, compoundNum, auxButtonTxt) {
+	if ((heldKey == "AltGr") && (auxButtonTxt != "Clear")) { //only run if "AltGr" is held down
 		arry["cellIdForCompoundTrans"] = cellId;
 		arry["compoundNum"] = compoundNum;
 		arry["createCompoundTransAjaxSendHasRun"] = true;
@@ -323,10 +413,10 @@ function setCompoundTransAjaxSend(arry, cellId, heldKey, compoundNum) {
 	return arry;
 }
 
-function setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellDescrpAry, compoundTypeAry) {
+function setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellDescrpAry, compoundTypeAry, colClssAry) {
 	var maxColIdx = displayCellDescrpAry.length - 1; //derive maximum column index from displayCellDescrpAry which holds single word descriptions for each column
 	var familyColKeyStr = String(getKeyFromValue(displayCellDescrpAry, "Family"));
-	if (existsAndTrue(arryBackFromPhp, "PHPsetCompoundTransHasRun")) { //only run if complementary send function has already run
+	if (existsAndTrue(arryBackFromPhp, "PHPsetCompoundTransHasRun")) { //only run if returning PHP has already run on server
 		compoundNum = arryBackFromPhp["returnCompoundNum"]; //used to set value of this global external to this function (also cleared by both press or release of AltGr keyboard button)
 		var compoundActionAry = arryBackFromPhp["compoundActionAry"];
 		for (let key in compoundActionAry) { //loops through all the positions in the returned compoundActionAry
@@ -361,8 +451,8 @@ function setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellD
 	//consoleAry(compoundTypeAry);
 }
 
-function createParentAjaxSend(arry, cellId, createParent, cellWarnClass) {
-	if ((createParent == "yes") && (inrGet(cellId).substring(0, 2) != "OO")) { //only run if createParent = "yes" and target row not already parent (THIS USES A SIMPLE CHECK OF FIRST TWO DISPLAYED CHARACTERS OF "OO" - WOULD NEED TO CHANGE THIS IF A FUTURE FEATURE OF COLOURS OR SHAPES FOR PARENTS AND CHILDREN IS ADOPTED!!!)
+function createParentAjaxSend(arry, cellId, createParent, cellWarnClass, auxButtonTxt) {
+	if ((createParent == "yes") && (inrGet(cellId).substring(0, 2) != "OO") && (auxButtonTxt != "Clear")) { //only run if createParent = "yes" and target row not already parent (THIS USES A SIMPLE CHECK OF FIRST TWO DISPLAYED CHARACTERS OF "OO" - WOULD NEED TO CHANGE THIS IF A FUTURE FEATURE OF COLOURS OR SHAPES FOR PARENTS AND CHILDREN IS ADOPTED!!!)
 		arry["cellIdForNewParent"] = cellId;
 		arry["NewParentOrgClass"] = document.getElementById(cellId).className; //save original class for re-enstatement later
 		document.getElementById(cellId).className = cellWarnClass; //set the cell class to warning until it has been properly updated with data back from the table
@@ -381,35 +471,38 @@ function createParentAjaxReceive(arry, arryBackFromPhp, cellId) {
 	}
 }
 
-function stickyAjaxSend(arry, itemStr, cellId, idrArry, cellWarnClass, displayCellDescrpAry) {
-	console.log("HERE ##################################### stickyAjaxSend()");
-	var colId = cellId.split("-")[1];
-	var dispCellDscrp = displayCellDescrpAry[colId];
-	if ((dispCellDscrp == 'PersOrg') || (dispCellDscrp == 'TransCat') || (dispCellDscrp == 'Account') || (dispCellDscrp == 'Budget') || (dispCellDscrp == 'Reference') || (dispCellDscrp == 'Umbrella') || (dispCellDscrp == 'DocType') || (dispCellDscrp == 'Note')) {
-		if (valGet("stickyActive-"+cellId.split("-")[1]) == "yes") { //check to make sure flag indicates a sticky itemStr for this column has been set so the function should be run
-			if (itemStr == "--CLEAR--") {
-				itemStr = ""; //set to real intended value for updating table, "--CLEAR--" is just for display in the sticky heading because "" would be invisible
+function stickyAjaxSend(arry, itemStr, cellId, idrArry, cellWarnClass, displayCellDescrpAry, auxButtonTxt) {
+	 if (auxButtonTxt != "Clear") {
+		console.log("HERE ##################################### stickyAjaxSend()");
+		var colId = cellId.split("-")[1];
+		var dispCellDscrp = displayCellDescrpAry[colId];
+		if ((dispCellDscrp == 'PersOrg') || (dispCellDscrp == 'TransCat') || (dispCellDscrp == 'Account') || (dispCellDscrp == 'Budget') || (dispCellDscrp == 'Reference') || (dispCellDscrp == 'Umbrella') || (dispCellDscrp == 'DocType') || (dispCellDscrp == 'Note')) {
+			if (valGet("stickyActive-"+cellId.split("-")[1]) == "yes") { //check to make sure flag indicates a sticky itemStr for this column has been set so the function should be run
+				if (itemStr == "--CLEAR--") {
+					itemStr = ""; //set to real intended value for updating table, "--CLEAR--" is just for display in the sticky heading because "" would be invisible
+				}
+				arry["itemStr"] = itemStr;
+				arry["cellId"] = cellId;
+				arry["stickyOrgClass"] = document.getElementById(cellId).className; //save original class for re-enstatement later
+				arry["idRlist"].forEach(function(value) { //cycle through all the cell idRs selected by 'shift' click
+					document.getElementById(value+"-"+cellId.split("-")[1]).className = cellWarnClass; //set the cell class to warning until it has been properly updated with data back from the table
+				});
+				arry["stickyAjaxSendHasRun"] = true;
 			}
-			arry["itemStr"] = itemStr;
-			arry["cellId"] = cellId;
-			arry["stickyOrgClass"] = document.getElementById(cellId).className; //save original class for re-enstatement later
-			arry["idRlist"].forEach(function(value) { //cycle through all the cell idRs selected by 'shift' click
-				document.getElementById(value+"-"+cellId.split("-")[1]).className = cellWarnClass; //set the cell class to warning until it has been properly updated with data back from the table
-			});
-			arry["stickyAjaxSendHasRun"] = true;
+		}
+		if (displayCellDescrpAry[colId] == 'Family') { //if a child update - also uses different checking and update code in writeReadAllRecordsItem() php function
+			if ((valGet("stickyActive-"+cellId.split("-")[1]) == "yes")) { //check to make sure flag indicates a sticky itemStr for this column has been set so the function should be run 
+				arry["itemStr"] = itemStr.replace(/\D/g,''); //removes all characters except numbers 0-9 - returns empty string "" if no numeric characters are in itemStr
+				arry["cellId"] = cellId;
+				arry["stickyOrgClass"] = document.getElementById(cellId).className; //save original class for re-enstatement later
+				arry["idRlist"].forEach(function(value) { //cycle through all the cell idRs selected by 'shift' click
+					document.getElementById(value+"-"+cellId.split("-")[1]).className = cellWarnClass; //set the cell class to warning until it has been properly updated with data back from the table
+				});
+				arry["stickyAjaxSendHasRun"] = true;
+			}
 		}
 	}
-	if (displayCellDescrpAry[colId] == 'Family') { //if a child update - also uses different checking and update code in writeReadAllRecordsItem() php function
-		if ((valGet("stickyActive-"+cellId.split("-")[1]) == "yes")) { //check to make sure flag indicates a sticky itemStr for this column has been set so the function should be run 
-			arry["itemStr"] = itemStr.replace(/\D/g,''); //removes all characters except numbers 0-9 - returns empty string "" if no numeric characters are in itemStr
-			arry["cellId"] = cellId;
-			arry["stickyOrgClass"] = document.getElementById(cellId).className; //save original class for re-enstatement later
-			arry["idRlist"].forEach(function(value) { //cycle through all the cell idRs selected by 'shift' click
-				document.getElementById(value+"-"+cellId.split("-")[1]).className = cellWarnClass; //set the cell class to warning until it has been properly updated with data back from the table
-			});
-			arry["stickyAjaxSendHasRun"] = true;
-		}
-	}
+
 	return arry;
 }
 
@@ -444,10 +537,10 @@ function stickyAjaxReceive(arry, arryBackFromPhp, cellId, savedCellClassesArry) 
 }
 
 /*   */
-function withdrawnPaidinAjaxSend(arry, editableCellIdValHldr, moneyWarnClass, displayCellDescrpAry, headingAry, bankAccNameAry, compoundTypeAry, compoundGroupIdrAry) {
+function withdrawnPaidinAjaxSend(arry, editableCellIdValHldr, moneyWarnClass, displayCellDescrpAry, headingAry, bankAccNameAry, compoundTypeAry, compoundGroupIdrAry, auxButtonTxt, colClssAry) {
 	var cellId = valGet(editableCellIdValHldr); 
 	var colId = cellId.split("-")[1]; //get the column number that was clicked
-	if ((displayCellDescrpAry[colId] == "MoneyOut") || (displayCellDescrpAry[colId] == "MoneyIn")) { //withdrawn or paidin cell so run this function		
+	if (((displayCellDescrpAry[colId] == "MoneyOut") || (displayCellDescrpAry[colId] == "MoneyIn")) && (auxButtonTxt != "Clear")) { //withdrawn or paidin cell so run this function		
 		valSet(editableCellIdValHldr, 0); //resets the id value holder pointed to by editableCellIdValHldr
 		if (cellId != 0) { //the cell that was previously in focus before the current cell that triggered this atomicAjaxCall was an editable one, and may have a new value in it
 			var accountName = document.getElementById(cellId.split("-")[0]+"-"+getKeyFromValue(headingAry, "Account")).innerText //gets the name from the Account column
@@ -490,10 +583,10 @@ function withdrawnPaidinAjaxReceive(arry, arryBackFromPhp) {
 }
 
 
-function directStrEditAjaxSend(arry, editableCellIdValHldr, cellWarnClass, displayCellDescrpAry, allRecordsColNameRndAry) {
+function directStrEditAjaxSend(arry, editableCellIdValHldr, cellWarnClass, displayCellDescrpAry, allRecordsColNameRndAry, auxButtonTxt) {
 	cellId = valGet(editableCellIdValHldr);
 	var colId = cellId.split("-")[1]; //get the column number that was clicked
-	if ((displayCellDescrpAry[colId] == "Reference") || (displayCellDescrpAry[colId] == "Note")) { //an editable cell so run this function		
+	if (((displayCellDescrpAry[colId] == "Reference") || (displayCellDescrpAry[colId] == "Note")) && (auxButtonTxt != "Clear")) { //an editable cell so run this function - DON'T run if Clear clicked
 		valSet(editableCellIdValHldr, 0); //resets the id value holder pointed to by editableCellIdValHldr
 		if (cellId != 0) { //the cell that was previously in focus before the current cell that triggered this atomicAjaxCall was an editable one, and may have a new value in it
 			var value = document.getElementById(cellId).innerText; //get string value held in the cell
@@ -658,7 +751,7 @@ function compoundGroupAry(cellId, withdrnId, paidinId, compoundGroupIdrAry, colC
 	function changeAndSaveClassSuffixes(value) {
 		var colId = this.cellId.split("-")[1];
 		var rowId = value;
-		return changeSuffixClass((rowId+"-"+colId), this.colClssAry["waitingForServer"]); //save original suffix for assembly into an array and replace it with temporary "waitingForServer" one
+		return changeSuffixClass((rowId+"-"+colId), this.colClssAry["waitingForServer"]); //return original suffix for assembly into an array and replace it with temporary "waitingForServer" one
 	}
 	applyAmountRules(amountsAry); //amountsAry is passed by reference so can be modified within function an doesn't need to be returned (THIS IS THE CASE FOR MANY ajax FUNCTIONS BUT RETURNS ARE USED FOR CLARITY TO INDICATE WHAT'S GOING ON !)
 	return amountsAry;
@@ -1142,7 +1235,7 @@ function changeField(event) {
 function clickCellBelow(id, idrAry, source) {
 	allowSetSticky = false; //inhibit sticky in case rapid clicking of sucessive calendar or butPanel buttons triggers it - it is re-enabled after double click detection block at beginning of doEverything()
 	fromClickCellCmnd = true; //indicates that the cell click has come from one of the button panels and not a mouse click on the display area
-	if ((autoClickDwnFromCalOrButPnl || (source == "From Return Key")) && Array.isArray(idrAry) && (0 < idrAry.length) && atomicAjaxCallCompleted) { //check to see that some idRs exist - indicates page isn't empty! Alsothat an ajax call isn't still waiting to complete
+	if ((autoClickDwnFromCalOrButPnl || (source == "From Return Key")) && Array.isArray(idrAry) && (0 < idrAry.length) && atomicAjaxCallCompleted) { //check to see that some idRs exist - indicates page isn't empty! Also that an ajax call isn't still waiting to complete
 		var idR = id.split("-")[0];
 		var column = id.split("-")[1];
 		var idrIndexNew = idrAry.indexOf(idR) + 1;
@@ -1163,7 +1256,7 @@ function returnPress(event) { //BECAUSE changeField() IS NOW EXECUTED IN clickFi
   if (event.keyCode === 13) {
     document.getElementById(valGet("seltdRowCellId")).blur(); //used to remove focus from the selected item. same effect as onchange() for paidin and withdrawn fields - does a submit of the value to server if there has been a change of value
     valSet("editableCellIdHldr", valGet("seltdRowCellId"));
-    upDatewithdrnPaidin(); //redirects to ajaxRecordsWithdrawnPaidinAndCellsUpdate() in this file, which makes a server call to update the record for the clicked field to  the withdrawn or paidin value
+   // upDatewithdrnPaidin(); // DEPRECATED - redirects to ajaxRecordsWithdrawnPaidinAndCellsUpdate() in this file, which makes a server call to update the record for the clicked field to  the withdrawn or paidin value
   }
 }
 
@@ -1179,6 +1272,12 @@ function setOneStrClassUnsetRest(baseId, onClass, offClass, itemKeysCsv, itemKey
       }
       document.getElementById(baseId+idxSelected).className = onClass;
     }
+}
+
+/* Converts passed $date string by reversing it, e.g. "07-04-2020" to "2020-04-07" or "2020-04-07" to "07-04-2020" to change to and from database table format when required for display in "07-04-2020" format. */
+function reverseDate(date) {
+	var dateAry = date.split("-");
+	return dateAry[2]+"-"+dateAry[1]+"-"+dateAry[0]; 
 }
 
 /* Converts passed date string, $date, (which is in the form "07-04-2020") by reversing it, removing the separator "-"s, and returning "20200407" which can be used directly for comparisons such as > < ==. */
@@ -1316,7 +1415,7 @@ function cellMatchInObj(dispCellDescrpAry, elementId, conditionsObj) {
 
 /* First all button panels are made invisible and then, for the selected cell, the relevent identifier from the butPanelControlAry is used to unhide the specified button panel. Unless the test with conditionsObj succeeds or there is no relevant data for the current column (see description in cellMatchInObj() function) only the panel referenced by dummyButPanelId will displayed. If "None" is the identifier the panel referenced by dummyButPanelId will be displayed. Facilitates granular overriding of general no-edit directive for specific button panels (e.g. budget column) for specific users. */
 function selectButPanel(displayCellDescrpAry, fieldNameAry, butPanelControlAry, elementId, prefix, dummyButPanelId, noEditButPanelId, outerContainerForPanel, conditionsObj, restrictionsAry, edit) {
-	startTimeout();
+	startTimeout("selectButPanel()");
 	document.getElementById(outerContainerForPanel).style.display = 'inline'; //makes containing div visible (it is hidden by default so display area sits at the left for 'non-editing' users)
 	document.getElementById(noEditButPanelId).style.display = 'none';
 	for (index = 0; index < butPanelControlAry.length; index++) { //start by hiding all button panels
@@ -3040,7 +3139,9 @@ String.prototype.escapeSpecialChars = function() {
 };
 
 
-function startTimeout() {
+function startTimeout(nameOfCallingItem) {
+	checkTimeoutIndentNum++;
+	checkTimeoutNamesAry[0] = nameOfCallingItem;
 	var dateTest = new Date();
 	millisecStartTime = dateTest.getTime();
 }
@@ -3059,6 +3160,21 @@ function checkTimeout(itemName, millisecThreshold) {
 		}
 	}
 }
+
+function startCheckTime(itemName) {
+	//append array with {name:itemName, time:currentTime,  print:notYet} (itemName to have tab(tabValue) prefixed)
+	//push aryIndex onto aryIndxStack with prefixed tab
+	//increment tabValue 
+
+}
+
+function endCheckTime() {
+	//pull aryIndex from aryIndxStack
+	//update time object at aryIndex position
+	//decrement tab value 
+	//if tab value == 0 print (itemName) down the way through array from latest printed marker setting each marker to printed
+}
+
 
 
 /* NOT WORKING ! */

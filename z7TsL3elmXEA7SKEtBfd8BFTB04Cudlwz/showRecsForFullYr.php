@@ -1210,7 +1210,8 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 					<!-- for Swap Doc and Swap Group Doc buttons subCommand is not used (dummy string only) and subSubCommand is used instead to match the way the buttons in uploadScans.php operate  -->
 					<button class="subMenuBtn" type="submit" name="command" value=<?php echo $menuRandomsArray["Upload Scans"]."-dummy-".getRand("Swap Doc");?>><i class="fas fa-file"></i> Swap Doc</button>
 					<button class="subMenuBtn" type="submit" name="command" value=<?php echo $menuRandomsArray["Upload Scans"]."-dummy-".getRand("Swap Group Doc");?>><i class="fas fa-copy"></i> Swap Grp Doc</button>
-					<button class="subMenuBtn" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-".$genrlAryRndms["deleteRec"];?>><i class="fas fa-trash-alt"></i> Bin</button>
+					<button class="subMenuBtn" type="button" onclick="atomicCall('Clear')"><i class="fas fa-trash-alt"></i> Bin</button>
+				<!--	<button class="subMenuBtn" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-".$genrlAryRndms["deleteRec"];?>><i class="fas fa-trash-alt"></i> Bin</button> -->
 				<?php
 				}
 
@@ -1374,7 +1375,7 @@ else {
 	}
 
 	function atomicCall(auxButtonTxt) {
-		atomicAjaxCall(  //function that combines updateFromSticky(id, valueStr), displayBalances(id), upDatewithdrnPaidin(id), newDocFileName(id) in one atomic ajax call to server to prevent race conditions
+		atomicAjaxCall(  //function that combines updateFromSticky(id, valueStr), displayBalances(id), newDocFileName(id) in one atomic ajax call to server to prevent race conditions
 			valGet("seltdRowCellId"),
 			inrGet("sticky-"+valGet("seltdRowCellId").split("-")[1]),
 			'editableCellIdHldr',
