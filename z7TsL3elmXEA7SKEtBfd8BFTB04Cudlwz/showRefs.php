@@ -16,7 +16,7 @@ $refAry = $recRefsAndDates["refs"];
 $dateAry = $recRefsAndDates["dates"];
 
 ?>
-<div style="height: 865px; width: 1890px; padding-left:20px; overflow:scroll; background-color: #FFFFFF; float:left;">
+<div style="height: 44.268vw; width: 98.4312vw; padding-left:1.0416vw; overflow:scroll; background-color: #FFFFFF; float:left;">
 <?php
 
 $previousRef = 0;

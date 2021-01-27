@@ -15,7 +15,7 @@ print_r("</br>");
 ?>
 <div style="background-color: #FFFFFF; float:left;">
 	<div class="newUserPwContainer">
-		<div style="width:450px; float:left; margin-left:20px">
+		<div style="width:23.436vw; float:left; margin-left:1.0416vw">
 			<form id="passwordReset" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data"  onsubmit="">
 				</br>
 				<span><input class="loginTextBox" type="password" name="oldPassword" placeholder="Old Password" id="oldPassword" onkeydown="testForEnter();" /></span>
@@ -30,7 +30,7 @@ print_r("</br>");
 				<span><button class="btn" type="submit" form="passwordReset" name="command" value=<?php echo $menuRandomsArray["Submit New Password"];?>><i class="fas fa-list-ol"></i> Submit</button></span>
 			</form>
 		</div>
-		<div style="width:600px; float:left;">
+		<div style="width:31.248vw; float:left;">
 			</br>
 			<p style="font-weight:bold">Passwords must have at least 8 characters and must have at least:</p>
 			<li>one UPPER case letter</li>

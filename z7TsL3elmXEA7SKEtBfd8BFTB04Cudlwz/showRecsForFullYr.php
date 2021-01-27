@@ -15,13 +15,17 @@ $indexPage = htmlspecialchars($_SERVER["PHP_SELF"]);
 $timeStart = microtime(true); //use microtime to time how long this page takes to execute
 $download = FALSE; //flag to indicate record data should be downloaded
 
+
+
 //TEST AREA START ###########################
 
 
 
 //TEST AREA END #############################
 
-//parseFile("/home/chris/Desktop/accCcc.css", "/parse/accCccVW.css"); //used to change css file from px units to vw units
+
+//  ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ ENSURE THE FILE NAMES IN parseFile() POINT TO SOMETHING OR THIS WHOLE SCRIPT WILL HANG !!! ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+//parseFile("/home/chris/Desktop/expandText.css", "/parse/accCccVW.css"); //used to change css file from px units to vw units
 
 $colClssAry = [	"unselCol"				=>	"white", 
 				"unselInvisCol"			=>	"whiteInvis", 
@@ -67,7 +71,7 @@ $umbrellaListAry = getDocTagData(); //gets array of all possible doc tags in alp
 
 
 
-/* Returns TRUE if the button whose random value is returned in $subCommand is the button identified by $butPlainTextStr, otherwise returns FALSE.   */
+// Returns TRUE if the button whose random value is returned in $subCommand is the button identified by $butPlainTextStr, otherwise returns FALSE.
 function isClicked($butPlainTextStr) {
 	global $nonVolatileArray;
 	global $subCommand;
@@ -202,7 +206,10 @@ else {
 
 
 
-/* Use the pivot table clicked cell id (e.g. row,col "251-piv-45") and the pivot table row and head names (e.g. "transCatgry-budget") to generate a filter array (e.g. array ([transCatgry] => 16,  [budget] => 15)  ) based on pivot table click rules defined in this function. $_fieldNameAry is also passed as it is used to generate the ids of the filtered columns from the pivot table row and headings names. (this is quite a hard concept to explain as the words used - and by derivation the variable names - to describe the different names used in the standard display and the pivot table are subject to overlap and confusion!) */
+// Use the pivot table clicked cell id (e.g. row,col "251-piv-45") and the pivot table row and head names (e.g. "transCatgry-budget") to generate a filter array
+// (e.g. array ([transCatgry] => 16,  [budget] => 15)  ) based on pivot table click rules defined in this function. $_fieldNameAry is also passed as it is used to generate the ids of the filtered columns
+// from the pivot table row and headings names. (this is quite a hard concept to explain as the words used - and by derivation the variable names - to describe the different names used in the 
+// standard display and the pivot table are subject to overlap and confusion!)
 function getFiltersAryFromPivotCell($rowFiltId, $colFiltId, $rowAndHeadNames, $pivotCellEmpty) {
 	$onlyRowsWhereThisFieldNotZero = ""; //default value for selector that is used to indicate when only rows with none zero values in either amountWithdrawn or amountPaidIn are required
 
@@ -281,6 +288,7 @@ function getFiltersAryFromPivotCell($rowFiltId, $colFiltId, $rowAndHeadNames, $p
 
 
 
+
 $buttonPanelPresetVal = ""; //DEFAULT FOR presetVal. THIS IS USED ONLY FOR BUDGETS COLUMN JUST NOW - QUICK FIX - BUT NEEDS TO SORTED SO IT WORKS WITH ANY COLUMN (DERIVED FROM createPivotDisplData() OUTPUT)
 $onlyRowsWhereThisFieldNotZero = ""; //default value for selector that is used to indicate when only rows with none zero values in either amountWithdrawn or amountPaidIn are required
 if (getPlain($subSubCommand) == "Filters From Pivot") { //this if section runs when a pivot table cell is clicked and sets up appropriate filters to display data according to a set of rules	
@@ -313,12 +321,11 @@ if (sanPost("idRforFamily")) {
 	$fam->inputFamId(sanPost("idRforFamily"));
 }
 
-
 //########################	shortcut button section start
 
 if ($subSubCommand == "Restricted2021") { //same as 2019-20 but for 2020-21 - a lot of duplication!
 	$genFilter->replaceIncludeFiltStrValAry(["umbrella" => "Furniture Project"]);
-	$genFilter->replaceExcludeFiltStrValAry(["budget" => "Church Main"]);
+	$genFilter->replaceExcludeFiltStrValAry( [ ["budget" => ["Church Main", "None", "SPLIT"]] ] );
 	$nonVolatileArray["AllDates"] = FALSE;
 	$nonVolatileArray["masterYear"] = "2021";
 	$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
@@ -435,6 +442,8 @@ else {
 		$recordsDataArry = sortCompoundRows(getMultDocDataAry($startDate, $endDate, $genFilter->getFiltStr(), "", $fam->getCmnd(), $groupColSelector, $restrictFilter->getFiltStr(), $onlyRowsWhereThisFieldNotZero)); //gets records data from allRecords table and then uses sortCompoundRows() to group compound rows together in the correct date position with master first followed by slaves in idR order
 	}
 }
+
+//pr($genFilter->getFiltStr());
 
 //pr($recordsDataArry);
 
@@ -653,7 +662,7 @@ else { //loop through all records that have been retrieved from the allRecords t
 
 
 	if ($pivotBut->isSet()) {
-		$displayData = createPivotDisplData($recordsPivotArry, "pivotCellStd", "pivotCellRowName", "pivotCellRed", "pivotCellGreen", "pivotCellOrange", "pivotCellRowNameRight", "budget", "transCatgry", "transCatgry", "Budget Fwd"); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scro;;able display area
+		$displayData = createPivotDisplData($recordsPivotArry, "pivotCellStd", "pivotCellRowName", "pivotCellRed", "pivotCellGreen", "pivotCellOrange", "pivotCellInvisible", "pivotCellRowNameRight", "budget", "transCatgry", "transCatgry", "Budget Fwd"); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scro;;able display area
 	}
 	else {
 			$displayData = createStndDisplData($recordsDataArry, $genFilter->getInclColIdxsAry(), "displayCellStd", "displayCellRowSel", "displayCellRowSelMoney", "displayCellFilt", "displayMoneyCellFiltClass", "displayCellMoney", "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", $endDate, $download, $allowedToEdit, $allRecordsColNameRndAry, $displayBankAcc, $colClssAry); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scrollable display area
@@ -664,6 +673,7 @@ else { //loop through all records that have been retrieved from the allRecords t
 
 //pr($displayData);
 //pr($displayData["compoundGroupIdrAry"]);
+
 
 
 $lineCount = $index;
@@ -717,6 +727,8 @@ else {
 formValHolder("seltdRowCellId", $selectedRowCell);
 formValHolder("previousCellId", $selectedRowCell);
 formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating withdrawn/paidin values in table - set by changeField()
+
+
 ?>
 
 
@@ -725,372 +737,503 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 	var docFilename2 = "../<?php echo $dir?>obscureTest2.php";
 	var pageNum = 1;
 
+	$(document).ready(doPivotGangResizing);
+	$(window).resize(doPivotGangResizing);
 
-	//stores scroll position to make working on a particular edit line easier
+	function doPivotGangResizing() {
+		setTimeout(function() { //setTimeout() may not be needed but is here anyway - can jsut set to a low ms value if not really needed
+			var rightInnerHeight = $('#multiRowPivotTableContainerRight')[0]['clientHeight']; // gets the height of the inner displayed area without the lower scroll bar
+			var rightInnerWidth = $('#multiRowPivotTableContainerRight')[0]['clientWidth']; // gets the width of the inner displayed area without the lower scroll bar
+			$("#multiRowPivotTableContainerLeft").innerHeight(rightInnerHeight); //set LH pivot table categories height to same as RH display rows height (so they are effectively ganged if window size changes)
+			$("#multiRowHeaderContainerRight").innerWidth(rightInnerWidth);  //set LH pivot table categories width to same as RH display rows width (so they are effectively ganged if window size changes)
+		}, 10);
+	}
+
+	var notRun = true;
+	//stores scroll position to make working on a particular edit line easier. Also used to resize the LH pivot table window so it can scroll in syncronisum with the RH one and not have an extra lower bit
 	function storeScrollPos() {
-	    var y = document.getElementById("docScrollDiv").scrollTop;
-	    sessionStorage.setItem('docScrollpos', y);
+		var pivotX = document.getElementById("multiRowPivotTableContainerRight").scrollLeft; //get horizontal scroll position for RH pivot table rows section
+		sessionStorage.setItem('pivotXScrollpos', pivotX); //store scroll position for use later
+		document.getElementById("multiRowHeaderContainerRight").scrollLeft = pivotX; //set RH pivot table header horzontal scroll position to samme position as rows (so thaey are effectively ganged)
+		var pivotY = document.getElementById("multiRowPivotTableContainerRight").scrollTop;  //get vertical scroll position for RH pivot table rows section
+		sessionStorage.setItem('pivotYScrollpos', pivotX); //store scroll position for use later
+		document.getElementById("multiRowPivotTableContainerLeft").scrollTop = pivotY; //set LH vertical scroll position of LH pivot table rows section to same position as rows (making them ganged)
+	    var y = document.getElementById("docScrollDiv").scrollTop; 
+	    sessionStorage.setItem('docScrollpos', y); //store y scroll for use later
 	}
 
 	$(document).ready(function() { recoverScrollPos(); });
 
 	//recovers scroll position (only pertinant if same session and same year/month) to make working on a particular edit line easier
-	window.onload = "alert('!')";
+	window.onload = "alert('!')"; //don't know why this is here or what it's meant to do
 
 	function recoverScrollPos() {
 		if(sessionStorage.getItem('docScrollpos')) {
 			document.getElementById("docScrollDiv").scrollTop = sessionStorage.getItem('docScrollpos');
 		}
+		if(sessionStorage.getItem('pivotXScrollpos')) {
+			document.getElementById("multiRowPivotTableContainerRight").scrollTop = sessionStorage.getItem('pivotXScrollpos');
+		}
+		if(sessionStorage.getItem('pivotYScrollpos')) {
+			document.getElementById("multiRowPivotTableContainerRight").scrollLeft = sessionStorage.getItem('pivotYScrollpos');
+		}
 	}
 
 </script>
 
-<?php
-	if ($pivotBut->isSet()) { //select classes based on normal display or pivot table
-		$headerRowsContainerClass = "multiRowHeaderContainer";
-		$dataDisplayContainerClass = "dataDisplayContainerPivot";
-		$scrollClass = "scrollableDisplayAreaPivot";
-	}
-	else {
-		$headerRowsContainerClass = "headingsStrip";
-		$dataDisplayContainerClass = "dataDisplayContainer";
-		$scrollClass = "scrollableDisplayArea";
-	}
-?>
 
-
-<div class="allExceptIframe">  <!-- enclosing div for everything except the iFrame - it is contained within the .mainContainer div that defines the display screen extents -->
+<div class="allExceptIframe" >  <!-- enclosing div for everything except the iFrame - it is contained within the .mainContainer div that defines the display screen extents -->
 
 	<?php
 	include_once("./".$sdir."menu.php"); //top main menu
 	include_once("./".$sdir."monthSelSideBar.php"); //months select sidebar (usually on left of display)
 	//$nonVolatileArray["genrlAryRndms"] = $genrlAryRndms;
-
-//pr("<br>");
-//pr($nonVolatileArray);
 	?>
 
-
-
-	
 	<form style="float:left;" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data">
 
 		<!-- Start of overall records display - headings, sticky buttons, scrollable records, and totals-->
-		<div class=<?php echo $dataDisplayContainerClass;?>>
 
-
-
-<?php  ?>
-			<!-- Start of headings div -->
-			<div class=<?php echo $headerRowsContainerClass;?> id="headings"  onclick="clickField(event)">
-				<?php
-				if ($pivotBut->isSet()) { //header for pivot table
-					foreach ($displayData["headerAry"] as $hdrRowIdx => $headerRow) { //ROW LOOP
-						//########################################################### INDIVIDUAL ROW - START
-						?>
-						<div style="float:left; ">
-							<div style=" display:flex; align-items: stretch; ">
-								<?php
-							    foreach	($headerRow["headerRowsAry"] as $headingIdx => $heading) { //COLUMN LOOP
-							    	?>
-									<div 	class=<?php echo '\''.$headerRow["headerRowsClassesAry"][$headingIdx].'\'';?>
-											id=<?php echo $headerRow["headerCellIdsAry"][$headingIdx];?>>
-											<?php echo nl2br($heading);?>
-									</div>
-									<?php
-							    }
-							    if ($headingIdx < 12) {
-									?>
-									<div style="height:20px; width:700px;"> </div> <!-- END FILLER TO ENSURE THAT MINIMUM DISPLAY OF ROW NAME, UNALLOCATED, AND TOTALS IS MORE THAN 1/2 FULL ROW LENGTH WHICH STOPS 2 RECORDS OR MORE BEING DISPLAYED ON ONE ROW AND CREATING A MESS. WHEN THE NUMBER OF CELLS IS MORE THAN HALF A FULL ROW LENGTH ($hdrRowIdx < 12 NO LONGER APPLIES) THIS FILLER DIV IS NOT PRODUCED - THIS SYSTEM IS A STOP GAP AND A MORE INTELLIGENT SOLUTION WITH JS CALCULATED WIDTH WOULD BE PREFERRED, ESPECIALLY TO COPE WITH FUTURE CELL WIDTH CHANGES -->
-									<?php
-								}
-								?>
-						    </div>
-					    </div>
-					    <?php
-					    //########################################################### ONE ROW - END
-					}
-				}
-				else
-				{
-				?>
-					<table border=0 style="border-collapse: separate; border-spacing: 0px; font-size: 11px;"  >
-					<?php
-					$displayCellStd = array();
-					for ($colIdxAryIdx = 0; $colIdxAryIdx <= 12; $colIdxAryIdx++) { 
-
-
-						if (FALSE === array_search($colIdxAryIdx, $genFilter->getInclColIdxsAry())) {
-							$headingClass[] = "recHeadingCell";
-							$displayCellStd[] = "displayCellStd";
-						}
-						else {
-							$headingClass[] = "recHeadingCellFilt";
-							$displayCellStd[] = "displayCellFilt";
-						}
-
-
-						if (($nonVolatileArray["headingIdForGroupSel"] == $colIdxAryIdx) &&  ($nonVolatileArray["headingIdForGroupSel"] != 0)) { //group column so highlight top bar, but not for default of 0 (date)
-							$groupIndicatorClass[] = "recGroupIndicationCellSel";
-						}
-						else { //ordinary so no highlight
-							$groupIndicatorClass[] = "recGroupIndicationCell";
-						}
-					}
-
-					formValHolder("stickyActive-0", "no"); //value holder flags that indicate whether a sticky value has been set or not - allows sticky value of "" if desired, to make clearing cells easy
-					formValHolder("stickyActive-1", "no");
-					formValHolder("stickyActive-2", "no");
-					formValHolder("stickyActive-3", "no");
-					formValHolder("stickyActive-4", "no");
-					formValHolder("stickyActive-5", "no");
-					formValHolder("stickyActive-6", "no");
-					formValHolder("stickyActive-7", "no");
-					formValHolder("stickyActive-8", "no");
-					formValHolder("stickyActive-9", "no");
-					formValHolder("stickyActive-10", "no");
-					formValHolder("stickyActive-11", "no");
-					formValHolder("stickyActive-12", "no");
-
-					$headingWidth = "";
-					
-					    tableStartRow("", "", "",            TRUE);
-					    	tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-0");
-					        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-1");
-					        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-2");
-					        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-3");
-					        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-4");
-					        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-5");
-					        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-6");
-					        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-7");
-					        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-8");
-					        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-9");
-					        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-10");
-					        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-11");
-					        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-12");
-					    tableEndRow(TRUE); 
-					
-					    tableStartRow("", "", "",            TRUE);
-						    foreach ($displayData["headerAry"] as $headerRow) {
-							    foreach	($headerRow["headerRowsAry"] as $headingIdx => $heading) {
-							    	tableCell($headingClass[$headingIdx], $headingWidth, $heading,   TRUE, "heading-".$headingIdx);
-							    }
-							}
-					    tableEndRow(TRUE);
-
-					    tableStartRow("", "", "",            TRUE);
-					    	tableCell($groupIndicatorClass[0], $headingWidth, "", TRUE, "");
-					        tableCell($groupIndicatorClass[1], $headingWidth, "", TRUE, "");
-					        tableCell($groupIndicatorClass[2], $headingWidth, "", TRUE, "");
-					        tableCell($groupIndicatorClass[3], $headingWidth, "", TRUE, "");
-					        tableCell($groupIndicatorClass[4], $headingWidth, "", TRUE, "");
-					        tableCell($groupIndicatorClass[5], $headingWidth, "", TRUE, "");
-					        tableCell($groupIndicatorClass[6], $headingWidth, "", TRUE, "");
-					        tableCell($groupIndicatorClass[7], $headingWidth, "", TRUE, "");
-					        tableCell($groupIndicatorClass[8], $headingWidth, "", TRUE, "");
-					        tableCell($groupIndicatorClass[9], $headingWidth, "", TRUE, "");
-					        tableCell($groupIndicatorClass[10], $headingWidth, "", TRUE, "");
-					        tableCell($groupIndicatorClass[11], $headingWidth, "", TRUE, "");
-					        tableCell($groupIndicatorClass[12], $headingWidth, "", TRUE, "");
-					        
-					    tableEndRow(TRUE);
-
-					?>
-					</table>
-				<?php
-				}
-				?>
-			</div>
-			<!-- End of headings div -->
-
-
-			<!-- scrollable div to display transactions -->
-			<div class=<?php echo $scrollClass;?> id="docScrollDiv" onscroll="storeScrollPos()" onclick="clickField(event)" onkeyup="changeField(event)" onpaste="changeField(event)">
-				
-				<?php
-
-				//################################################################################ -   New div Section - START
-
-				foreach ($displayData["rowsAry"] as $rowIdx => $curRow) { //ROW LOOP
-					$rowId = $displayData["idrArry"][$rowIdx];
-					$hidden = $displayData["compoundHiddenAry"][$rowId];
-					nameAndValHolder($rowId."-docRnd", $curRow["fileNameRand"], "7777777"); //assign to name holder the random for the current doc file name 
-					?>
-					<div style="float:left;">
-						<?php
-						if ($pivotBut->isSet()) { //do version without rowId for pivot table
-							?> <div style="display:flex; flex-direction:row; align-items: stretch; "> <?php
-						}
-						else { //for initially hidden compound rows use display:none
-							if ($hidden) {
-								?> <div id=<?php echo $rowId;?> style="display:none; flex-direction:row; align-items: stretch; "> <?php
-							}
-							else {
-								?> <div id=<?php echo $rowId;?> style="display:flex; flex-direction:row; align-items: stretch; "> <?php
-							}
-						}
-						?>
+			<?php
+		
+			if ($pivotBut->isSet()) {  //PIVOT SET SO SHOW PIVOT TABLE
+												//PIVOT TABLE HEADER DISPLAY SECTION - START				?>
+				<div class="dataDisplayContainerPivot">
+					<div class="containerForLeftRightPivotHeaders">
+						<div class="multiRowHeaderContainerLeft" id="headings"  onclick="clickField(event)">
 							<?php
-							foreach ($curRow["displayRowsAry"] as $colIdx => $cellData) { //COLUMN LOOP
-								$cellClass = $curRow["displayRowsClassesAry"][$colIdx];
-								if ($pivotBut->isSet()) {
-									$cellId = $curRow["displayRowIdsAry"][$colIdx];
-								}
-								else {
-									$cellId = $rowId."-".$colIdx;
-								}
+							foreach ($displayData["headerAry"] as $hdrRowIdx => $headerRow) { //ROW LOOP
+								//########################################################### INDIVIDUAL ROW - START
 								?>
-								<div id=<?php echo $cellId;?> class=<?php echo '\''.$cellClass.'\'';?> <?php echo $displayData["displayCellCntrlStrAry"][$colIdx];?>>
-									<?php echo nl2br($cellData);?>
-								</div>
-								<?php
+								<div style="float:left; ">
+									<div style=" display:flex; align-items: stretch; ">
+										<?php
+									    foreach	($headerRow["headerRowsAry"] as $headingIdx => $heading) { //COLUMN LOOP - traies to display all columns so height is set by largest heading text, but truncated at 2 col
+									    	?>
+											<div 	class=<?php echo '\''.$headerRow["headerRowsClassesAry"][$headingIdx].'\'';?> //to allow multiple classes with spaces to be displayed \' is used around class
+													id=<?php echo $headerRow["headerCellIdsAry"][$headingIdx];?>>
+													<?php echo nl2br($heading);?>
+											</div>
+											<?php
+									    }
+									    if ($headingIdx < 12) {
+											?>
+											<div style="height:1.0416vw; width:36.456vw;"> </div> <!-- END FILLER TO ENSURE THAT MINIMUM DISPLAY OF ROW NAME, UNALLOCATED, AND TOTALS IS MORE THAN 1/2 FULL ROW LENGTH WHICH STOPS 2 RECORDS OR MORE BEING DISPLAYED ON ONE ROW AND CREATING A MESS. WHEN THE NUMBER OF CELLS IS MORE THAN HALF A FULL ROW LENGTH ($hdrRowIdx < 12 NO LONGER APPLIES) THIS FILLER DIV IS NOT PRODUCED - THIS SYSTEM IS A STOP GAP AND A MORE INTELLIGENT SOLUTION WITH JS CALCULATED WIDTH WOULD BE PREFERRED, ESPECIALLY TO COPE WITH FUTURE CELL WIDTH CHANGES -->
+											<?php
+										}
+										?>
+								    </div>
+							    </div>
+							    <?php
+							    //########################################################### INDIVIDUAL ROW - END
 							}
-							if ($colIdx < 12) {
-									?>
-									<div style="height:20px; width:700px;"> </div> <!-- END FILLER TO ENSURE THAT MINIMUM DISPLAY OF ROW NAME, UNALLOCATED, AND TOTALS IS MORE THAN 1/2 FULL ROW LENGTH WHICH STOPS 2 RECORDS OR MORE BEING DISPLAYED ON ONE ROW AND CREATING A MESS. WHEN THE NUMBER OF CELLS IS MORE THAN HALF A FULL ROW LENGTH ($hdrRowIdx < 12 NO LONGER APPLIES) THIS FILLER DIV IS NOT PRODUCED - THIS SYSTEM IS A STOP GAP AND A MORE INTELLIGENT SOLUTION WITH JS CALCULATED WIDTH WOULD BE PREFERRED, ESPECIALLY TO COPE WITH FUTURE CELL WIDTH CHANGES -->
-									<?php
-								}
+							?>
+						</div>
+
+						<div class="multiRowHeaderContainerRight" id="multiRowHeaderContainerRight"  onclick="clickField(event)">
+							<?php
+							foreach ($displayData["headerAry"] as $hdrRowIdx => $headerRow) { //ROW LOOP
+								//########################################################### INDIVIDUAL ROW - START
 								?>
+								<div style="float:left; ">
+									<div style=" display:flex; align-items: stretch; ">
+										<?php
+									    foreach	($headerRow["headerRowsAry"] as $headingIdx => $heading) { //COLUMN LOOP
+									    	if (1 < $headingIdx) { //only display columns after first 2
+										    	?>
+												<div 	class=<?php echo '\''.$headerRow["headerRowsClassesAry"][$headingIdx].'\'';?> //to allow multiple classes with spaces to be displayed \' is used around class
+														id=<?php echo $headerRow["headerCellIdsAry"][$headingIdx];?>>
+														<?php echo nl2br($heading);?>
+												</div>
+												<?php
+											}
+									    }
+									    if ($headingIdx < 12) {
+											?>
+											<div style="height:1.0416vw; width:39.06vw;"> </div> <!-- END FILLER TO ENSURE THAT MINIMUM DISPLAY OF ROW NAME, UNALLOCATED, AND TOTALS IS MORE THAN 1/2 FULL ROW LENGTH WHICH STOPS 2 RECORDS OR MORE BEING DISPLAYED ON ONE ROW AND CREATING A MESS. WHEN THE NUMBER OF CELLS IS MORE THAN HALF A FULL ROW LENGTH ($hdrRowIdx < 12 NO LONGER APPLIES) THIS FILLER DIV IS NOT PRODUCED - THIS SYSTEM IS A STOP GAP AND A MORE INTELLIGENT SOLUTION WITH JS CALCULATED WIDTH WOULD BE PREFERRED, ESPECIALLY TO COPE WITH FUTURE CELL WIDTH CHANGES -->
+											<?php
+										}
+										?>
+								    </div>
+							    </div>
+							    <?php
+							    //########################################################### INDIVIDUAL ROW - END
+							}
+							?>
 						</div>
 					</div>
 					<?php
-				}
-				//################################################################################ -   New div Section - END
-				?>
-			</div>
-			<!-- End of scrollable transactions div -->
-
-
-
-			<?php if (!$pivotBut->isSet()) {  ?>
-				<div  class="totalsFooter"> <!-- totals outer container footer div  -->
-
-					<table border=0 style="border-collapse: separate; border-spacing: 0px; font-size: 12px;" >
-					<?php
-
-
-					if ($displayBankAcc) { //display sum and comparison data specifically for bank account reconciliation at bottom of table 
-						$headingWidth = "";
-						$headingClass = "displayCellStd";
-						$linesDiff = $displayData["linesDiff"];
-						//$transactionsBal = (float)$displayData["totalRecncldDocsPaidIn"] - (float)$displayData["totalRecncldDocsWithdrawn"];
-						//$bankAccBal = (float)$displayData["bankStmtPaidIn"] - (float)$$displayData["bankStmtWithdrawn"];
-						$balDiff = $displayData["balDiff"];
-
-						//$diff = fourThreeOrTwoDecimals(($displayData["totalRecncldDocsPaidIn"]-$displayData["totalRecncldDocsWithdrawn"]) - ($displayData["bankStmtPaidIn"]-$$displayData["bankStmtWithdrawn"]),TRUE);
-						$diffClass = "recTotalsCellBad";
-						if ($balDiff == "0.00") {
-							$diffClass = "recTotalsCellGood";
-						}
-
-						$wdrwnDiffClass = "recTotalsCellBad";
-						if (fourThreeOrTwoDecimals($displayData["withdrawnDiff"], TRUE) == "0.00") {
-							$wdrwnDiffClass = "recTotalsCellGood";
-						}
-
-						$pdinDiffClass = "recTotalsCellBad";
-						if (fourThreeOrTwoDecimals($displayData["paidinDiff"], TRUE) == "0.00") {
-							$pdinDiffClass = "recTotalsCellGood";
-						}
-
-						$linesDiffClass = "recTotalsCellBad";
-						if ($linesDiff == 0) {
-							$linesDiffClass = "recTotalsCellGood";
-						}
-						//filtered totals display
-					    tableStartRow("", "", "",	TRUE);
-					    	tableCell("recTotalsCell", $headingWidth, "NOT",         	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",         		TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "Bank", 			TRUE);
-					        tableCell("recTotalsCell", $headingWidth, fourThreeOrTwoDecimals($displayData["bankStmtWithdrawn"], 		TRUE),         	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, fourThreeOrTwoDecimals($displayData["bankStmtPaidIn"], 			TRUE),         	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, fourThreeOrTwoDecimals($displayData["bankStmtBal"], 				TRUE),   		TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",         		TRUE);
-				        	tableCell("recTotalsCell", $headingWidth, "",         		TRUE);
-				        	tableCell("recTotalsCell", $headingWidth, "",         		TRUE);
-				        	tableCell("recTotalsCell", $headingWidth, "",         		TRUE);
-				        	tableCell("recTotalsCell", $headingWidth, "",         		TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",				TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",      			TRUE);
-					    tableEndRow(TRUE);
-					    //financial year totals display
-					    tableStartRow("", "", "",  	TRUE);
-					    	tableCell("recTotalsCell", $headingWidth, "INTERACTIVE!",   TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "", 			   	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "Trans", 			TRUE);
-					        tableCell("recTotalsCell", $headingWidth, fourThreeOrTwoDecimals($displayData["totalRecncldDocsWithdrawn"], TRUE),         	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, fourThreeOrTwoDecimals($displayData["totalRecncldDocsPaidIn"], 	TRUE),         	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, fourThreeOrTwoDecimals($displayData["totalRecncldDocsBal"], 		TRUE),			TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",              	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",              	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",  				TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",              	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",              	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "Trans Lines",    			TRUE);
-					        tableCell("recTotalsCell", $headingWidth, ($displayData["transCount"] -1),				TRUE);
-					    tableEndRow(TRUE);
-					    tableStartRow("", "", "",  	TRUE);
-					    	tableCell("recTotalsCell", $headingWidth, "",   			TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "", 			   	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "Diff", 			TRUE);
-					        tableCell($wdrwnDiffClass, $headingWidth, fourThreeOrTwoDecimals($displayData["withdrawnDiff"], TRUE),         	TRUE);
-					        tableCell($pdinDiffClass,  $headingWidth, fourThreeOrTwoDecimals($displayData["paidinDiff"], 	TRUE),         	TRUE);
-					        tableCell($linesDiffClass, $headingWidth, $linesDiff,		TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "Lines Diff",              	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",              	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",  				TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",              	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",              	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "Doc Lines",    			TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",				TRUE,  	'docLineCountDispId');
-					    tableEndRow(TRUE);
-
-					}
-					else { //normal display of totals and sums at bottom of table 
-						$headingWidth = "";
-						$headingClass = "displayCellStd";
-						//filtered totals display
-					    tableStartRow("", "", "",  	TRUE);
-					    	tableCell("recTotalsCell", $headingWidth, "",         	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",         	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "Filtered", 	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",         	TRUE, 	'filtWithdrawnTotalsBut');
-					        tableCell("recTotalsCell", $headingWidth, "",         	TRUE, 	'filtPaidInTotalsId');
-					        tableCell("recTotalsCell", $headingWidth, "",         	TRUE, 	'filtBalId');
-					        tableCell("recTotalsCell", $headingWidth, "",         	TRUE);
-				        	tableCell("recTotalsCell", $headingWidth, "*** MAY",         	TRUE);
-				        	tableCell("recTotalsCell", $headingWidth, "INCLUDE",         	TRUE);
-				        	tableCell("recTotalsCell", $headingWidth, "UNDISPLAYED",         	TRUE);
-				        	tableCell("recTotalsCell", $headingWidth, "LINES !!",         	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "Total Lines", TRUE);
-					        tableCell("recTotalsCell", $headingWidth, $displayData["transCount"],   TRUE);
-					    tableEndRow(TRUE);
-					    //financial year totals display
-					    tableStartRow("", "", "",	TRUE);
-					    	tableCell("recTotalsCell", $headingWidth, "",           TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "", 			TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "Reconciled", TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "", 			TRUE, 	'reconciledWithdrawnTotalsId');
-					        tableCell("recTotalsCell", $headingWidth, "",     		TRUE, 	'reconciledPaidInTotalsId');
-					        tableCell("recTotalsCell", $headingWidth, "",         	TRUE, 	'reconciledBalId');
-					        tableCell("recTotalsCell", $headingWidth, "",       	TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "Doc Totals", TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",        	TRUE, 	'docOnlyWithdrawnId');
-					        tableCell("recTotalsCell", $headingWidth, "",      		TRUE, 	'docOnlyPaidInId');
-					        tableCell("recTotalsCell", $headingWidth, "",         	TRUE, 	'docOnlyBalId');
-					        tableCell("recTotalsCell", $headingWidth, "Doc Lines",  TRUE);
-					        tableCell("recTotalsCell", $headingWidth, "",      		TRUE,  	'docLineCountDispId');
-					    tableEndRow(TRUE);
-					} 
+										//PIVOT TABLE HEADER DISPLAY SECTION - END
 					?>
-					</table>
-					
+					<div class="containerForLeftRightPivotRows">
+						<?php //PIVOT TABLE LEFT TWO COLUMNS CATEGORY LIST AND TOTALS SCROLLABLE DISPLAY - START
+						?>   			
+						<div class="multiRowPivotTableContainerLeft" id="multiRowPivotTableContainerLeft" onscroll="storeScrollPos()" onclick="clickField(event)" onkeyup="changeField(event)" onpaste="changeField(event)">
+							<?php
+							foreach ($displayData["rowsAry"] as $rowIdx => $curRow) { //ROW LOOP
+								$rowId = $displayData["idrArry"][$rowIdx];
+								$hidden = $displayData["compoundHiddenAry"][$rowId];
+								nameAndValHolder($rowId."-docRnd", $curRow["fileNameRand"], "7777777"); //assign to name holder the random for the current doc file name 
+								?>
+								<div style="float:left;">
+									<div style="display:flex; flex-direction:row; align-items: stretch; "> 
+										<?php
+										foreach ($curRow["displayRowsAry"] as $colIdx => $cellData) { //COLUMN LOOP
+											$cellClass = $curRow["displayRowsClassesAry"][$colIdx];
+											$cellId = $curRow["displayRowIdsAry"][$colIdx];
+											?>
+											<div id=<?php echo $cellId;?> class=<?php echo '\''.$cellClass.'\'';?> <?php echo $displayData["displayCellCntrlStrAry"][$colIdx];?>>
+												<!-- to allow multiple classes with spaces to be displayed \' is used around class -->
+												<?php echo nl2br($cellData);?>
+											</div>
+											<?php
+										}
+										if ($colIdx < 12) {
+												?>
+												<div style="height:1.0416vw; width:36.456vw;"> </div> <!-- END FILLER TO ENSURE THAT MINIMUM DISPLAY OF ROW NAME, UNALLOCATED, AND TOTALS IS MORE THAN 1/2 FULL ROW LENGTH WHICH STOPS 2 RECORDS OR MORE BEING DISPLAYED ON ONE ROW AND CREATING A MESS. WHEN THE NUMBER OF CELLS IS MORE THAN HALF A FULL ROW LENGTH ($hdrRowIdx < 12 NO LONGER APPLIES) THIS FILLER DIV IS NOT PRODUCED - THIS SYSTEM IS A STOP GAP AND A MORE INTELLIGENT SOLUTION WITH JS CALCULATED WIDTH WOULD BE PREFERRED, ESPECIALLY TO COPE WITH FUTURE CELL WIDTH CHANGES -->
+												<?php
+											}
+											?>
+									</div>
+								</div>
+								<?php
+							}
+							?>
+						</div>
+						<?php   			//PIVOT TABLE LEFT TWO COLUMNS CATEGORY LIST AND TOTALS SCROLLABLE DISPLAY - END
+
+									//PIVOT TABLE RIGHT COLUMNS SCROLLABLE DISPLAY - START
+						?>
+						<div class="multiRowPivotTableContainerRight" id="multiRowPivotTableContainerRight" onscroll="storeScrollPos()" onclick="clickField(event)" onkeyup="changeField(event)" onpaste="changeField(event)">
+							<?php
+							foreach ($displayData["rowsAry"] as $rowIdx => $curRow) { //ROW LOOP
+								$rowId = $displayData["idrArry"][$rowIdx];
+								$hidden = $displayData["compoundHiddenAry"][$rowId];
+								nameAndValHolder($rowId."-docRnd", $curRow["fileNameRand"], "7777777"); //assign to name holder the random for the current doc file name 
+								?>
+								<div style="float:left;">
+									<div style="display:flex; flex-direction:row; align-items: stretch; "> 
+										<?php
+										foreach ($curRow["displayRowsAry"] as $colIdx => $cellData) { //COLUMN LOOP
+											if (1 < $colIdx) { //only display columns after first 2
+												$cellClass = $curRow["displayRowsClassesAry"][$colIdx];
+												$cellId = $curRow["displayRowIdsAry"][$colIdx];
+												?>
+												<div id=<?php echo $cellId;?> class=<?php echo '\''.$cellClass.'\'';?> style="visibility:none" <?php echo $displayData["displayCellCntrlStrAry"][$colIdx];?>>
+													<!-- to allow multiple classes with spaces to be displayed \' is used around class -->
+													<?php echo nl2br($cellData);?>
+												</div>
+												<?php
+											}
+										}
+										if ($colIdx < 12) {
+												?>
+												<div style="height:1.0416vw; width:39.06vw;"> </div> <!-- END FILLER TO ENSURE THAT MINIMUM DISPLAY OF ROW NAME, UNALLOCATED, AND TOTALS IS MORE THAN 1/2 FULL ROW LENGTH WHICH STOPS 2 RECORDS OR MORE BEING DISPLAYED ON ONE ROW AND CREATING A MESS. WHEN THE NUMBER OF CELLS IS MORE THAN HALF A FULL ROW LENGTH ($hdrRowIdx < 12 NO LONGER APPLIES) THIS FILLER DIV IS NOT PRODUCED - THIS SYSTEM IS A STOP GAP AND A MORE INTELLIGENT SOLUTION WITH JS CALCULATED WIDTH WOULD BE PREFERRED, ESPECIALLY TO COPE WITH FUTURE CELL WIDTH CHANGES -->
+												<?php
+											}
+											?>
+									</div>
+								</div>
+								<?php
+							}
+							?>
+						</div>
+						<?php    			//PIVOT TABLE RIGHT COLUMNS SCROLLABLE DISPLAY - END
+						?>
+					</div>
 				</div>
-				<!-- End of totals outer container footer div  -->	
-			<?php }  ?>
-<?php  ?>
-		</div>
-		<!-- End of overall records display - headings, sticky buttons, scrollable records, and totals-->
+				<?php
+							
+
+			}			
+			else {			//PIVOT NOT SET SO SHOW NORMAL DISPLAY
+
+
+						//NORMAL TRANSACTIONS LIST HEADER DISPLAY SECTION - START
+				?>
+				<div class="transactionsDisplayContainer">
+					<div class="transactionsHeader" id="headings"  onclick="clickField(event)">
+						<table border=0 style="border-collapse: separate; border-spacing: 0vw; font-size: 0.57288vw;"  >
+						<?php
+						$displayCellStd = array();
+						for ($colIdxAryIdx = 0; $colIdxAryIdx <= 12; $colIdxAryIdx++) { 
+
+
+							if (FALSE === array_search($colIdxAryIdx, $genFilter->getInclColIdxsAry())) {
+								$headingClass[] = "recHeadingCell";
+								$displayCellStd[] = "displayCellStd";
+							}
+							else {
+								$headingClass[] = "recHeadingCellFilt";
+								$displayCellStd[] = "displayCellFilt";
+							}
+
+
+							if (($nonVolatileArray["headingIdForGroupSel"] == $colIdxAryIdx) &&  ($nonVolatileArray["headingIdForGroupSel"] != 0)) { //group column so highlight top bar, but not for default of 0 (date)
+								$groupIndicatorClass[] = "recGroupIndicationCellSel";
+							}
+							else { //ordinary so no highlight
+								$groupIndicatorClass[] = "recGroupIndicationCell";
+							}
+						}
+
+						formValHolder("stickyActive-0", "no"); //value holder flags that indicate whether a sticky value has been set or not - allows sticky value of "" if desired, to make clearing cells easy
+						formValHolder("stickyActive-1", "no");
+						formValHolder("stickyActive-2", "no");
+						formValHolder("stickyActive-3", "no");
+						formValHolder("stickyActive-4", "no");
+						formValHolder("stickyActive-5", "no");
+						formValHolder("stickyActive-6", "no");
+						formValHolder("stickyActive-7", "no");
+						formValHolder("stickyActive-8", "no");
+						formValHolder("stickyActive-9", "no");
+						formValHolder("stickyActive-10", "no");
+						formValHolder("stickyActive-11", "no");
+						formValHolder("stickyActive-12", "no");
+
+						$headingWidth = "";
+						
+						    tableStartRow("", "", "",            TRUE);
+						    	tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-0");
+						        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-1");
+						        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-2");
+						        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-3");
+						        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-4");
+						        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-5");
+						        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-6");
+						        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-7");
+						        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-8");
+						        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-9");
+						        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-10");
+						        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-11");
+						        tableCell("recStickyCell", $headingWidth, "", TRUE, "sticky-12");
+						    tableEndRow(TRUE); 
+						
+						    tableStartRow("", "", "",            TRUE);
+							    foreach ($displayData["headerAry"] as $headerRow) {
+								    foreach	($headerRow["headerRowsAry"] as $headingIdx => $heading) {
+								    	tableCell($headingClass[$headingIdx], $headingWidth, $heading,   TRUE, "heading-".$headingIdx);
+								    }
+								}
+						    tableEndRow(TRUE);
+
+						    tableStartRow("", "", "",            TRUE);
+						    	tableCell($groupIndicatorClass[0], $headingWidth, "", TRUE, "");
+						        tableCell($groupIndicatorClass[1], $headingWidth, "", TRUE, "");
+						        tableCell($groupIndicatorClass[2], $headingWidth, "", TRUE, "");
+						        tableCell($groupIndicatorClass[3], $headingWidth, "", TRUE, "");
+						        tableCell($groupIndicatorClass[4], $headingWidth, "", TRUE, "");
+						        tableCell($groupIndicatorClass[5], $headingWidth, "", TRUE, "");
+						        tableCell($groupIndicatorClass[6], $headingWidth, "", TRUE, "");
+						        tableCell($groupIndicatorClass[7], $headingWidth, "", TRUE, "");
+						        tableCell($groupIndicatorClass[8], $headingWidth, "", TRUE, "");
+						        tableCell($groupIndicatorClass[9], $headingWidth, "", TRUE, "");
+						        tableCell($groupIndicatorClass[10], $headingWidth, "", TRUE, "");
+						        tableCell($groupIndicatorClass[11], $headingWidth, "", TRUE, "");
+						        tableCell($groupIndicatorClass[12], $headingWidth, "", TRUE, "");
+						        
+						    tableEndRow(TRUE);
+
+						?>
+						</table>
+					</div>
+					<!-- End of headings div -->
+					<?php             
+									//NORMAL TRANSACTIONS LIST HEADER DISPLAY SECTION - END
+
+
+
+
+
+								//NORMAL TRANSACTIONS SCROLLABLE DISPLAY - START
+					?>
+					<div class="transactionsScrollableDisplayArea" id="docScrollDiv" onscroll="storeScrollPos()" onclick="clickField(event)" onkeyup="changeField(event)" onpaste="changeField(event)">
+						<?php
+						foreach ($displayData["rowsAry"] as $rowIdx => $curRow) { //ROW LOOP
+							$rowId = $displayData["idrArry"][$rowIdx];
+							$hidden = $displayData["compoundHiddenAry"][$rowId];
+							nameAndValHolder($rowId."-docRnd", $curRow["fileNameRand"], "7777777"); //assign to name holder the random for the current doc file name 
+							?>
+							<div style="float:left;">
+								<?php
+								if ($pivotBut->isSet()) { //do version without rowId for pivot table
+									?> <div style="display:flex; flex-direction:row; align-items: stretch; "> <?php
+								}
+								else { //for initially hidden compound rows use display:none
+									if ($hidden) {
+										?> <div id=<?php echo $rowId;?> style="display:none; flex-direction:row; align-items: stretch; "> <?php
+									}
+									else {
+										?> <div id=<?php echo $rowId;?> style="display:flex; flex-direction:row; align-items: stretch; "> <?php
+									}
+								}
+								?>
+									<?php
+									foreach ($curRow["displayRowsAry"] as $colIdx => $cellData) { //COLUMN LOOP
+										$cellClass = $curRow["displayRowsClassesAry"][$colIdx];
+										if ($pivotBut->isSet()) {
+											$cellId = $curRow["displayRowIdsAry"][$colIdx];
+										}
+										else {
+											$cellId = $rowId."-".$colIdx;
+										}
+										?>
+										<div id=<?php echo $cellId;?> class=<?php echo '\''.$cellClass.'\'';?> <?php echo $displayData["displayCellCntrlStrAry"][$colIdx];?>>
+											<!-- to allow multiple classes with spaces to be displayed \' is used around class -->
+											<?php echo nl2br($cellData);?>
+										</div>
+										<?php
+									}
+									if ($colIdx < 12) {
+											?>
+											<div style="height:1.0416vw; width:36.456vw;"> </div> <!-- END FILLER TO ENSURE THAT MINIMUM DISPLAY OF ROW NAME, UNALLOCATED, AND TOTALS IS MORE THAN 1/2 FULL ROW LENGTH WHICH STOPS 2 RECORDS OR MORE BEING DISPLAYED ON ONE ROW AND CREATING A MESS. WHEN THE NUMBER OF CELLS IS MORE THAN HALF A FULL ROW LENGTH ($hdrRowIdx < 12 NO LONGER APPLIES) THIS FILLER DIV IS NOT PRODUCED - THIS SYSTEM IS A STOP GAP AND A MORE INTELLIGENT SOLUTION WITH JS CALCULATED WIDTH WOULD BE PREFERRED, ESPECIALLY TO COPE WITH FUTURE CELL WIDTH CHANGES -->
+											<?php
+										}
+										?>
+								</div>
+							</div>
+							<?php
+						}
+						?>
+					</div>
+					<?php
+									//NORMAL TRANSACTIONS SCROLLABLE DISPLAY - END
+
+
+									//NORMAL FOOTER SECTION WITH TOTALS - START
+
+				  	?>
+					<div  class="totalsFooter"> <!-- totals outer container footer div  -->
+
+						<table border=0 style="border-collapse: separate; border-spacing: 0vw; font-size: 0.62496vw;" >
+						<?php
+
+
+						if ($displayBankAcc) { //display sum and comparison data specifically for bank account reconciliation at bottom of table 
+							$headingWidth = "";
+							$headingClass = "displayCellStd";
+							$linesDiff = $displayData["linesDiff"];
+							//$transactionsBal = (float)$displayData["totalRecncldDocsPaidIn"] - (float)$displayData["totalRecncldDocsWithdrawn"];
+							//$bankAccBal = (float)$displayData["bankStmtPaidIn"] - (float)$$displayData["bankStmtWithdrawn"];
+							$balDiff = $displayData["balDiff"];
+
+							//$diff = fourThreeOrTwoDecimals(($displayData["totalRecncldDocsPaidIn"]-$displayData["totalRecncldDocsWithdrawn"]) - ($displayData["bankStmtPaidIn"]-$$displayData["bankStmtWithdrawn"]),TRUE);
+							$diffClass = "recTotalsCellBad";
+							if ($balDiff == "0.00") {
+								$diffClass = "recTotalsCellGood";
+							}
+
+							$wdrwnDiffClass = "recTotalsCellBad";
+							if (fourThreeOrTwoDecimals($displayData["withdrawnDiff"], TRUE) == "0.00") {
+								$wdrwnDiffClass = "recTotalsCellGood";
+							}
+
+							$pdinDiffClass = "recTotalsCellBad";
+							if (fourThreeOrTwoDecimals($displayData["paidinDiff"], TRUE) == "0.00") {
+								$pdinDiffClass = "recTotalsCellGood";
+							}
+
+							$linesDiffClass = "recTotalsCellBad";
+							if ($linesDiff == 0) {
+								$linesDiffClass = "recTotalsCellGood";
+							}
+							//filtered totals display
+						    tableStartRow("", "", "",	TRUE);
+						    	tableCell("recTotalsCell", $headingWidth, "NOT",         	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",         		TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "Bank", 			TRUE);
+						        tableCell("recTotalsCell", $headingWidth, fourThreeOrTwoDecimals($displayData["bankStmtWithdrawn"], 		TRUE),         	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, fourThreeOrTwoDecimals($displayData["bankStmtPaidIn"], 			TRUE),         	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, fourThreeOrTwoDecimals($displayData["bankStmtBal"], 				TRUE),   		TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",         		TRUE);
+					        	tableCell("recTotalsCell", $headingWidth, "",         		TRUE);
+					        	tableCell("recTotalsCell", $headingWidth, "",         		TRUE);
+					        	tableCell("recTotalsCell", $headingWidth, "",         		TRUE);
+					        	tableCell("recTotalsCell", $headingWidth, "",         		TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",				TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",      			TRUE);
+						    tableEndRow(TRUE);
+						    //financial year totals display
+						    tableStartRow("", "", "",  	TRUE);
+						    	tableCell("recTotalsCell", $headingWidth, "INTERACTIVE!",   TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "", 			   	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "Trans", 			TRUE);
+						        tableCell("recTotalsCell", $headingWidth, fourThreeOrTwoDecimals($displayData["totalRecncldDocsWithdrawn"], TRUE),         	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, fourThreeOrTwoDecimals($displayData["totalRecncldDocsPaidIn"], 	TRUE),         	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, fourThreeOrTwoDecimals($displayData["totalRecncldDocsBal"], 		TRUE),			TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",              	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",              	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",  				TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",              	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",              	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "Trans Lines",    			TRUE);
+						        tableCell("recTotalsCell", $headingWidth, ($displayData["transCount"] -1),				TRUE);
+						    tableEndRow(TRUE);
+						    tableStartRow("", "", "",  	TRUE);
+						    	tableCell("recTotalsCell", $headingWidth, "",   			TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "", 			   	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "Diff", 			TRUE);
+						        tableCell($wdrwnDiffClass, $headingWidth, fourThreeOrTwoDecimals($displayData["withdrawnDiff"], TRUE),         	TRUE);
+						        tableCell($pdinDiffClass,  $headingWidth, fourThreeOrTwoDecimals($displayData["paidinDiff"], 	TRUE),         	TRUE);
+						        tableCell($linesDiffClass, $headingWidth, $linesDiff,		TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "Lines Diff",              	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",              	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",  				TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",              	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",              	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "Doc Lines",    			TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",				TRUE,  	'docLineCountDispId');
+						    tableEndRow(TRUE);
+
+						}
+						else { //normal display of totals and sums at bottom of table 
+							$headingWidth = "";
+							$headingClass = "displayCellStd";
+							//filtered totals display
+						    tableStartRow("", "", "",  	TRUE);
+						    	tableCell("recTotalsCell", $headingWidth, "",         	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",         	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "Filtered", 	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",         	TRUE, 	'filtWithdrawnTotalsBut');
+						        tableCell("recTotalsCell", $headingWidth, "",         	TRUE, 	'filtPaidInTotalsId');
+						        tableCell("recTotalsCell", $headingWidth, "",         	TRUE, 	'filtBalId');
+						        tableCell("recTotalsCell", $headingWidth, "",         	TRUE);
+					        	tableCell("recTotalsCell", $headingWidth, "*** MAY",         	TRUE);
+					        	tableCell("recTotalsCell", $headingWidth, "INCLUDE",         	TRUE);
+					        	tableCell("recTotalsCell", $headingWidth, "UNDISPLAYED",         	TRUE);
+					        	tableCell("recTotalsCell", $headingWidth, "LINES !!",         	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "Total Lines", TRUE);
+						        tableCell("recTotalsCell", $headingWidth, $displayData["transCount"],   TRUE);
+						    tableEndRow(TRUE);
+						    //financial year totals display
+						    tableStartRow("", "", "",	TRUE);
+						    	tableCell("recTotalsCell", $headingWidth, "",           TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "", 			TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "Reconciled", TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "", 			TRUE, 	'reconciledWithdrawnTotalsId');
+						        tableCell("recTotalsCell", $headingWidth, "",     		TRUE, 	'reconciledPaidInTotalsId');
+						        tableCell("recTotalsCell", $headingWidth, "",         	TRUE, 	'reconciledBalId');
+						        tableCell("recTotalsCell", $headingWidth, "",       	TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "Doc Totals", TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",        	TRUE, 	'docOnlyWithdrawnId');
+						        tableCell("recTotalsCell", $headingWidth, "",      		TRUE, 	'docOnlyPaidInId');
+						        tableCell("recTotalsCell", $headingWidth, "",         	TRUE, 	'docOnlyBalId');
+						        tableCell("recTotalsCell", $headingWidth, "Doc Lines",  TRUE);
+						        tableCell("recTotalsCell", $headingWidth, "",      		TRUE,  	'docLineCountDispId');
+						    tableEndRow(TRUE);
+						} 
+						?>
+						</table>
+						
+					</div>
+					<!--      NORMAL FOOTER SECTION WITH TOTALS - END  -->	
+				</div>
+				<?php 
+			}
+
+			  ?>
+
+		<!-- End of overall records display - headings, sticky buttons, scrollable records/pivot table, and totals-->
 	</form>
 
 
@@ -1125,17 +1268,10 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 
 		subButPanelJSDummy($dummySubButPanelId, "subMenuContainer");
 		?>
-		
+	</div> <!-- end of container for button panel date and item selection with reconcilation set buttons and auto button -->
 
-		
-
-	
-
-	</div> <!-- end of container for button panel date and item selection with reconcilation set buttons -->
 
 	
-	
-
 	<div class="bottomMenuContn">  <!-- outer container for bottom menu  -->
 		<form id="docEdit" class="form" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data">
 			<?php
@@ -1152,17 +1288,6 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 			
 			if (!$editFamBut->isSet()) {
 				$showFamBut->drawBut();
-				/*
-				if ($nonVolatileArray["familyMaster"] == "All") { //include kids in display so show button as set
-				?>
-			    <button class="subMenuBtnSel" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-".$genrlAryRndms["expandFamilies"];?>><i class="fas fa-minus-square"></i> Show Families</button>
-			    <?php
-				}
-				else { //no kids in display so show button as unset
-			    ?>
-			    <button class="subMenuBtn" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-".$genrlAryRndms["expandFamilies"];?>><i class="fas fa-plus-square"></i> Show Families</button>
-			    <?php
-				}*/
 			}
 
 			$pivotBut->drawBut();
@@ -1215,21 +1340,6 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 				<?php
 				}
 
-
-				// THIS SECTION WAS TO SHOW A BUTTON THAT PERFORMED AN ABSOLUTE 'SHOW ALL' REGARDLESS OF FAMILIES OR ERRORS OF ANY KIND - CREATED TO FIND LOST RECORDS, NOT SURE IF IT STILL WORKS OR NEEDED!
-			/*	if ($allowedToEdit && !$nonVolatileArray["editFamilies"]) { //inhibit show everything button unless allowed to edit
-					if ($nonVolatileArray["showAbsolutlyEverything"]) { //include everything in display so show button as set
-					?>
-				    <button class="subMenuBtnSel" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-".$genrlAryRndms["showEverything"];?>><i class="fas fa-arrows-alt-v"></i> Show All</button>
-				    <?php
-					}
-					else { //not everything in display so show button as unset
-				    ?>
-				    <button class="subMenuBtn" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-".$genrlAryRndms["showEverything"];?>><i class="fas fa-arrows-alt-v"></i> Show All</button>
-				    <?php
-					}
-				} */
-
 			?>
 			</div> <!-- end of  containing div for grouping righthand buttons of bottom menu -->
 			<?php
@@ -1243,6 +1353,20 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 	</div> <!-- End of outer container for bottom menu  -->
 
 </div> <!-- end of  enclosing div for everything except the iFrame - it is contained within the .mainContainer div that defines the display screen extents -->
+
+<?php
+if ($pivotBut->isSet()) {
+	
+}
+else {
+	?>
+	<iframe id="pdfIframe" name="docIframe" class="docDisplayIframeRecsFullYr" >
+	    <p>Your browser does not support iframes.</p>
+	</iframe>
+	<?php
+}
+?>
+
 
 
 	<form id="7EKR03N0CJ" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data">
@@ -1319,18 +1443,7 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
     ?>
     </form>
 
-<?php
-if ($pivotBut->isSet()) {
-	
-}
-else {
-	?>
-	<iframe id="pdfIframe" name="docIframe" class="docDisplayIframeRecsFullYr" >
-	    <p>Your browser does not support iframes.</p>
-	</iframe>
-	<?php
-}
-?>
+
 
 
 <script type="text/javascript">
@@ -1362,19 +1475,30 @@ else {
 	var bankAccNameAry = ["RBS 8252", "Clyde 5477"];
 
 	// INITIALISATION SECTION TO SET SELECTION TO ROW 0 AND SET UP THE CALENDAR, CATEGORY, ACCOUNT, AND BUDGET SELECTION PANELS TO ROW 0 VALUES. INITIALLY ALL PANELS EXCEPT CALENDAR WILL BE HIDDEN
-	window.onload = doEverything(valGet("seltdRowCellId"), false, false, 0); //initialise to top row left cell selecting all rows woth same doc. All panels except calendar (and that only if edit allowed) are hidden.
+	window.onload = function() {
+		//alert(window.location.hash);
+		if (window.location.hash != "#loaded") {
+			window.location.hash = "loaded";
+			doEverything(valGet("seltdRowCellId"), "", " Called from window.onload function"); //initialise to top row left cell selecting all rows wth same doc. All panels except calendar (and that only if edit allowed) are hidden.
+		}
+	}
 
 	function toggleSingleFamDisplay(id) { //function to toggle the currently selected family on and off - if id doesn't represent a family the destination php script does nothing
+		START("toggleSingleFamDisplay()");
 		valSet("idRforFamily", id.split("-")[0])
 		document.getElementById("e7j4UT42v4x").submit();
+		FINISH("toggleSingleFamDisplay()");
 	}
 
 	function groupSet(id) {
+		START("groupSet()")
 		valSet("headingCol", id.split("-")[1])
 		document.getElementById("ff48f454n8f").submit();
+		FINISH("groupSet()");
 	}
 
 	function atomicCall(auxButtonTxt) {
+		START("atomicCall()");
 		atomicAjaxCall(  //function that combines updateFromSticky(id, valueStr), displayBalances(id), newDocFileName(id) in one atomic ajax call to server to prevent race conditions
 			valGet("seltdRowCellId"),
 			inrGet("sticky-"+valGet("seltdRowCellId").split("-")[1]),
@@ -1409,23 +1533,22 @@ else {
         	bankAccNameAry,
         	restrictionsAry
 		);
+		FINISH("atomicCall()");
 	}
 
 	function newDocFileName(id) { //function to update displayed doc according to the cell that has been selected
+		START("newDocFileName()");
 		ajaxUpdateDocFileName(
 			id,
 			'<?php echo $indexPage;?>',
 			'<?php echo $menuRandomsArray["Update Doc File Name"];?>',
 		);
+		FINISH("newDocFileName()");
 	}
 
 </script>
 
 <?php
-
-/* THINK THIS ISN'T USED FOR ANYTHING
-formValHolder("tbl", $genrlAryRndms["allRecords"]);
-*/
 
 
 include_once("./".$sdir."saveSession.php");

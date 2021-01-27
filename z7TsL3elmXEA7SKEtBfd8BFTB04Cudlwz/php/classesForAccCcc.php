@@ -372,6 +372,7 @@ class filterColumns {
 			$this->excludeFiltersAry[$fieldName] = $fieldValue;
 		}
 		setNonVolAryItem($this->nonVolFiltAryKey."Exclude", $this->excludeFiltersAry);
+		//pr($this->excludeFiltersAry);
 	}
 
 	function getFiltStr() {
@@ -406,10 +407,16 @@ class filterColumns {
 		setNonVolAryItem($this->nonVolFiltAryKey."Include", $this->includeFiltersAry);
 	}
 
-	function replaceExcludeFiltStrValAry($newExclFiltAry) { //replaces the filter array with a new one. Passed array is in the form columnName => strValue e.g. [["budget" => "Church Main"], ["Umbrella" => ...], ..]
+	function replaceExcludeFiltStrValAry($newExclFiltAry) { //replaces the filter array with a new one. Passed array is in the form of indexed subarrays - columnName => strValue e.g.                     [["budget" => ["Church Main","None"], ["Umbrella" => ["Furniture Project"]], ..]
 		$convertedAry = [];
-		foreach ($newExclFiltAry as $key => $value) { //convert columnName => strValue into columnName => dbTableIndex e.g. [["budget" => 7], ["Umbrella" => 23] etc.]
-			$convertedAry[$key] = $this->tables->getKey($key, $value); //a bit confusing - think a bit about which key is which, i.e. the key of the passed filter array vs the key (index) of the DB table
+		foreach ($newExclFiltAry as $subArray) { //$subArray = e.g. ["budget" => ["Church Main","None"]]
+			$itemNameAry = [];
+			foreach($subArray as $subAryKey => $subSubArray) { //only one iteration will happen - just a simple way of extracting the key and subSubArray
+				foreach($subSubArray as $value) { 
+					$itemNameAry[] = $this->tables->getKey($subAryKey, $value); //a bit confusing - think a bit about which key is which, i.e. the key of the passed filter array vs the key (index) of the table
+				}
+			}
+			$convertedAry[$subAryKey] = csvFromAry($itemNameAry);
 		}
 		$this->excludeFiltersAry = $convertedAry;
 		setNonVolAryItem($this->nonVolFiltAryKey."Exclude", $this->excludeFiltersAry);

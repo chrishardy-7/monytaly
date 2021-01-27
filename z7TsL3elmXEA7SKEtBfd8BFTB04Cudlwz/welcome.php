@@ -12,7 +12,7 @@ include_once("./".$sdir."saveSession.php");
 print_r($message);
 
 ?>
-<div style="height: 300px; width: 500px; background-color: #AAAAFF; float:left;">
+<div style="height: 15.624vw; width: 26.04vw; background-color: #AAAAFF; float:left;">
 	<div style="margin: 100px">
 		<H1>Welcome!</H1>
 	</div>

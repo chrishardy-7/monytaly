@@ -24,7 +24,7 @@ max_file_uploads: 50
 The files upload to month folders within upload folder /var/www/cuibhrig.com/accountsccc/uploads on the server. This upload folder is synced using Syncthing to a hidden folder "/media/data/Data/0_acountscccSncdDocs HiddenFoldWithin/.accountscccSyncdDocs" which in turn is mounted read only on dir /home/chris/accountscccSncdDocs to allow no destructive access for copying back to the server in the event of loss or damage to the files on the server or recreation on a new server. This read only mounting is performed at bootup by a line: mount --bind -r "/media/data/Data/0_acountscccSncdDocs HiddenFoldWithin/.accountscccSyncdDocs" /home/chris/accountscccSncdDocs within the system /etc/rc.local script. */
 
 
-/* added margin-top:250px; to .JsDatePickBox{} (first line in jsDatePick_ltr.min.css) to make calendar display below date box, in fixed relation to it. Copyright 2010 Itamar Arjuan jsDatePick is distributed under the terms of the GNU General Public License. */
+/* added margin-top:13.02vw; to .JsDatePickBox{} (first line in jsDatePick_ltr.min.css) to make calendar display below date box, in fixed relation to it. Copyright 2010 Itamar Arjuan jsDatePick is distributed under the terms of the GNU General Public License. */
 
 ?>
 <script type="text/javascript">
@@ -128,7 +128,7 @@ $uploadBtnsRndmsArray = createKeysAndRandomsArray($uploadBtnsNames, $_cmndRndmLn
 				<?php formValHolder("storeSelectedRecordIdR", $idR); ?>
 				<br>
 				<input type="hidden" name="MAX_FILE_SIZE" value="10485760" /> <!-- set max file size in html to 10MB, helps against failure and lockup if too large a file is attempted. Size is for each file. -->
-				<input type="file" style="width:250px;" name="filesToUpload[]" id="filesToUpload"  multiple accept="<?php echo $fileAcceptExts; ?>"> Scans Upload? (max size 10MB)</input>
+				<input type="file" style="width:13.02vw;" name="filesToUpload[]" id="filesToUpload"  multiple accept="<?php echo $fileAcceptExts; ?>"> Scans Upload? (max size 10MB)</input>
 				<br>
 				<br>
 				<input class="loginTextBox" type="text" name="dateStamp" value=<?php echo $scanNameDate;?> id="dateReq" onkeydown="testForEnter();" />
@@ -146,7 +146,7 @@ $uploadBtnsRndmsArray = createKeysAndRandomsArray($uploadBtnsNames, $_cmndRndmLn
 
 			</form>
 		</div>
-		<div id="swapDocDiv" style="float:right; color:#FFFF00; background:#FF6060; display:none; padding-right: 50px; padding-top: 160px; font-size: 50px; text-align: right;">
+		<div id="swapDocDiv" style="float:right; color:#FFFF00; background:#FF6060; display:none; padding-right: 2.604vw; padding-top: 8.3328vw; font-size: 2.604vw; text-align: right;">
 			<?php echo $swapFilenameNotification."!"; ?>
 		</div>
 	</div>
@@ -164,7 +164,7 @@ $uploadBtnsRndmsArray = createKeysAndRandomsArray($uploadBtnsNames, $_cmndRndmLn
 
 		if (!empty($fileUploadReportArray)) {
 			?>
-			<table border=0 style="margin-left:50px;">
+			<table border=0 style="margin-left:2.604vw;">
 			<?php 
 
 			    tableStartRow("tableForFileUploadHeading", 	"", "", TRUE); //header row for column names

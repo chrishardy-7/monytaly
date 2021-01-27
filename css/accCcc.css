@@ -119,50 +119,7 @@ input: focus, textarea: focus, select: focus {
         background-color: #D0C8FF;
 }
 
-.dataDisplayContainer, .dataDisplayContainerPivot {
-    display: flex;
-    flex-direction: column;
-    float: left;
-    background-color: #00FF00;
-}
 
-.headingsStrip {
-    display:  flex;
-    flex-direction:  column;
-    border-bottom: 0.05208vw solid #808080;
-    background-color: #FFFFFF;
-}
-
-.scrollableDisplayArea {
-    flex-grow: 1;
-    background-color: #FFFFFF;
-    overflow: auto;
-}
-
-.multiRowHeaderContainer{
-  /*  flex-grow: 50;
-    background-color: #C0FFC0;
-    overflow-x: auto;
-    overflow-y: hidden; */
-}
-
-.scrollableDisplayAreaPivot {
-    flex-grow: 1;
-    background-color: #FFFFFF;
-    overflow: auto;
-}
-
-
-
-.totalsFooter {
-    border-top: 0.05208vw solid #808080;
-    background-color: #FF6060;
-}
-
-.dateAndItemSelectRecnclDiv {
-    float: left;
-    display: none;
-}
 
 .bottomMenuContn {
     clear: both;
@@ -170,9 +127,7 @@ input: focus, textarea: focus, select: focus {
     float: left;
 }
 
-.bottomMenuRHgroup {    /* no sub-definitions in @media sections */
-    float: right;
-}
+
 
 
 
@@ -479,42 +434,137 @@ input: focus, textarea: focus, select: focus {
         font: 0.62496vw/200% Verdana, Tahoma, sans-serif;
     }
 
-    .headingsStrip {
-        max-width: 53.1216vw;
-        margin-bottom: 0.2604vw;
-        margin-left: 0.2604vw;
-    }
 
-    .multiRowHeaderContainer {
-        width: 96.0876vw;
-        margin-left: 0.2604vw;
-        font-size: 0.62496vw;
-        background-color:  #FFFFFF;
-        border-bottom:  solid 0.15624vw #A0A0A0;
-    }
 
-    .scrollableDisplayArea {
-        width: 53.1216vw;
-        margin-left: 0.2604vw;
-        font-size: 0.62496vw;
-    }
+    /* ############## Start of PIVOT TABLE DISPLAY divs ############## */
 
-    .scrollableDisplayAreaPivot {
-        margin-left: 0.2604vw;
-        font-size: 0.62496vw;
-    }
+    /* The css settings in this whole pivot section may still not be optimal - as browser size changes things used to fail, with gaps at the bottom of multiRowPivotTableContainerLeft and right of multiRowHeaderContainerRight ganged divs, a little but, until a reload. .containerForLeftRightPivotRows {height:32vw;} seems to fix things at the moment. a greater height of say 40vw doesn't work, nor a lesser one of 32vw. Things may still not ve right if the header rows take up less height, e.g short budget names are used. */
 
-    .totalsFooter {
-        width: 53.1216vw;
-        height: 3.906vw;
-        margin-top: 0.2604vw;
-        margin-left: 0.2604vw;
-    }
+	    .dataDisplayContainerPivot { 
+	    	display: flex;
+		    flex-direction: column;
+		    float: left;
+		    background-color: #00FF00;
+	        width: 96.348vw;
+	        height: 43.2264vw;
+	        font: 0.5208vw/150% Verdana, Tahoma, sans-serif;
+	        overflow-x: auto;
+	        overflow-y: hidden;
+	    }
+
+		    .containerForLeftRightPivotHeaders {
+		        
+		    }
+
+			    .multiRowHeaderContainerLeft {
+			        width: 11.37vw;
+			        margin-left: 0.2604vw;
+			        font-size: 0.62496vw;
+			        background-color:  #FFFFFF;
+			        border-bottom:  solid 0.15624vw #A0A0A0;
+			        overflow-x: hidden;
+			        float: left;
+			    }
+
+			    .multiRowHeaderContainerRight {
+
+			        width: 83.5vw;
+			        font-size: 0.62496vw;
+			        background-color:  #FFFFFF;
+			        border-bottom:  solid 0.15624vw #A0A0A0;
+			        overflow-x: hidden;
+			        float: left;
+			    }
+
+
+		    .containerForLeftRightPivotRows {
+		    	flex-grow: 1;
+		        display:flex;
+		        float:left;
+		        height:32vw;
+		        background-color: #EEAAAA;
+		    }
+
+			    .multiRowPivotTableContainerLeft {
+			        width: 11.37vw;
+			        margin-left: 0.2604vw;
+			        font-size: 0.62496vw;
+			        background-color:  #FFFFFF;
+			        border-bottom:  solid 0.15624vw #A0A0A0;
+			        overflow: hidden;
+			        float: left;
+			    }
+
+			    .multiRowPivotTableContainerRight {
+			        width: 84.5vw;
+			        font-size: 0.62496vw;
+			        background-color:  #FFFFFF;
+			        border-bottom:  solid 0.15624vw #A0A0A0;
+			        overflow: auto;
+			        float: left;
+			    }
+
+    /* ############## end of PIVOT TABLE DISPLAY divs ############## */
+
+
+    /* ############## Start of TRANSACTION AREA DISPLAY divs ############## */
+
+	    .transactionsDisplayContainer {
+	    	display: flex;
+		    flex-direction: column;
+		    float: left;
+		    background-color: #00FF00;
+	        width: 53.27784vw;
+	        height: 43.2264vw;
+	        font: 0.5208vw/150% Verdana, Tahoma, sans-serif;
+	    }  
+
+		    .transactionsHeader {
+		    	display:  flex;
+			    flex-direction:  column;
+			    border-bottom: 0.05208vw solid #808080;
+			    background-color: #FFFFFF;
+		        max-width: 53.1216vw;
+		        margin-bottom: 0.2604vw;
+		        margin-left: 0.2604vw;
+		    }
+
+		    .transactionsScrollableDisplayArea {
+		    	flex-grow: 1;
+			    background-color: #FFFFFF;
+			    overflow: auto;
+		        width: 53.1216vw;
+		        margin-left: 0.2604vw;
+		        font-size: 0.62496vw;
+		    }
+
+		    .totalsFooter {
+		    	border-top: 0.05208vw solid #808080;
+    			background-color: #FF6060;
+		        width: 53.1216vw;
+		        height: 3.906vw;
+		        margin-top: 0.2604vw;
+		        margin-left: 0.2604vw;
+		    }
+
+
+    /* ############## end of TRANSACTION AREA DISPLAY divs ############## */
+
+
+    .dateAndItemSelectRecnclDiv {
+	    float: left;
+	    display: none;
+	}
+    
 
     .bottomMenuContn {
         width: 63.0168vw;
         height: 2.0832vw;
     }
+
+    .bottomMenuRHgroup {    /* no sub-definitions in @media sections */
+	    float: right;
+	}
 
 
 
@@ -727,20 +777,6 @@ input: focus, textarea: focus, select: focus {
         padding:  0.05208vw 0.2604vw;
         font-size:  0.72912vw;
     }
-
-    .dataDisplayContainer {
-        width: 53.27784vw;
-        height: 43.2264vw;
-        font: 0.5208vw/150% Verdana, Tahoma, sans-serif;
-    }
-
-    .dataDisplayContainerPivot {
-        width: 96.348vw;
-        height: 43.2264vw;
-        font: 0.5208vw/150% Verdana, Tahoma, sans-serif;
-        overflow-x: auto;
-        overflow-y: hidden;
-    }  
 
     .docDisplayIframeRecsFullYr {
         width: 36.09144vw;
@@ -1021,7 +1057,7 @@ input: focus, textarea: focus, select: focus {
         user-select:  none;          /* Likely future */ 
     }
 
-    .pivotCellStd, .pivotCellGreen, .pivotCellOrange, .pivotCellRed, .pivotCellRowName, .pivotCellRowNameRight {
+    .pivotCellStd, .pivotCellGreen, .pivotCellOrange, .pivotCellRed, .pivotCellInvisible, .pivotCellRowName, .pivotCellRowNameRight {
         color:  #000000;
         font-size:  0.57288vw;
         word-wrap:  break-word;
@@ -1062,6 +1098,13 @@ input: focus, textarea: focus, select: focus {
         background-color:  #FFAA00;
     }
 
+    .pivotCellInvisible {
+        width:  3.22896vw;
+        text-align: right;
+        color:  #FFFFFF;
+        background-color:  #FFFFFF;
+    }
+
     .pivotCellRed {
         width:  3.22896vw;
         text-align: right;
@@ -1069,12 +1112,15 @@ input: focus, textarea: focus, select: focus {
         background-color:  #FF0000;
     }
 
-    .pivotCellRowName, .pivotCellRowNameRight {
+    .pivotCellRowName {
         width:  7.2912vw;
         font-weight:  bold;
+        white-space: nowrap;
     }
 
     .pivotCellRowNameRight {
+        width:  7.2912vw;
+        font-weight:  bold;
         text-align: right;
     }
 

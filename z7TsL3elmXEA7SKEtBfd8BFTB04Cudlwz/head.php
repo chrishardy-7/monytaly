@@ -13,7 +13,7 @@
 
 	<link rel="stylesheet" href="<?php echo $dir?>css/jquery-ui-1.9.2.custom.css" type="text/css" media="all" />
 	<link rel="stylesheet" href="<?php echo $dir?>css/jsDatePick_ltr.min.css" type="text/css" media="all" />
-	<link rel="stylesheet" href="<?php echo $dir?>css/expandText.css?version=2016-04-29-1426" type="text/css" media="all" />
+	<link rel="stylesheet" href="<?php echo $dir?>css/expandText.css?version=<?php echo (string)time(TRUE); ?>" type="text/css" media="all" />
 	<link rel="stylesheet" href="<?php echo $dir?>css/jquery.jqplot.css" type="text/css" media="all" />
 	<link rel="stylesheet" href="<?php echo $dir?>css/accCcc.css?version=<?php echo (string)time(TRUE); ?>" type="text/css" media="all" />
 	<link rel="stylesheet" href="<?php echo $dir?>css/all.css" type="text/css" media="all" />
@@ -53,7 +53,7 @@
 
 </head> 
 
-<body id="mainBody" style="background-color:#FFFFFF; " onkeypress="keyPressDetect(event);" onkeyup="keyUpDetect(event);">
+<body id="mainBody" style="background-color:#FFFFFF; " onkeypress="keyPressDetect(event);" onkeyup="keyUpDetect(event);" >
 
 	<div id="container" class="mainContainer"> <!--Overall container div for the whole web page -->
 

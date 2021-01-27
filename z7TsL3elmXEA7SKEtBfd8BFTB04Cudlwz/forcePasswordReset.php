@@ -16,8 +16,8 @@ print_r("</br>");
 <div style="background-color: #FFFFFF; float:left;">
 	<div class="newUserPwContainer">
 
-		<div style="width:550px; float:left; margin-left:20px ">
-			<p style="font-weight:bold; font-size: 17px; margin-top:25px">Please create a new Password known only to you</p>
+		<div style="width:28.664vw; float:left; margin-left:1.0416vw; ">
+			<p style="font-weight:bold; font-size: 0.88536vw; margin-top:1.302vw">Please create a new Password known only to you</p>
 			<form id="passwordReset" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data"  onsubmit="">
 				</br>
 				<span><input class="loginTextBox" type="password" name="oldPassword" placeholder="Temporary Password" id="oldPassword" onkeydown="testForEnter();" /></span>
@@ -32,7 +32,7 @@ print_r("</br>");
 				<span><button class="btn" type="submit" form="passwordReset" name="resetPWbuttonBtn" value="login"><i class="fas fa-unlock"></i> Change Password</button></span>
 			</form>
 		</div>
-		<div style="width:500px; float:left;">
+		<div style="width:26.04vw; float:left;">
 			</br>
 			<p style="font-weight:bold">Passwords must have at least:</p>
 			<li>8 characters</li>

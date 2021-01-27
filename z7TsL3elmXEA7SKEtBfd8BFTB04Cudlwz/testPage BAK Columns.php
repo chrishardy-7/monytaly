@@ -8,7 +8,7 @@ $nameOfThisPage = "Test";
 
 //include_once("./".$sdir."createMenuRndms.php");
 
-include_once("./".$sdir."head.php");
+include_once("./".$sdir."head.php");          //NEEDS PX VALUES CONVERTED TO VW  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 include_once("./".$sdir."menu.php");
 
 

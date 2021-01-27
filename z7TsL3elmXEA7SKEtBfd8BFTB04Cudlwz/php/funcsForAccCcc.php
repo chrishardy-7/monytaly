@@ -125,6 +125,7 @@ function createPivotDisplData(
         $pivotCellRedClass,
         $pivotCellGreenClass,
         $pivotCellOrangeClass,
+        $pivotCellInvisibleClass,
         $pivotCellRowNameRightClass,
         $columnForHeadings,
         $columnForRows,
@@ -208,7 +209,7 @@ function createPivotDisplData(
         $headingsTotalSpendSumAry[] = 		0;
         $headingsTotalSurplusSumAry[] = 	0;
         $headingsbalanceAry[] = 			0;
-        $spacerRowAry[] = 					"";
+        $spacerRowAry[] = 					"ZZZ";
 
         // 7 Lines
         $headingsClassesAry[] = 					$pivotCellClass;
@@ -217,7 +218,7 @@ function createPivotDisplData(
         $headingsTotalSpendSumClassesAry[] = 		$pivotCellClass;
         $headingsTotalSurplusSumClassesAry[] = 		$pivotCellClass;
         $headingsbalanceClassesAry[] = 				$pivotCellClass;
-        $headingsSpacerClassesAry[] = 				$pivotCellClass;
+        $headingsSpacerClassesAry[] = 				$pivotCellInvisibleClass;
 
         $colHeadingTblIdx = $tables->getKey($columnForHeadings, $headingText);
         // 7 Lines
@@ -1399,7 +1400,7 @@ function saveMessageOnClient($message) {
 
 function getMessageFromClient() {
     ?>
-    <p id="messageDisplay" style="margin: 50px;"> </p>
+    <p id="messageDisplay" style="margin: 2.604vw;"> </p>
     <script>
         if(sessionStorage.getItem('message')) {
             document.getElementById("messageDisplay").innerText = sessionStorage.getItem('message');
@@ -1653,7 +1654,7 @@ function calendar($uniqueId, $setDate, $viewOnly, $outerDivClass, $outerDivClass
                 $dayOfMnthButIdx++;
             }  
             ?>
-            <input style="display:none; width:20px;" id="<?php echo $dayOfMnthTextBoxId; ?>" type="text" name="<?php echo $dayOfMnthTextBoxName;?>" value="<?php echo $dayOfMnthSelected; ?>"  > </input>
+            <input style="display:none; width:1.0416vw;" id="<?php echo $dayOfMnthTextBoxId; ?>" type="text" name="<?php echo $dayOfMnthTextBoxName;?>" value="<?php echo $dayOfMnthSelected; ?>"  > </input>
         </div>
         <!--     -->
         <?php echo '<div class='.$calMnthDiv.'>';
@@ -1672,7 +1673,7 @@ function calendar($uniqueId, $setDate, $viewOnly, $outerDivClass, $outerDivClass
                 $mnthButIdx++;
             } 
             ?>
-            <input style="display:none; width:20px;" id="<?php echo $mnthTextBoxId; ?>" type="text" name="<?php echo $mnthTextBoxName;?>" value="<?php echo $mnthSelected; ?>"  > </input>
+            <input style="display:none; width:1.0416vw;" id="<?php echo $mnthTextBoxId; ?>" type="text" name="<?php echo $mnthTextBoxName;?>" value="<?php echo $mnthSelected; ?>"  > </input>
         </div>
         <!--     -->
         <?php echo '<div class='.$calYrDiv.'>';
@@ -1692,7 +1693,7 @@ function calendar($uniqueId, $setDate, $viewOnly, $outerDivClass, $outerDivClass
                 $yrButIdx++;
             } 
             ?>
-            <input style="display:none; width:45px;" id="<?php echo $yrTextBoxId; ?>" type="text" name="<?php echo $yrTextBoxName;?>" value="<?php echo $yrSelected; ?>"  > </input>
+            <input style="display:none; width:2.3436vw;" id="<?php echo $yrTextBoxId; ?>" type="text" name="<?php echo $yrTextBoxName;?>" value="<?php echo $yrSelected; ?>"  > </input>
         </div>             
     </div>
     <script type="text/javascript"> setMaxDayOfMnth('<?php echo $yrTextBoxId; ?>', '<?php echo $mnthTextBoxId; ?>', '<?php echo $dayOfMnthTextBoxId; ?>', '<?php echo $dayOfMnthUniqueId; ?>', '<?php echo $dayOfMnthBtnSelectedClass; ?>', '<?php echo $dayOfMnthBtnClass; ?>', '<?php echo $outerDivId; ?>', '<?php echo $outerDivClassWarning; ?>'); </script> <!-- sets display of day of month buttons in keeping with initial date values -->
@@ -1791,7 +1792,7 @@ function calJavaScrpInteractn($uniqueId, $viewOnly, $outerDivClass, $outerDivCla
                 $dayOfMnthButIdx++;
             }  
             ?>
-            <input style="display:none; width:20px;" id="<?php echo $dayOfMnthTextBoxId; ?>" type="text" name="<?php echo $dayOfMnthTextBoxName;?>" value="<?php echo $dayOfMnthSelected; ?>"  > </input>
+            <input style="display:none; width:1.0416vw;" id="<?php echo $dayOfMnthTextBoxId; ?>" type="text" name="<?php echo $dayOfMnthTextBoxName;?>" value="<?php echo $dayOfMnthSelected; ?>"  > </input>
         </div>
         <!--     -->
         <?php echo '<div class='.$calMnthDiv.'>';
@@ -1850,7 +1851,7 @@ function calJavaScrpInteractn($uniqueId, $viewOnly, $outerDivClass, $outerDivCla
                 $mnthButIdx++;
             } 
             ?>
-            <input style="display:none; width:20px;" id="<?php echo $mnthTextBoxId; ?>" type="text" name="<?php echo $mnthTextBoxName;?>" value="<?php echo $mnthSelected; ?>"  > </input>
+            <input style="display:none; width:1.0416vw;" id="<?php echo $mnthTextBoxId; ?>" type="text" name="<?php echo $mnthTextBoxName;?>" value="<?php echo $mnthSelected; ?>"  > </input>
         </div>
         <!--     -->
         <?php echo '<div class='.$calYrDiv.'>';
@@ -1911,7 +1912,7 @@ function calJavaScrpInteractn($uniqueId, $viewOnly, $outerDivClass, $outerDivCla
                 $yrButIdx++;
             } 
             ?>
-            <input style="display:none; width:45px;" id="<?php echo $yrTextBoxId; ?>" type="text" name="<?php echo $yrTextBoxName;?>" value="<?php echo $yrSelected; ?>"  > </input>
+            <input style="display:none; width:2.3436vw;" id="<?php echo $yrTextBoxId; ?>" type="text" name="<?php echo $yrTextBoxName;?>" value="<?php echo $yrSelected; ?>"  > </input>
         </div>             
     </div>
     <input hidden id="<?php echo $dateUniqueId;?>" type="text"></input>
@@ -2127,7 +2128,7 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
             }  
             ?>
             <button class="calDaysOfMnthButHidden" type="button" id="<?php echo $miniButId; ?>"></button> <!-- button that is zero dimensions that is set to be in focus on in the cal panel so return works -->
-            <input style="display:none; width:20px;" id="<?php echo $dayOfMnthTextBoxId; ?>" type="text" name="<?php echo $dayOfMnthTextBoxName;?>" value="<?php echo $dayOfMnthSelected; ?>"  > </input>
+            <input style="display:none; width:1.0416vw;" id="<?php echo $dayOfMnthTextBoxId; ?>" type="text" name="<?php echo $dayOfMnthTextBoxName;?>" value="<?php echo $dayOfMnthSelected; ?>"  > </input>
         </div>
         <!--     -->
         <?php echo '<div class='.$calMnthDiv.'>';
@@ -2167,7 +2168,7 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
                 $mnthButIdx++;
             } 
             ?>
-            <input style="display:none; width:20px;" id="<?php echo $mnthTextBoxId; ?>" type="text" name="<?php echo $mnthTextBoxName;?>" value="<?php echo $mnthSelected; ?>"  > </input>
+            <input style="display:none; width:1.0416vw;" id="<?php echo $mnthTextBoxId; ?>" type="text" name="<?php echo $mnthTextBoxName;?>" value="<?php echo $mnthSelected; ?>"  > </input>
         </div>
         <!--     -->
         <?php echo '<div class='.$calYrDiv.'>';    
@@ -2207,7 +2208,7 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
                 $yrButIdx++;
             } 
             ?>
-            <input style="display:none; width:45px;" id="<?php echo $yrTextBoxId; ?>" type="text" name="<?php echo $yrTextBoxName;?>" value="<?php echo $yrSelected; ?>"  > </input>
+            <input style="display:none; width:2.3436vw;" id="<?php echo $yrTextBoxId; ?>" type="text" name="<?php echo $yrTextBoxName;?>" value="<?php echo $yrSelected; ?>"  > </input>
         </div>             
     </div>
     <input hidden id="<?php echo $dateUniqueId;?>" type="text"></input>
@@ -2377,7 +2378,7 @@ function subButPanelJSclickDown(
     </div>
     <script> //dummy function no longer needed as it now isn't called by JS selectButPanel()
         function <?php echo $uniqueId;?>initButPanel(cellId) {
-            //dummy function - here so initilisatioin call from selectButPanel() doesn't cause things to hang!
+            //dummy function - here so initilisation call from selectButPanel() doesn't cause things to hang!
         }
         var but1Id = <?php echo json_encode('but1'.$uniqueId);?>;
         var unselectedClass = <?php echo json_encode($butClass);?>;
@@ -2603,7 +2604,7 @@ function textPanelJSInteracStrOnly(
     $itemCellUniqueId = $uniqueId."itemCellIdPlaceholder"; //row in display page
     echo '<div class='.$outerDivClass.' id='.$uniqueId.' style="display:none;">' ;
         ?> 
-        <textarea style="width:133px; height:70px;" id='<?php echo $textAreaUniqueId;?>' onchange="<?php echo $uniqueId;?>testAreaChange(event)"></textarea>         
+        <textarea style="width:6.92664vw; height:3.6456vw;" id='<?php echo $textAreaUniqueId;?>' onchange="<?php echo $uniqueId;?>testAreaChange(event)"></textarea>         
     </div>
     <input hidden id="<?php echo $itemCellUniqueId;?>" type="text"></input>
     <script>
@@ -3756,7 +3757,7 @@ function expandingTextarea($expandingTextareaClass, $width, $tableName, $columnT
             $onchangeStr = "";
             $readOnly = "readonly";
         }
-        $widthStyle = "width:".$width."px;";
+        $widthStyle = "width:".$width."vw;";
         echo '
             <div class="'.$expandingTextareaClass.'" style="'.$widthStyle.'">
                 <pre><span></span><br></pre>
@@ -4187,6 +4188,14 @@ function pr($input) {
         print_r(displayHiddenChars($input));
     }
 
+}
+
+function csvFromAry($array) {
+    return implode(",", $array);
+}
+
+function aryFromCsv($csvString) {
+    return explode(",", $csvString);
 }
 
 ?>

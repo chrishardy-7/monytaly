@@ -24,7 +24,7 @@ print_r("</br>");
 ?>
 <div style="background-color: #FFFFFF; float:left;">
 	<div class="newUserPwContainer">
-		<div style="width:450px; float:left; margin-left:20px">
+		<div style="width:23.436vw; float:left; margin-left:1.0416vw">
 			<form id="newUserForm" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data"  onsubmit="">
 				</br>
 				<span><input class="loginTextBox" type="text" name="newUsername" placeholder="Username" id="newUsername" onkeydown="testForEnter();" /></span>

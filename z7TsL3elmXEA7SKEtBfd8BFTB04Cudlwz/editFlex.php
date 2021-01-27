@@ -10,10 +10,10 @@ $nameOfThisPage = "Edit Flex";
 
 
 
-$divEachWidth = 297;
-$col1W = 45;
-$col2W = 150;
-$col3W = 50;
+$divEachWidth = 15.46776;
+$col1W = 2.3436;
+$col2W = 7.812;
+$col3W = 2.604;
 
 $genrlAry = Array("id", "accounts", "accountName", "status", "budgetName", "budgets", "docTags", "docTagName", "docVarieties", "docVarietyName", "orgPerCategories", "categoryName", "orgsOrPersons", "orgOrPersonName", );
 $genAryRnds = createKeysAndRandomsArray($genrlAry, $_cmndRndmLngth, $uniqnsChkAryForRndms);
@@ -39,7 +39,7 @@ include_once("./".$sdir."menu.php");
 
 
 <!--- ACCOUNTS -->
-<div style="height: 865px; width: <?php echo $divEachWidth;?>px; padding-left:20px; overflow:scroll; background-color: #FFE0FF; float:left;">
+<div style="height: 45.0492vw; width: <?php echo $divEachWidth;?>vw; padding-left:1.0416vw; overflow:scroll; background-color: #FFE0FF; float:left;">
 <div class="shrinkfitDiv" >
     <?php
         expandingTextarea("expandingArea expandingAreaWhiteBG expandingAreaGreyText",  $col1W, "", "", "", "",  "id",          TRUE, TRUE, $pathToPhpFile, $fileRndm);
@@ -69,7 +69,7 @@ foreach ($accfromDB as $dBRow) { //works one at a time through all the rows of d
 
 
 <!--- BUDGETS -->
-<div style="height: 865px; width: <?php echo $divEachWidth;?>px; padding-left:20px; overflow:scroll; background-color: #FFFFE0; float:left;">
+<div style="height: 45.0492vw; width: <?php echo $divEachWidth;?>vw; padding-left:1.0416vw; overflow:scroll; background-color: #FFFFE0; float:left;">
 <div class="shrinkfitDiv" >
     <?php
         expandingTextarea("expandingArea expandingAreaWhiteBG expandingAreaGreyText",   $col1W, "", "", "", "",  "id",         TRUE, TRUE, $pathToPhpFile, $fileRndm);
@@ -99,7 +99,7 @@ foreach ($budgfromDB as $dBRow) { //works one at a time through all the rows of 
 
 
 <!--- TAGS -->
-<div style="height: 865px; width: <?php echo $divEachWidth;?>px; padding-left:20px; overflow:scroll; background-color: #FFFFE0; float:left;">
+<div style="height: 45.0492vw; width: <?php echo $divEachWidth;?>vw; padding-left:1.0416vw; overflow:scroll; background-color: #FFFFE0; float:left;">
 <div class="shrinkfitDiv" >
     <?php
         expandingTextarea("expandingArea expandingAreaWhiteBG expandingAreaGreyText",   $col1W, "", "", "", "",  "id",         TRUE, TRUE, $pathToPhpFile, $fileRndm);
@@ -129,7 +129,7 @@ foreach ($tagfromDB as $dBRow) { //works one at a time through all the rows of d
 
 
 <!--- VARIETIES -->
-<div style="height: 865px; width: <?php echo $divEachWidth;?>px; padding-left:20px; overflow:scroll; background-color: #FFFFE0; float:left;">
+<div style="height: 45.0492vw; width: <?php echo $divEachWidth;?>vw; padding-left:1.0416vw; overflow:scroll; background-color: #FFFFE0; float:left;">
 <div class="shrinkfitDiv" >
     <?php
         expandingTextarea("expandingArea expandingAreaWhiteBG expandingAreaGreyText",   $col1W, "", "", "", "",  "id",             TRUE, TRUE, $pathToPhpFile, $fileRndm);
@@ -160,7 +160,7 @@ foreach ($varfromDB as $dBRow) { //works one at a time through all the rows of d
 
 
 <!--- CATEGORIES -->
-<div style="height: 865px; width: <?php echo $divEachWidth;?>px; padding-left:20px; overflow:scroll; background-color: #FFFFE0; float:left;">
+<div style="height: 45.0492vw; width: <?php echo $divEachWidth;?>vw; padding-left:1.0416vw; overflow:scroll; background-color: #FFFFE0; float:left;">
 <div class="shrinkfitDiv" >
     <?php
         expandingTextarea("expandingArea expandingAreaWhiteBG expandingAreaGreyText",   $col1W, "", "", "", "",  "id",           TRUE, TRUE, $pathToPhpFile, $fileRndm);
@@ -191,7 +191,7 @@ foreach ($catfromDB as $dBRow) { //works one at a time through all the rows of d
 
 
 <!--- PERSORGS -->
-<div style="height: 865px; width: <?php echo $divEachWidth;?>px; padding-left:20px; overflow:scroll; background-color: #FFFFE0; float:left;">
+<div style="height: 45.0492vw; width: <?php echo $divEachWidth;?>vw; padding-left:1.0416vw; overflow:scroll; background-color: #FFFFE0; float:left;">
 <div class="shrinkfitDiv" >
     <?php
         expandingTextarea("expandingArea expandingAreaWhiteBG expandingAreaGreyText",   $col1W, "", "", "", "",  "id",              TRUE, TRUE, $pathToPhpFile, $fileRndm);

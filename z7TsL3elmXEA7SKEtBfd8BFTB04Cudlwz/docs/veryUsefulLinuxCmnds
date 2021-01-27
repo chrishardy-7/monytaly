@@ -1,5 +1,8 @@
 
 sudo -H -u www-data (become www-data)
 
-namei (trace a path to its end and show structure - useful for testing whether something can be got at!)
+namei <path> (trace a path to its end and show structure - useful for testing whether something can be got at!)
 
+lsblk -p  (lists mount points)
+
+umount /dev/sdX?   (unmounts the relevant partition)

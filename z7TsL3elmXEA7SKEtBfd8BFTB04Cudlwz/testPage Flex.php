@@ -4,7 +4,7 @@ if (empty($_calledFromIndexPage)) { //prevents someone trying to open this page 
 	exit("");
 }
 
-$nameOfThisPage = "Test";
+$nameOfThisPage = "Test";          //NEEDS PX VALUES CONVERTED TO VW  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 //include_once("./".$sdir."createMenuRndms.php");
 

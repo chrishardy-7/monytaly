@@ -27,18 +27,7 @@ else { //form to enter new item and then recall this page when the fact it is ca
 		var pageNum = 1;
 		function loadIframeDoc() {	//in response to changes in display size from different devices gets width of container div and reloads the document into the iframe using a suitable zoom %
 			var outerContainerWidth = window.getComputedStyle( document.getElementById("container"), null).getPropertyValue("width");
-			var zoom = "20";
-			switch (outerContainerWidth) {
-				case "1010px": //iPad 4 landscape
-					zoom = "50";
-					break;
-				case "1350px": //Old laptop screen (1366 x 768)
-					zoom = "70";
-					break;
-				case "1912px": //HD Screen (1920 x 1080)
-					zoom = "100";
-					break;
-			}
+			var zoom = "100";
 			document.getElementById("pdfIframe").src  = "./web/viewer.html?file="+docFilename+"#page="+pageNum+"&zoom="+zoom;
 		}
 		var myEfficientFn = debounce(function() { 
@@ -76,7 +65,7 @@ else { //form to enter new item and then recall this page when the fact it is ca
 			
 			
 		</div>
-		<div style="clear:both; width:1090px; height:40px; background-color: #AAAAFF;">	
+		<div style="clear:both; width:56.7672vw; height:2.0832vw; background-color: #AAAAFF;">	
 			<?php namedValHolder("sessionCommitRnd", $recoveredSessionAryCommitRnd); ?>
 			<button class="subMenuBtn" id="newItemSubmit" type="submit" name="command" value=<?php echo $menuRandomsArray["Add Items"]."-".$menuRandomsArray["Add Items"];?>><i class="fas fa-save"></i> Add New Item</button>
 		</div>

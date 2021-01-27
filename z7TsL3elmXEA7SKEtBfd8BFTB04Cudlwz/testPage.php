@@ -24,7 +24,7 @@ foreach ($OrgOrPersons as $OrgOrPers) {
 }
 
 $reasonAry = [];
-$reasonsListAry = getorgPerCategories();
+$reasonsListAry = getorgPerCategories();           //NEEDS PX VALUES CONVERTED TO VW  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 foreach ($reasonsListAry as $reason) {
 	$reasonAry[] = $reason;
 }

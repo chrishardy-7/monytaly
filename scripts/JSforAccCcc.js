@@ -10,27 +10,36 @@ var atomicAjaxCallCompleted = true;
 var allowSetSticky = true;
 var fromClickCellCmnd = false;
 var autoClickDwnFromCalOrButPnl = false;
-var millisecStartTime = 0; //global variable for startTimeout() and checkTimeout()
-var checkTimeoutFunction = "Console"; //controls checkTimeout() - "Alert", "Console" or "Off"
-var checkTimeoutIndentNum = 0; //holds running count of number of indents to be applied to console display of check timeouts
-var checkTimeoutNamesAry = [];
 var currentKey = "none"; //stores value of current key - either "none", "Control" etc. or a code number (e.g. 112 = "p"). Shift key produces "Shift" and not the code number for an uppercase (e.g. 80 = "P")
 var altGrLastPressedTime = 0;
 var compoundNum = 0;
 
+var conLogMode = "Off";
+var consoleAryMode = "Off";
+var checkTimeMode = "Immediate"; //set to "Off", "Immediate" (prints as each START() FINISH() pair complete - for troubleshooting code problems) or "AfterRoot" which prints after any root pair finishes
+var checkTimeLastRun = 0;
+var checkTimeTabCount = 0;
+var checkTimeStack = [];
+
+
+//new method
+var	checkTimeStack = [];
+
 
 function clickField(event) {
+
+	conLog("PERFORMANCE>NOW() = "+performance.now());
+	//STARTinit(); think not needed normally as START() has feature built in to do initialisation
+	var id = event.target.id;
+	conLog("                                                                        #################### START clickField()     Id = "+id+" ####################");
+
+	START("clickField()");
 	if (!fromClickCellCmnd) { //click from normal display area rather than calendar or selection panel buttons so cancel clickDown feature
 		autoClickDwnFromCalOrButPnl = false;
 		eval(autoClickDownSubId+'changeButClass')(""); //function within subButPanelJSclickDown() to select/unselect button by changing the class - default "" means unselected
 	}
 	fromClickCellCmnd = false;
-	var id = event.target.id;
-
-	var tab = "      ";
-	console.log(tab+"Clicked Id = "+id);
-	console.log("OOOOOOO");
-	console.log("iiiiiii");
+	
 
 //alert(compound.mastIdr);
 	if (id.split("-")[1] == "piv") { //click comes from pivot table
@@ -43,6 +52,7 @@ function clickField(event) {
 			document.getElementById("m88vof5A73").submit(); //calls showRecsForFullYr.php with filter info from clicked pivot display
 			
 		}
+		FINISH("clickField()")
 		return "function exited";
 	}
 
@@ -50,24 +60,29 @@ function clickField(event) {
 		if (id.split("-")[0] == "sticky") { //a cell in the sticky row has been clicked, cancel sticky function
 			inrSet(id, ""); //clear the clicked sticky cell 
 			valSet("stickyActive-"+id.split("-")[1], "no"); //clears value holder flag to indicate that the sticky value has been cleared
+			FINISH("clickField()")
 			return "function exited";
 		}
 
 		if (id.split("-")[0] == "heading") { //a cell in the heading row has been clicked clicked
 			groupSet(id);
+			FINISH("clickField()")
 			return "function exited";
 		}
 
 		if (id.split("-").length != 2) { //if the mouse is clicked anywhere other than on a valid cell and id is a word instead of (e.g.) 23-74 exit this function to prevent later errors (fixes lock-up problem)
+			FINISH("clickField()")
 			return;
 		}
 
-		doEverything(id, currentKey); //currentKey comes from function keyPressDetect()
-	}
+		doEverything(id, currentKey, " Called From clickField()"); //currentKey comes from function keyPressDetect()
 
+	}
+	FINISH("clickField()");
 }
 
-function doEverything(id, heldKey) {
+function doEverything(id, heldKey, calledFrom) {
+	START("doEverything()"+calledFrom);
 	//timeToCons();
 
     // ########################### LOCAL JAVASCRIPT STUFF - DOES NOT INTERACT WITH SERVER ###################
@@ -86,6 +101,7 @@ function doEverything(id, heldKey) {
 	    	inrSet("sticky-"+id.split("-")[1], stickyStr); //set the text of the sticky cell at the heading to the string value of the table cell just clicked on
 	    	valSet("stickyActive-"+id.split("-")[1], "yes"); //sets value holder flag to indicate that the sticky value has been set - allows sticky value of "" if desired, to make clearing cells easy
 	    }
+	    FINISH("doEverything()"+calledFrom)
     	return "function exited";
 	}
 
@@ -104,10 +120,12 @@ function doEverything(id, heldKey) {
     // ########################### STATEMENTS ALL ACCESS THE SERVER AND DATABASE (AND REFRESH PAGE) #####################
 	if (heldKey == "Control") { //call filter Include send function from this if condition and exit this clickField() function so no other server calls are made
 		document.getElementById("fn445dya48d").submit(); //calls new (same) page immediately with filter function set
+		FINISH("doEverything()"+calledFrom)
 		return "function exited";
 	}
 	if (heldKey == "ControlShift") { //ASCII "e" held down so call filter Exclude send function from this if condition and exit this clickField() function so no other server calls are made
 		document.getElementById("2FNPOyN0Pr4").submit(); //calls new (same) page immediately with filter function set
+		FINISH("doEverything()"+calledFrom)
 		return "function exited";
 	}
 	if (id.split("-")[1] == 12) { //if family column has been clicked call toggle display of family and exit this clickField() function so no other server calls are made
@@ -116,6 +134,7 @@ function doEverything(id, heldKey) {
 		}
 		else{
 			toggleSingleFamDisplay(id); //calls new (same) page immediately with family display toggled on or off
+			FINISH("doEverything()"+calledFrom)
 			return "function exited";
 		}
 	}
@@ -167,24 +186,7 @@ function doEverything(id, heldKey) {
 	atomicCall(""); //function that combines updateFromSticky(id, valueStr), displayBalances(id), newDocFileName(id) in one atomic to prevent race conditions
 	valSet("previousCellId", valGet("seltdRowCellId")); //store current row so that it is available next click (used with shift to copy sticky value to a range of selected cells)
 	// ########################### STATEMENTS ALL ACCESS THE SERVER AND DATABASE - END #####################
-
-}
-
-/* Makes visible/invisible rows that exist but are hidden by default in the current display view because they are excluded by filter settings. The criteria for controlling a row's visibility is that it has a matching compound number. showHide parameter determines whether the row will be be made visible or invisible by calling this function. */
-function showHideCompoundRows(rowId, compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, showHide) {
-	if (compoundTypeAry[rowId.split("-")[0]] != "None") {
-		var compoundNumIdrAry = getcompoundNumIdrAry(compoundGroupIdrAry, rowId.split("-")[0]); //indexed subarray of idRs grouped by a common compound number with the edit cell idR extracted from withdrnId
-		for (var i = 0; i < compoundNumIdrAry.length; i++) { //loop through all idRs of compound group belonging to clicked cell
-			if (compoundHiddenAry[compoundNumIdrAry[i]] == true) { //only process if row belongs to the list of compounds hidden by default (filtered)
-				if (showHide == "Show") {
-					document.getElementById(compoundNumIdrAry[i]).style.display = 'flex';
-				}
-				else {
-					document.getElementById(compoundNumIdrAry[i]).style.display = 'none';
-				}
-			}
-		}
-	}
+	FINISH("doEverything()"+calledFrom);
 }
 
 
@@ -223,12 +225,12 @@ function atomicAjaxCall(
 	bankAccNameAry,
 	restrictionsAry //not sure if needed but ready in case
 	) { 
-	
+	START("atomicAjaxCall()");
 
-	console.log("HERE ##################################### atomicAjaxCall()");
+	conLog("HERE ##################################### atomicAjaxCall()");
 	if (atomicAjaxCallCompleted) { //prevents new calls to server before existing one has completed - NOT SURE IF THIS IS THE OPTIMUM PLACE FOR THIS (BUT COULD BE IF ALL SERVER CALLS COME THROUGH HERE!)
-console.log(fileRndm);
-console.log("HERE ##################################### atomicAjaxCall()   PRE-AJAX SENDS");
+conLog(fileRndm);
+conLog("HERE ##################################### atomicAjaxCall()   PRE-AJAX SENDS");
 
 		var random = (new Date).getTime(); //random number to add as GET variable to php calls to prevent xmlHttpReq caching (not used by php script).
 		var xmlhttp;
@@ -275,14 +277,15 @@ console.log("HERE ##################################### atomicAjaxCall()   PRE-A
 		arry = getBalDataSend(arry, cellId, recStartDate, recEndDate, valGet("runNormalBalFunc"), auxButtonTxt); //executes if runBalFunc = "Yes" (though php on server may return all balances as "0.00" if nonsensical column like date is clicked)
 		arry = docUpdateSend(arry, cellId, accountBankLinksArry, auxButtonTxt); //only executes if currentDocRnd != previousDocRnd or column 8 (reconciliation) has been selected
 			
-		console.log(JSON.stringify(arry, null, 4));
+		conLog(JSON.stringify(arry, null, 4));
 
-		xmlhttp.onreadystatechange=function() { //only use this for test purposes to display the addressed column in the reporting area on the html page
+		xmlhttp.onreadystatechange=function() {
 		    if (xmlhttp.readyState==4 && xmlhttp.status==200) {
+		    	START("onreadystatechange(ASYNC)");
 		    	//alert (xmlhttp.responseText);
-		    	console.log(xmlhttp.responseText);
+		    	conLog(xmlhttp.responseText);
 		      	var arryBackFromPhp = JSON.parse(xmlhttp.responseText);
-		      	console.log(JSON.stringify(arryBackFromPhp, null, 4));
+		      	conLog(JSON.stringify(arryBackFromPhp, null, 4));
 
 		      	clearRowExcptRecDateAjaxReceive(arry, arryBackFromPhp, cellId, colClssAry);
 		      	setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellDescrpAry, compoundTypeAry, colClssAry);
@@ -306,15 +309,17 @@ console.log("HERE ##################################### atomicAjaxCall()   PRE-A
 				);
 		      	docUpdateReceive(arry, arryBackFromPhp);
 		      	atomicAjaxCallCompleted = true;
+		      	FINISH("onreadystatechange(ASYNC)");
 		    }
 		}
 		xmlhttp.open("POST", pathToPhpFile, true);
 		xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 		xmlhttp.send("command="+fileRndm+"&arryJsonStr="+JSON.stringify(arry)+"&random="+random);
 		atomicAjaxCallCompleted = false; //set to false to prevent other attempts at sending ajax data until the current one has completed and this flag has been set to true by return from server above
-		console.log("HERE ##################################### atomicAjaxCall()   POST-AJAX SENDS");
+		conLog("HERE ##################################### atomicAjaxCall()   POST-AJAX SENDS");
 		//alert("End Of atomicAjaxCall");
 	}
+	FINISH("atomicAjaxCall()");
 }
 
 
@@ -327,6 +332,7 @@ console.log("HERE ##################################### atomicAjaxCall()   PRE-A
 
 function clearRowExcptRecDateAjaxSend(arry, cellId, colClssAry, auxButtonTxt, compoundTypeAry) {
 	if (auxButtonTxt == "Clear") { //only run if Clear button has been clicked
+		START("clearRowExcptRecDateAjaxSend()");
 		var idR = cellId.split("-")[0];
 		if (document.getElementById(idR+"-12").innerText.split(" ")[0] == "OOO") { //row is a parent of family so show alert and inhibit clear action and return from function
 			alert("Clear will not work Parent rows !");
@@ -347,12 +353,14 @@ function clearRowExcptRecDateAjaxSend(arry, cellId, colClssAry, auxButtonTxt, co
 			arry["clearCellId"] = cellId;
 			arry["clearRowExcptRecDateAjaxSend"] = true;
 		}
+		FINISH("clearRowExcptRecDateAjaxSend()");
 	}
 	return arry;
 }
 
 function clearRowExcptRecDateAjaxReceive(arry, arryBackFromPhp, OrigCellId, colClssAry) {
 	if (existsAndTrue(arryBackFromPhp, "PHPwriteReadRowHasRun")) { //only run if returning PHP has already run on server
+		START("clearRowExcptRecDateAjaxReceive()");
 		var rowId = Object.keys(arryBackFromPhp["aryBackFromWriteReadRows"])[0]; //extract rowId from returned array - PHP writeReadRows() can return several rows if required but only single row used here
 		var origValueAry = arry["writeValuesAry"][rowId];
 		var updatedValueAry = arryBackFromPhp["aryBackFromWriteReadRows"][rowId];	
@@ -399,24 +407,28 @@ function clearRowExcptRecDateAjaxReceive(arry, arryBackFromPhp, OrigCellId, colC
 					}
 				}
 			}
-		} 
+		}
+		FINISH("clearRowExcptRecDateAjaxReceive()");
 	}
 }
 
 function setCompoundTransAjaxSend(arry, cellId, heldKey, compoundNum, auxButtonTxt) {
 	if ((heldKey == "AltGr") && (auxButtonTxt != "Clear")) { //only run if "AltGr" is held down
+		START("setCompoundTransAjaxSend()");
 		arry["cellIdForCompoundTrans"] = cellId;
 		arry["compoundNum"] = compoundNum;
 		arry["createCompoundTransAjaxSendHasRun"] = true;
 		//alert("setCompoundTransAjaxSend has run "+compoundNum);
+		FINISH("setCompoundTransAjaxSend()");
 	}
 	return arry;
 }
 
 function setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellDescrpAry, compoundTypeAry, colClssAry) {
-	var maxColIdx = displayCellDescrpAry.length - 1; //derive maximum column index from displayCellDescrpAry which holds single word descriptions for each column
-	var familyColKeyStr = String(getKeyFromValue(displayCellDescrpAry, "Family"));
 	if (existsAndTrue(arryBackFromPhp, "PHPsetCompoundTransHasRun")) { //only run if returning PHP has already run on server
+		START("setCompoundTransAjaxReceive()");
+		var maxColIdx = displayCellDescrpAry.length - 1; //derive maximum column index from displayCellDescrpAry which holds single word descriptions for each column
+		var familyColKeyStr = String(getKeyFromValue(displayCellDescrpAry, "Family"));
 		compoundNum = arryBackFromPhp["returnCompoundNum"]; //used to set value of this global external to this function (also cleared by both press or release of AltGr keyboard button)
 		var compoundActionAry = arryBackFromPhp["compoundActionAry"];
 		for (let key in compoundActionAry) { //loops through all the positions in the returned compoundActionAry
@@ -447,33 +459,39 @@ function setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellD
 			}
 		  	
 		}
+		FINISH("setCompoundTransAjaxReceive()");
 	}
 	//consoleAry(compoundTypeAry);
 }
 
 function createParentAjaxSend(arry, cellId, createParent, cellWarnClass, auxButtonTxt) {
 	if ((createParent == "yes") && (inrGet(cellId).substring(0, 2) != "OO") && (auxButtonTxt != "Clear")) { //only run if createParent = "yes" and target row not already parent (THIS USES A SIMPLE CHECK OF FIRST TWO DISPLAYED CHARACTERS OF "OO" - WOULD NEED TO CHANGE THIS IF A FUTURE FEATURE OF COLOURS OR SHAPES FOR PARENTS AND CHILDREN IS ADOPTED!!!)
+		START("createParentAjaxSend()");
 		arry["cellIdForNewParent"] = cellId;
 		arry["NewParentOrgClass"] = document.getElementById(cellId).className; //save original class for re-enstatement later
 		document.getElementById(cellId).className = cellWarnClass; //set the cell class to warning until it has been properly updated with data back from the table
 		arry["createParentAjaxSendHasRun"] = true;
+		FINISH("createParentAjaxSend()");
 	}
 	return arry;
 }
 
 function createParentAjaxReceive(arry, arryBackFromPhp, cellId) {
 	if (existsAndTrue(arryBackFromPhp, "PHPcreateNewParentHasRun")) { //only run if complementary send function has already run
+		START("createParentAjaxReceive()");
 		itemStrFromTable = arryBackFromPhp["createNewParentId"];
 	    cleanedItemStrFromTable = itemStrFromTable.trim(); //removes unwanted spaces.	    
 	    document.getElementById(cellId).className = arry["NewParentOrgClass"]; //re-enstate original class	    
 	    cleanedItemStrFromTable = "OOO "+cleanedItemStrFromTable; //prepend with parent pattern
 	    document.getElementById(cellId).innerText = cleanedItemStrFromTable; //write returned confirmatory string to cell
+	    FINISH("createParentAjaxReceive()");
 	}
 }
 
 function stickyAjaxSend(arry, itemStr, cellId, idrArry, cellWarnClass, displayCellDescrpAry, auxButtonTxt) {
 	 if (auxButtonTxt != "Clear") {
-		console.log("HERE ##################################### stickyAjaxSend()");
+	 	START("stickyAjaxSend()");
+		conLog("HERE ##################################### stickyAjaxSend()");
 		var colId = cellId.split("-")[1];
 		var dispCellDscrp = displayCellDescrpAry[colId];
 		if ((dispCellDscrp == 'PersOrg') || (dispCellDscrp == 'TransCat') || (dispCellDscrp == 'Account') || (dispCellDscrp == 'Budget') || (dispCellDscrp == 'Reference') || (dispCellDscrp == 'Umbrella') || (dispCellDscrp == 'DocType') || (dispCellDscrp == 'Note')) {
@@ -501,6 +519,7 @@ function stickyAjaxSend(arry, itemStr, cellId, idrArry, cellWarnClass, displayCe
 				arry["stickyAjaxSendHasRun"] = true;
 			}
 		}
+		FINISH("stickyAjaxSend()");
 	}
 
 	return arry;
@@ -508,7 +527,8 @@ function stickyAjaxSend(arry, itemStr, cellId, idrArry, cellWarnClass, displayCe
 
 function stickyAjaxReceive(arry, arryBackFromPhp, cellId, savedCellClassesArry) {
 	if (existsAndTrue(arryBackFromPhp, "PHPwriteReadAllRecordsItemHasRun")) { //only run if complementary send function has already run
-		console.log("In stickyAjaxReceive() !");
+		START("stickyAjaxReceive()");
+		conLog("In stickyAjaxReceive() !");
 		var column = cellId.split("-")[1];
 		for (var idR in arryBackFromPhp["stickyItemsUpdatedObjects"]) {
 			var prependPattern = ""; //default, so nothing will be changed if it is prefixed to any cell retValue regardless (this may not actually happen)
@@ -516,7 +536,7 @@ function stickyAjaxReceive(arry, arryBackFromPhp, cellId, savedCellClassesArry) 
 			var retValue = arryBackFromPhp["stickyItemsUpdatedObjects"][idR].trim(); //removes unwanted spaces;
 			var parentFlag = arryBackFromPhp["stickyItemsUpdatedParentFlagObjects"][idR];
 			var savedClass = savedCellClassesArry[idR];
-			console.log("key = "+idR+" retValue = "+retValue+" parent = "+parentFlag+" class = "+savedClass);
+			conLog("key = "+idR+" retValue = "+retValue+" parent = "+parentFlag+" class = "+savedClass);
 			if (column == "12") { //FAMILY COLUMN - a make child sticky operation, so format the returned
 				if (retValue == "0") { //if read back for parent field is 0 (indicating this record is no longer a child) convert to "" for display (mimicking php parsing in showRecsForFullYr.php)
 		    		retValue = "";
@@ -533,6 +553,7 @@ function stickyAjaxReceive(arry, arryBackFromPhp, cellId, savedCellClassesArry) 
 		      	document.getElementById(recreatedCellId).className = savedClass; //re-enstate original class
 		    }
 		}
+		FINISH("stickyAjaxReceive()");
 	}
 }
 
@@ -540,7 +561,8 @@ function stickyAjaxReceive(arry, arryBackFromPhp, cellId, savedCellClassesArry) 
 function withdrawnPaidinAjaxSend(arry, editableCellIdValHldr, moneyWarnClass, displayCellDescrpAry, headingAry, bankAccNameAry, compoundTypeAry, compoundGroupIdrAry, auxButtonTxt, colClssAry) {
 	var cellId = valGet(editableCellIdValHldr); 
 	var colId = cellId.split("-")[1]; //get the column number that was clicked
-	if (((displayCellDescrpAry[colId] == "MoneyOut") || (displayCellDescrpAry[colId] == "MoneyIn")) && (auxButtonTxt != "Clear")) { //withdrawn or paidin cell so run this function		
+	if (((displayCellDescrpAry[colId] == "MoneyOut") || (displayCellDescrpAry[colId] == "MoneyIn")) && (auxButtonTxt != "Clear")) { //withdrawn or paidin cell so run this function	
+		START("withdrawnPaidinAjaxSend()");	
 		valSet(editableCellIdValHldr, 0); //resets the id value holder pointed to by editableCellIdValHldr
 		if (cellId != 0) { //the cell that was previously in focus before the current cell that triggered this atomicAjaxCall was an editable one, and may have a new value in it
 			var accountName = document.getElementById(cellId.split("-")[0]+"-"+getKeyFromValue(headingAry, "Account")).innerText //gets the name from the Account column
@@ -559,12 +581,14 @@ function withdrawnPaidinAjaxSend(arry, editableCellIdValHldr, moneyWarnClass, di
 			arry["compoundGroupAry"] = compoundGroupAry(cellId, withdrnId, paidinId, compoundGroupIdrAry, colClssAry, isBankAcc); //create an array of cellIds corresponding to the compound group of withdrawn values potentially affected by the withdrawn or paidin edit
 			arry["withdrawnPaidinAjaxSendHasRun"] = true;
 		}
+		FINISH("withdrawnPaidinAjaxSend()");
 	}
 	return arry;
 }
 
 function withdrawnPaidinAjaxReceive(arry, arryBackFromPhp) {
 	if (existsAndTrue(arryBackFromPhp, "PHPupdateWithdrawnPaidinHasRun")) { //only run if complementary send function has already run
+		START("withdrawnPaidinAjaxReceive()");
 		var compoundGroupAry = arry["compoundGroupAry"];
 		var withdrawnAry = compoundGroupAry["withdrawnAry"];
 		var paidinAry = compoundGroupAry["paidinAry"];
@@ -579,6 +603,7 @@ function withdrawnPaidinAjaxReceive(arry, arryBackFromPhp) {
 		var paidinOrgSuffixClassAry = compoundGroupAryBack["paidinOrgSuffixClassAry"];
 		chkAndUpdtValueAndClasSfx(idrAry, withdrawnColId, updatedWithdrawnAry, withdrawnAry, withdrnOrgSuffixClassAry);
 		chkAndUpdtValueAndClasSfx(idrAry, paidinColId, updatedPaidInAry, paidinAry, paidinOrgSuffixClassAry);
+		FINISH("withdrawnPaidinAjaxReceive()");
 	}
 }
 
@@ -587,6 +612,7 @@ function directStrEditAjaxSend(arry, editableCellIdValHldr, cellWarnClass, displ
 	cellId = valGet(editableCellIdValHldr);
 	var colId = cellId.split("-")[1]; //get the column number that was clicked
 	if (((displayCellDescrpAry[colId] == "Reference") || (displayCellDescrpAry[colId] == "Note")) && (auxButtonTxt != "Clear")) { //an editable cell so run this function - DON'T run if Clear clicked
+		START("directStrEditAjaxSend()");
 		valSet(editableCellIdValHldr, 0); //resets the id value holder pointed to by editableCellIdValHldr
 		if (cellId != 0) { //the cell that was previously in focus before the current cell that triggered this atomicAjaxCall was an editable one, and may have a new value in it
 			var value = document.getElementById(cellId).innerText; //get string value held in the cell
@@ -601,6 +627,7 @@ function directStrEditAjaxSend(arry, editableCellIdValHldr, cellWarnClass, displ
 			arry["editableCellVal"] = sanitiseText(value);
 			arry["directStrEditAjaxSendHasRun"] = true;
 		}
+		FINISH("directStrEditAjaxSend()");
 	}
 	return arry;
 }
@@ -608,6 +635,7 @@ function directStrEditAjaxSend(arry, editableCellIdValHldr, cellWarnClass, displ
 
 function directStrEditAjaxReceive(arry, arryBackFromPhp) {
 	if (existsAndTrue(arryBackFromPhp, "PHPupdateEditableItemHasRun")) { //only run if complementary send function has already run
+		START("directStrEditAjaxReceive()");
 	    var updatedEditableStr = arryBackFromPhp["updatedEditableStr"]; //returned  value
 	    if (valGet("allowedToEdit") == "Yes") { //only check for match of sent and return data before removing warning class if editing rights are given - with no editing rights the current table values will always be returned and the table will remain unaltered
 
@@ -619,16 +647,19 @@ function directStrEditAjaxReceive(arry, arryBackFromPhp) {
 	    	document.getElementById(arry["editableCellId"]).className = arry["editableCellOrgClass"];
 	    }
 	    document.getElementById(arry["editableCellId"]).innerText = updatedEditableStr; //copy value read from table for complete confirmation that the edit has completed (or orig value re-enstated)
+	    FINISH("directStrEditAjaxReceive()");
 	}
 }
 
 
 function getBalDataSend(arry, cellId, recStartDate, recEndDate, runBalFunc) {
 	if (runBalFunc == "Yes") {
+		START("getBalDataSend()");
 		arry["cellIdBal"] = cellId;
 		arry["recStartDate"] = recStartDate;
 		arry["recEndDate"] = recEndDate;
 		arry["getBalDataSendHasRun"] = true;
+		FINISH("getBalDataSend()");
 	}
 	return arry;
 }
@@ -647,6 +678,7 @@ function getBalDataReceive(
 	docOnlyBalId
 	) {
 	if (existsAndTrue(arryBackFromPhp, "PHPgetFilterStrAllBalDataHasRun")) { //only run if complementary send function has already run
+		START("getBalDataReceive()");
 	    document.getElementById(OrdWithdrawnId).innerText = formatTo2DecPlcs(arryBackFromPhp["withdrawnNorm"], true); //set element to cleaned withdrawn value.
 	    document.getElementById(OrdPaidInId).innerText = formatTo2DecPlcs(arryBackFromPhp["paidInNorm"], true);
 	    document.getElementById(OrdBalId).innerText = formatTo2DecPlcs(arryBackFromPhp["balanceNorm"], true);
@@ -658,10 +690,12 @@ function getBalDataReceive(
 	    document.getElementById(docOnlyWithdrawnId).innerText = formatTo2DecPlcs(arryBackFromPhp["withdrawnDoc"], true);
 	    document.getElementById(docOnlyPaidInId).innerText = formatTo2DecPlcs(arryBackFromPhp["paidInDoc"], true);
 	    document.getElementById(docOnlyBalId).innerText = formatTo2DecPlcs(arryBackFromPhp["balanceDoc"], true);
+	    FINISH("getBalDataReceive()");
 	}
 }
 
 function docUpdateSend(arry, docUpdateCellId, accountBankLinksArry, auxButtonTxt) {
+	START("docUpdateSend()");
 	var currentDocRnd = document.getElementById(docUpdateCellId.split("-")[0]+"-docRnd").name;
 	var previousDocRnd = valGet("previousDocRnd");
 	//arry["accountIsRelevant"] = "No"; //set flag to default "No" that indicates to updateDocFilename() that the account is relevant (i.e. "General") when request is to display a reconciling bank statement
@@ -677,11 +711,13 @@ function docUpdateSend(arry, docUpdateCellId, accountBankLinksArry, auxButtonTxt
 		arry["auxButtonTxt"] = auxButtonTxt;
 		arry["docUpdateSendHasRun"] = true;
 	}
+	FINISH("docUpdateSend()");
 	return arry;
 }
     
 function docUpdateReceive(arry, arryBackFromPhp) {
 	if ((existsAndTrue(arryBackFromPhp, "PHPupdateDocFilenameHasRun")) && (arryBackFromPhp["docChanged"] == "Yes")) { //only run if complementary send function has already run
+		START("docUpdateReceive()");
 		if (valGet("previousObscureFile") == "obscureTest.php") { //set previousObscureFile value holder to obscureTest2.php and obscureTest.php alternately to fool pdfjs
 			valSet("previousObscureFile", "obscureTest2.php"); //toggle file name
 			document.getElementById("pdfIframe").src  = "./web/viewer.html?file="+docFilename2+"#page="+pageNum+"&zoom=100";
@@ -690,6 +726,7 @@ function docUpdateReceive(arry, arryBackFromPhp) {
 			valSet("previousObscureFile", "obscureTest.php"); //toggle file name
 			document.getElementById("pdfIframe").src  = "./web/viewer.html?file="+docFilename+"#page="+pageNum+"&zoom=100";
 		}
+		FINISH("docUpdateReceive()");
 	}
 }
 
@@ -700,6 +737,27 @@ function docUpdateReceive(arry, arryBackFromPhp) {
 //                                                                                                 #################
 //                                                                                                 #################
 //                                                                                                 #################
+
+
+/* Changes the visibility of rows that exist but are hidden by default in the current display view because they are excluded by filter settings. The criteria for controlling a row's visibility is that it has a matching compound number. showHide parameter determines whether the row will be be made visible or invisible by calling this function. */
+function showHideCompoundRows(cellId, compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, showHide) {
+	START("showHideCompoundRows()");
+	var rowId = cellId.split("-")[0];
+	if (compoundTypeAry[rowId] != "None") {
+		var compoundNumIdrAry = getcompoundNumIdrAry(compoundGroupIdrAry, rowId); //indexed subarray of idRs grouped by a common compound number
+		for (var i = 0; i < compoundNumIdrAry.length; i++) { //loop through all idRs of compound group belonging to clicked cell
+			if (compoundHiddenAry[compoundNumIdrAry[i]] == true) { //only process if row belongs to the list of compounds hidden by default (filtered)
+				if (showHide == "Show") {
+					document.getElementById(compoundNumIdrAry[i]).style.display = 'flex';
+				}
+				else {
+					document.getElementById(compoundNumIdrAry[i]).style.display = 'none';
+				}
+			}
+		}
+	}
+	FINISH("showHideCompoundRows()");
+}
 
 
 /* Uses passed cell ids, amount, array of compound numbers linked to idRs, colour suffix class array, and bank account flag to calculate amount values for withdrawn and paidin to maintain a consistant sum for all cells in the compound group. Returns an object (array) with subarrays of idRs, colIds, amounts and original class suffixes (which this function replaces with "waitingForServer" ones) in the form:
@@ -734,6 +792,7 @@ function docUpdateReceive(arry, arryBackFromPhp) {
 }
 } */
 function compoundGroupAry(cellId, withdrnId, paidinId, compoundGroupIdrAry, colClssAry, isBankAcc) {
+	START("compoundGroupAry()");
 	var compoundNumIdrAry = getcompoundNumIdrAry(compoundGroupIdrAry, withdrnId.split("-")[0] ); //indexed subarray of idRs grouped by a common compound number with the edit cell idR extracted from withdrnId
 	var keyOfEditIdr = getKeyFromValue(compoundNumIdrAry, withdrnId.split("-")[0]);
 	var withdrawnAry = compoundNumIdrAry.map(getCellValues, {cellId: withdrnId}); //map via compoundNumIdrAry() to get an array of withdrawn ammounts in the compound group
@@ -754,6 +813,7 @@ function compoundGroupAry(cellId, withdrnId, paidinId, compoundGroupIdrAry, colC
 		return changeSuffixClass((rowId+"-"+colId), this.colClssAry["waitingForServer"]); //return original suffix for assembly into an array and replace it with temporary "waitingForServer" one
 	}
 	applyAmountRules(amountsAry); //amountsAry is passed by reference so can be modified within function an doesn't need to be returned (THIS IS THE CASE FOR MANY ajax FUNCTIONS BUT RETURNS ARE USED FOR CLARITY TO INDICATE WHAT'S GOING ON !)
+	FINISH("compoundGroupAry()");
 	return amountsAry;
 }
 
@@ -761,6 +821,7 @@ function compoundGroupAry(cellId, withdrnId, paidinId, compoundGroupIdrAry, colC
 
 
 function applyAmountRules(amountsAry) {
+	START("applyAmountRules()");
 	var isBankAcc = amountsAry["isBankAcc"];
 	var editCellId = amountsAry["cellId"];
 	var editColId = editCellId.split("-")[1];
@@ -859,10 +920,12 @@ function applyAmountRules(amountsAry) {
 			amountsAry["paidinAry"] = paidinResultssAry;
 		}
 	}
+	FINISH("applyAmountRules()");
 }
 
 /* Swaps all values from one array to the other, except at index position keyOfEditIdr.  */
 function swapAllExceptKeyOfEditIdr(sourceAry1, sourceAry2, keyOfEditIdr) {
+	START("swapAllExceptKeyOfEditIdr()");
 	for (var slaveIdx = 0; slaveIdx < sourceAry1.length; slaveIdx++) {
 		if (slaveIdx == keyOfEditIdr)  { //slave matching keyOfEditIdr
 			//leave arrays as they are at thie position
@@ -873,10 +936,12 @@ function swapAllExceptKeyOfEditIdr(sourceAry1, sourceAry2, keyOfEditIdr) {
 			sourceAry2[slaveIdx] = sourceAry1Temp;
 		}
 	}
+	FINISH("swapAllExceptKeyOfEditIdr()");
 }
 
 /* Applies the rules by taking the values from the source array and creating an editedResultsAry from the original [].  */
 function applySlaveRules(sourceAry, keyOfEditIdr, editedResultsAry, zeroedResultsAry) {
+	START("applySlaveRules()");
 	//var editedResultsAry = [];
 	//var zeroedResultsAry = [];
 	var sumOfAllExceptTwo = getsumOfAllExceptTwo(sourceAry, keyOfEditIdr); //gets sum of all the rest of the slaves except the two that will be changed
@@ -895,17 +960,21 @@ function applySlaveRules(sourceAry, keyOfEditIdr, editedResultsAry, zeroedResult
 		}
 		zeroedResultsAry[slaveIdx] = 0; //clear other side of pair
 	}
+	FINISH("applySlaveRules()");
 }
 
 
 /* Sorts and array in numerically, in terms of absolute value disrigarding sign. e.g. [7,2,5] becomes [7,5,2] and [-4,-8,-3] becomes [-8,-4,-3]. The array doesn't need to be returned as it is passed by reference. */
 function sortNumAryDesPosAndNeg(aryToSort) {
+	START("sortNumAryDesPosAndNeg()");
 	aryToSort.sort(function(a, b){return Math.abs(b) - Math.abs(a)});
+	FINISH("sortNumAryDesPosAndNeg()");
 }
 
 
 /* Returns the sum of the values in all cellValuesAry positions greater than index 0, except the one indexed by keyOfEditIdr and the one below it (or above it if it's the last one). keyOfEditIdr index values of 0 or greater than the last index in the array will return 0. */
 function getsumOfAllExceptTwo(cellValuesAry, keyOfEditIdr) {
+	START("getsumOfAllExceptTwo()");
 	var acruedSlaveValues = 0;
 	if 	((cellValuesAry.length <= keyOfEditIdr) || (keyOfEditIdr == 0)) { 
 		return 0;
@@ -924,41 +993,48 @@ function getsumOfAllExceptTwo(cellValuesAry, keyOfEditIdr) {
 			acruedSlaveValues += cellValuesAry[slaveIdx]; //acrue the values of all except the one indexed by keyOfEditIdr and the one below it (or above it if it's the last one)
 		}
 	}
+	FINISH("getsumOfAllExceptTwo()");
 	return (acruedSlaveValues);
 }
 
 
 function smartMoneyDiv(dividend, divisor) {
+	START("smartMoneyDiv()");
 	if (dividend == 0) {
 		return 0;
 	}
 	else {
 		if (dividend < 0) { //dividend is -ve
-			console.log((dividend / divisor) + 0.003);
+			conLog((dividend / divisor) + 0.003);
 			return Number ( (-( ((-dividend / divisor) + 0.003) .toFixed(2) )).toFixed(2)  ); 
 		}
 		else {
-			console.log((dividend / divisor) + 0.003);			
+			conLog((dividend / divisor) + 0.003);			
 			return Number(((dividend / divisor) + 0.003).toFixed(2));
 		}
 	}
+	FINISH("smartMoneyDiv()");
 }
 
 
 /* Returns the indexed subarray of idRs grouped by a common compound number with the passed idR. If no match is found (say if idR is not part of a compound group) a one item array of idR is returned  */
 function getcompoundNumIdrAry(compoundGroupIdrAry, idR) {
+	START("getcompoundNumIdrAry()");
 	for (let key in compoundGroupIdrAry) { //loop through all objects (indexed subarrays) in the compoundGroupIdrAry
 		subarray = compoundGroupIdrAry[key]; //extract each subarry as the loop iterates
 		for (var i = 0; i < subarray.length; i++) { //go through each position in the current subarray
 			if (subarray[i] == idR) { //if given idR matches a subarray value (idR)
+				FINISH("getcompoundNumIdrAry()");
 				return compoundGroupIdrAry[key]; //use the key of the subarray to return the indexed subarray of idRs in teh compound group
 			}
 		}
 	}
+	FINISH("getcompoundNumIdrAry()");
 	return [idR]; //no matching idR found (idR is not part of a compound group?) so simiply return the search idR itself
 }
 
 function chkAndUpdtValueAndClasSfx (idrAry, colId, updatedValueAry, origValueAry, orgSuffixClassAry) {
+	START("chkAndUpdtValueAndClasSfx()");
 	//alert("In chkAndUpdtValueAndClasSfx !");
 	for (var i = 0; i < idrAry.length; i++) { //loop through all idr indexes (same index will be used for updatedValueAry and orgSuffixClassAry)
 		cellId = idrAry[i]+"-"+colId;
@@ -969,22 +1045,26 @@ function chkAndUpdtValueAndClasSfx (idrAry, colId, updatedValueAry, origValueAry
 			changeSuffixClass(cellId, orgSuffixClassAry[i]);
 		}
 	}
+	FINISH("chkAndUpdtValueAndClasSfx()");
 }
 
 
 
 /* Goes down column of cells, determined by array of row idRs and colId, copying classes to an array indexed by idR and returns the array. */
 function getAryOfClasses(idrAry, colId) {
+	START("getAryOfClasses()");
 	var savedCellClassesArry = {};
 	idrAry.forEach(function(idR) { //loop through all rows
 		savedCellClassesArry[idR] = document.getElementById(idR+"-"+colId).className; //save class
 		
 	});
+	FINISH("getAryOfClasses()");
 	return savedCellClassesArry;
 }
 
 
 function setSeveralClasses(elementId, arrayOfClasses) {
+	START("setSeveralClasses()");
 	var elementClass = "";
 	arrayOfClasses.forEach(myFunction);
 	function myFunction(value, index) {
@@ -996,12 +1076,14 @@ function setSeveralClasses(elementId, arrayOfClasses) {
 	  	}
 	}
 	document.getElementById(elementId).className = elementClass; //set to selected class
+	FINISH("setSeveralClasses()");
 }
 
 
 
 /* For the element identified by elementId any preexisting OldsuffixClass of a compound class (like "mainClass oldSuffixClass") is returned. If there is no preexisting OldsuffixClass "" is returned.  */
 function getSuffixClass(elementId) {
+	START("getSuffixClass()");
 	var combinationClass = document.getElementById(elementId).className.split(" ");
 	if (2 == combinationClass.length) { //a preexisting oldSuffixClass exists
 		return combinationClass[1];
@@ -1009,10 +1091,12 @@ function getSuffixClass(elementId) {
 	else { //no preexisting oldSuffixClass so return ""
 		return "";
 	}
+	FINISH("getSuffixClass()");
 }
 
 /* For the element identified by elementId any preexisting OldsuffixClass of a compound class (like "mainClass oldSuffixClass") is returned for storage (if required) and replaced by the passed newSuffixClass. If there is no preexisting OldsuffixClass "" is returned, and the mainClass is suffixed with a space followed by the passed newSuffixClass to create a new compound class. If newSuffixClass is not passed or it is "" any preexisting OldsuffixClass is removed along with its preceding space.  */
 function changeSuffixClass(elementId, newSuffixClass = "") {
+	START("changeSuffixClass()");
 	var combinationClass = document.getElementById(elementId).className.split(" ");
 	var mainClass = combinationClass[0];
 	if(2 == combinationClass.length) { //a preexisting oldSuffixClass exists
@@ -1023,6 +1107,7 @@ function changeSuffixClass(elementId, newSuffixClass = "") {
 		else { //passed newSuffixClass empty or not given so just set mainClass (effectively removing any preexisting oldSuffixClass and preceding space)
 			document.getElementById(elementId).className = mainClass;
 		}
+		FINISH("changeSuffixClass()");
 		return oldSuffixClass;
 	}
 	else { //no preexisting oldSuffixClass so if it exists concatonate newSuffixClass to mainClass and return ""
@@ -1032,6 +1117,7 @@ function changeSuffixClass(elementId, newSuffixClass = "") {
 		else {
 			//do nothing - existing mainClass will remain undisturbed
 		}
+		FINISH("changeSuffixClass()");
 		return "";
 	}
 }
@@ -1040,13 +1126,16 @@ function changeSuffixClass(elementId, newSuffixClass = "") {
 
 /* For the element identified by elementId a suffix class is concatonated to the already existing class with, a space in between. If no suffix class is passed or it is "" nothing will change.  */
 function addSuffixClass(elementId, suffixClass = "") {
+	START("addSuffixClass()");
 	if (0 < suffixClass.length) {
 		document.getElementById(elementId).className = document.getElementById(elementId).className + " " + suffixClass; //set to selected class
 	}
+	FINISH("addSuffixClass()");
 }
 
 /* For the element identified by elementId that has a compound class (like "mainClass suffixClass") the suffix class is removed from the element and returned by this function for storage if required. For elements that already have only a mainClass with no space and suffixClass, nothing happens and "" is returned. */
 function getAndRemoveSuffixClass(elementId) {
+	START("getAndRemoveSuffixClass()");
 	var combinationClass = document.getElementById(elementId).className.split(" ");
 	if(1 < combinationClass.length) { //check that suffix class exists
 		var mainClass = classCombination[0];
@@ -1057,9 +1146,11 @@ function getAndRemoveSuffixClass(elementId) {
 	else { //no suffix class so return ""
 		return "";
 	}
+	FINISH("getAndRemoveSuffixClass()");
 }
 
 function toggleClickDown() {
+	START("toggleClickDown()");
 	if (autoClickDwnFromCalOrButPnl) { //toggle autoClickDwnFromCalOrButPnl to false
 		autoClickDwnFromCalOrButPnl = false;
 		eval(autoClickDownSubId+'changeButClass')(""); //function within subButPanelJSclickDown() to select/unselect button by changing the class - default "" means unselected
@@ -1071,31 +1162,45 @@ function toggleClickDown() {
 	}
 	var colName =  staticArys["displayCellDescrpAry"][valGet("seltdRowCellId").split("-")[1]];
 	eval(butPanelIdSuffix+colName+'getFocusBack')(); //target the function in the current button panel to shift focus from the auto button
+	FINISH("toggleClickDown()");
 }
 
 function consoleAry(arrayToDisplayInConsole) {
-	console.log(JSON.stringify(arrayToDisplayInConsole, null, 4));
+	if (consoleAryMode == "On") {
+		conLog(JSON.stringify(arrayToDisplayInConsole, null, 4));
+	}
+}
+
+function conLog(valueToDisplay) {
+	if (conLogMode == "On") {
+		console.log(valueToDisplay);
+	}
 }
 
 
 /* checks to see if an object is empty and returns true if it is (from stackoverflow)  */
 function isEmpty(obj) {
+	START("isEmpty()");
     for(var prop in obj) {
         if(obj.hasOwnProperty(prop))
             return false;
     }
+    FINISH("isEmpty()");
     return true;
 }
 
 
 /* Checks to see if the passed characters match the first few (or all if necessary) characters of a test string - case independent. Returns true for match, false for no match */
 function charsMatchStringStart(charsToMatch, testString) {
+	START("charsMatchStringStart()");
 	charsLowerCase = charsToMatch.toLowerCase();
 	testStringLowerCase = testString.toLowerCase();
 	if (testStringLowerCase.search(charsLowerCase) == 0) {
+		FINISH("charsMatchStringStart()");
 		return true;
 	}
 	else {
+		FINISH("charsMatchStringStart()");
 		return false;
 	}
 }
@@ -1103,38 +1208,45 @@ function charsMatchStringStart(charsToMatch, testString) {
 
 /* Returns the key or index for the given value. An array of values is passed as an argument for the key (index) selection to be made from. If no match is found -1 is returned  */
 function getKeyFromValue(aryOfValues, value) {
+	START("getKeyFromValue()");
 	for (i = 0; i < aryOfValues.length; i++) {
 		if (aryOfValues[i] == value) {
 			return i;
 		}
 	}
+	FINISH("getKeyFromValue()");
 	return -1;
 }
 
 
 /* removes all special/awkward characters and only passes through those that can faithfully be written up to the database table and got back again. REMOVES NEWLINE CHARACTERS!! */
 function sanitiseText(inputText) {
+	START("sanitiseText()");
 	var firstPass = inputText.replace(/\r?\n|\r/g, ' '); //removes \n and \r or combination(?) and replaces them with a single space character
 	var secPass = firstPass.replace(/\"|\&|\+|\\/g, ''); //removes " & + \  (these symbols upset things! Not sure exactly at what point in the process - needs further research/workarounds)
 	var thirdPass = secPass.replace(/\,/g, ''); //removes ,  as it upsets downloaded csv file (obviously!!)
 	var fourthPass = thirdPass.trim(); //removes leading and trailing whitespace
+	FINISH("sanitiseText()");
 	return fourthPass;
 }
 
 function replaceNewLine(inputText) {
-	return inputText.replace( /\r?\n/gi, '' );
+	START("replaceNewLine()");
+	var replacedText = inputText.replace( /\r?\n/gi, '' );
+	FINISH("replaceNewLine()");
+	return replacedText;
 }
 
 
 function strToHex(strng){
+	START("strToHex()");
     var hex, i, singleHex;
-
     var result = "";
     for (i=0; i < strng.length; i++) {
         hex = strng.charCodeAt(i).toString(16);
         result += ("000"+hex).slice(-4)+" ";
     }
-
+    FINISH("strToHex()");
     return result
 }
 
@@ -1189,10 +1301,12 @@ function keyUpDetectDEPR(event) {
 /* 
 Called by monthSelSideBar.php - when a month button is pressed while shift button is held down this function suffixes "-mnthButShift" to the value of that button which is collected as a subSubCommand in monthSelProcess.php and forces selection of a range of months. */
 function detectShiftBut(event, id) {
+	START("detectShiftBut()");
 	if (event.shiftKey) {
 		var command = document.getElementById(id).value;
 		document.getElementById(id).value = command+"-mnthButShift";
 	}
+	FINISH("detectShiftBut()");
 }
 
 /* Deals with clicks on the header section ACTIONS HAVE BEEN MOVED TO clickField() */
@@ -1211,6 +1325,7 @@ function clickHeaderDEPRECATED(event) {
 
 /* called when something is keyed or pasted into an editable div - records the id of the div in editableCellIdHldr so the data in the newly changed cell can be accessed when it loses focus.  */
 function changeField(event) {
+	START("changeField()");
 	var id = event.target.id;
 	//alert(id);
 	if (event.keyCode != 13) { //key other than return pressed so log cell id
@@ -1228,11 +1343,13 @@ function changeField(event) {
 			document.getElementById(valGet("seltdRowCellId")).focus();
 		}
 	}
+	FINISH("changeField()");
 }
 
 
 /* when called with the id of a cell in the form "342-7" and an indexed array of the idRs for all rows, in display order, in the form ["321", "342", "129", ...] the cell immediately below the one referenced by id will be selected and brought into focus exactly as if it had been clicked with the mouse. If there is no cell below the cell in the top row of the same column will be selected. */
 function clickCellBelow(id, idrAry, source) {
+	START("clickCellBelow()");
 	allowSetSticky = false; //inhibit sticky in case rapid clicking of sucessive calendar or butPanel buttons triggers it - it is re-enabled after double click detection block at beginning of doEverything()
 	fromClickCellCmnd = true; //indicates that the cell click has come from one of the button panels and not a mouse click on the display area
 	if ((autoClickDwnFromCalOrButPnl || (source == "From Return Key")) && Array.isArray(idrAry) && (0 < idrAry.length) && atomicAjaxCallCompleted) { //check to see that some idRs exist - indicates page isn't empty! Also that an ajax call isn't still waiting to complete
@@ -1249,20 +1366,24 @@ function clickCellBelow(id, idrAry, source) {
 		//doEverything(newCellId, false, false, ""); //alternate way (with focus) of selecting the cell without using click() - seems to work and may be useful in some circumstances
 		document.getElementById(newCellId).focus();
 	}
+	FINISH("clickCellBelow()");
 }
 
 
 function returnPress(event) { //BECAUSE changeField() IS NOW EXECUTED IN clickField(event) PRESSING RETURN ONLY UPDATES paidin and withdrawn fields WHEN A CELL IS CLICKED (NEED TO FIX THIS !!)
-  if (event.keyCode === 13) {
+	START("returnPress()");
+  	if (event.keyCode === 13) {
     document.getElementById(valGet("seltdRowCellId")).blur(); //used to remove focus from the selected item. same effect as onchange() for paidin and withdrawn fields - does a submit of the value to server if there has been a change of value
     valSet("editableCellIdHldr", valGet("seltdRowCellId"));
    // upDatewithdrnPaidin(); // DEPRECATED - redirects to ajaxRecordsWithdrawnPaidinAndCellsUpdate() in this file, which makes a server call to update the record for the clicked field to  the withdrawn or paidin value
-  }
+  	}
+  	FINISH("returnPress()");
 }
 
 
 /* Sets class of item pointed to by itemKeySelected (uses baseIdRand for disambiguation) to onClass and all other classes (designated by baseIdRand along with each id from itemKeysCsv) to offClass. */
 function setOneStrClassUnsetRest(baseId, onClass, offClass, itemKeysCsv, itemKeySelected) {
+	START("setOneStrClassUnsetRest()");
     if ((2 < itemKeysCsv.length) && (0 < itemKeySelected)) { //this function body is only allowed to run if there is at least "1,2" in the itemKeysCsv and itemKeySelected contains an actual value other than 0. This is because it (probably the split or loop) misbehaves and doesn't complete. The consequence of this is that any buttons don't have their classes changed unless there are at least 3 of them. This could be rewritten to fix.
       var itemKeysAry = itemKeysCsv.split(',');
       var idxSelected = itemKeysAry.indexOf(itemKeySelected.toString());
@@ -1272,24 +1393,34 @@ function setOneStrClassUnsetRest(baseId, onClass, offClass, itemKeysCsv, itemKey
       }
       document.getElementById(baseId+idxSelected).className = onClass;
     }
+    FINISH("setOneStrClassUnsetRest()");
 }
 
 /* Converts passed $date string by reversing it, e.g. "07-04-2020" to "2020-04-07" or "2020-04-07" to "07-04-2020" to change to and from database table format when required for display in "07-04-2020" format. */
 function reverseDate(date) {
+	START("reverseDate()");
 	var dateAry = date.split("-");
-	return dateAry[2]+"-"+dateAry[1]+"-"+dateAry[0]; 
+	var reversedDate = dateAry[2]+"-"+dateAry[1]+"-"+dateAry[0]; 
+	FINISH("reverseDate()");
+	return reversedDate;
 }
 
 /* Converts passed date string, $date, (which is in the form "07-04-2020") by reversing it, removing the separator "-"s, and returning "20200407" which can be used directly for comparisons such as > < ==. */
 function reverseDateNumsOnly(date) {
+	START("reverseDateNumsOnly()");
 	var dateAry = date.split("-");
-	return dateAry[2]+dateAry[1]+dateAry[0]; 
+	var reversedDateNumsOnly = dateAry[2]+dateAry[1]+dateAry[0];
+	FINISH("reverseDateNumsOnly()");
+	return reversedDateNumsOnly; 
 }
 
 /* Converts passed date string, $date, (which is in the form "07-04-2020" or "2020-04-07") by removing the separator "-"s, and returning "07042020" or "20200407" which can be used directly for comparisons such as > < ==. */
 function dateNumsOnly(date) {
+	START("dateNumsOnly()");
 	var dateAry = date.split("-");
-	return dateAry[0]+dateAry[1]+dateAry[2]; 
+	var dateNumbersOnly =dateAry[0]+dateAry[1]+dateAry[2];
+	FINISH("dateNumsOnly()");
+	return dateNumbersOnly; 
 }
 
 /* highlights all the rows that use the displayed document. Does lots of additional things too! */
@@ -1311,13 +1442,13 @@ function selectTableRowsForDoc(
 	docLineCountDispId,
 	from
 	) {
+	START("selectTableRowsForDoc()");
 	var columnAry = columnCsv.split(",");
 	var currentDocRnd = document.getElementById(elementId.split("-")[0]+"-docRnd").name; //get the random that is associated with the current doc
 	var recsAry = document.getElementsByName(currentDocRnd); //get an array of all the elements that have the name attribute set to the same random as the current doc 
 	for(idx = 0; idx < recsAry.length; idx++) { //loop through all records that have the same doc random
 		var rowId = recsAry[idx].id.split("-")[0]; //get the id of the current element and extract the first integer - the bit before the '-' which is the row id
-		//console.log(recsAry[idx].value+" "+rowId);
-		//startTimeout();
+		//conLog(recsAry[idx].value+" "+rowId);
 		for(i = 0; i <= maxColIdx; i++) { //loop through all the columns in the row
 		    rowColIdx = rowId+"-"+i; //reconstruct the element id for each element the loop addresses
 		    if (-1 < columnAry.indexOf(i.toString())) { //if column is found in columnAry (derived from columnCsv) it is a filtered column
@@ -1378,6 +1509,7 @@ function selectTableRowsForDoc(
 	if (docLineCountDispId != "") { //"" is used if clearing a document selection with this function, the id of the doc line count display cell will only have a valid value during doc selection
 		document.getElementById(docLineCountDispId).innerText = idx; //display number of transactions associated with the selected document document
 	}
+	FINISH("selectTableRowsForDoc()");
 }
 
 
@@ -1388,6 +1520,7 @@ function selectTableRowsForDoc(
 and elementId resolves to cell "RcnclDate" the function examines (on the same row) the value in the "Account" cell to see if it equals "General" or "Cash" and the value in the "Budget" cell to see if it equals "FiSCAF" or "Reserved", if any case is a match "Match Success" will be returned, "Match Fail" otherwise. If conditionsObj contains nothing it is assumed the test is not required so "Nothing To Test" is returned. 
 USED TO BE SIMPLY true OR false WITH true RETURNED FOR BOTH "Match Success" AND "Nothing To Test" BUT IT WAS DECIDED TO DIFFERENTIATE THESE RESULTS TO ALLOW NUANCES, ALTHOUGH THIS FEATURE WAS NOT USED AS OF 2020-05-13. */
 function cellMatchInObj(dispCellDescrpAry, elementId, conditionsObj) {
+	START("cellMatchInObj()");
 	var match = "Match Fail";
 	var rowSelected = elementId.split("-")[0]; //extract the first integer of id - the bit before the first '-' which is the selected row id
   	var colSelectedValue = dispCellDescrpAry[elementId.split("-")[1]]; //extract the column string value using the second integer of id, the bit after the first '-', as an index
@@ -1409,13 +1542,14 @@ function cellMatchInObj(dispCellDescrpAry, elementId, conditionsObj) {
   	else { //no properties in conditionsObj match with the name of the column i.e. "RcnclDate" (this could also mean conditionsObj is empty) so default to true as decision is not required for this elementId
   		match = "Nothing To Test";
   	}
+  	FINISH("cellMatchInObj()");
   	return match;
 }
 
 
 /* First all button panels are made invisible and then, for the selected cell, the relevent identifier from the butPanelControlAry is used to unhide the specified button panel. Unless the test with conditionsObj succeeds or there is no relevant data for the current column (see description in cellMatchInObj() function) only the panel referenced by dummyButPanelId will displayed. If "None" is the identifier the panel referenced by dummyButPanelId will be displayed. Facilitates granular overriding of general no-edit directive for specific button panels (e.g. budget column) for specific users. */
 function selectButPanel(displayCellDescrpAry, fieldNameAry, butPanelControlAry, elementId, prefix, dummyButPanelId, noEditButPanelId, outerContainerForPanel, conditionsObj, restrictionsAry, edit) {
-	startTimeout("selectButPanel()");
+	START("selectButPanel()");
 	document.getElementById(outerContainerForPanel).style.display = 'inline'; //makes containing div visible (it is hidden by default so display area sits at the left for 'non-editing' users)
 	document.getElementById(noEditButPanelId).style.display = 'none';
 	for (index = 0; index < butPanelControlAry.length; index++) { //start by hiding all button panels
@@ -1426,11 +1560,16 @@ function selectButPanel(displayCellDescrpAry, fieldNameAry, butPanelControlAry, 
 		var objTestResult = cellMatchInObj(displayCellDescrpAry, elementId, conditionsObj);
 		if ((panelIdStrValue != "None") && ((objTestResult == "Match Success") || (objTestResult == "Nothing To Test")) ) { //the butPanelControlAry value indexed by elementId is not "None" and cellMatchInObj() passes test
 			document.getElementById(prefix+panelIdStrValue).style.display = 'inline';
-			eval(prefix+butPanelControlAry[elementId.split("-")[1]]+'initButPanel')(elementId); //target the initialisation function in the selected button panel using eval to assemble the name of the function which has been dynamically created in each button panel
+		var remoteFromEval = prefix+butPanelControlAry[elementId.split("-")[1]]+'initButPanel'; //removed from within eval statement for diagnosis to see what is taking a long time!
+			START("selectButPanel() 1st eval statement");
+			eval(remoteFromEval)(elementId); //target the initialisation function in the selected button panel using eval to assemble the name of the function which has been dynamically created in each button panel
+			FINISH("selectButPanel() 1st eval statement");
 		}
 		else {
 			document.getElementById(dummyButPanelId).style.display = 'inline'; //make visible the dummy button panel - no prefix required for this as it is incorporated into dummyButPanelId
+			START("selectButPanel() 2nd eval statement");
 			eval(dummyButPanelId+'initButPanel')(elementId); //target the initialisation function in the selected button panel using eval to assemble the name of the function which has been dynamically created in each button panel
+			FINISH("selectButPanel() 2nd eval statement");
 		}
 	}
 	else { //set for no edit so display default empty panel
@@ -1438,28 +1577,44 @@ function selectButPanel(displayCellDescrpAry, fieldNameAry, butPanelControlAry, 
 		eval(noEditButPanelId+'initButPanel')(elementId); //target the initialisation function in the selected button panel using eval to assemble the name of the function which has been dynamically created in each button panel
 	}
 	//checkTimeout("selectButPanel", 0);
+	FINISH("selectButPanel()");
 }
 
 
 
 /* Applies the appropriate class to a cell that has been selected to give the correct selection colour */
 function selectCell(elementId, colClssAry, standardSelClass, SnglSelEditableClass, rightAlignSelClass, blankClass, displayCellDescrpAry, cellSelectColorClass, cellSelectEditColorClass) {
-  var colId = elementId.split("-")[1];		
-  var displayCellDescrp = displayCellDescrpAry[colId];
-  if ((displayCellDescrp == "MoneyOut") || (displayCellDescrp == "MoneyIn") || (displayCellDescrp == "Reference") || (displayCellDescrp == "Note")) { //editable cell
-  	changeSuffixClass(elementId, colClssAry["cellSelEditCol"]);
-  }
-  else { //use normal select class
-  	changeSuffixClass(elementId, colClssAry["cellSelCol"]);
-  }
-  if (displayCellDescrp == "RcnclDate") { //reconcile date cell 
-  	var recnclDate = document.getElementById(elementId).innerText; //get reconciled date from selected cell
-	if (recnclDate == "01-01-2000") { //if default set to same text and background colour class to make invisible
-		changeSuffixClass(elementId, colClssAry["cellSelInvisCol"]);
+	START("selectCell()");
+	var colId = elementId.split("-")[1];		
+	var displayCellDescrp = displayCellDescrpAry[colId];
+	if ((displayCellDescrp == "MoneyOut") || (displayCellDescrp == "MoneyIn") || (displayCellDescrp == "Reference") || (displayCellDescrp == "Note")) { //editable cell
+		changeSuffixClass(elementId, colClssAry["cellSelEditCol"]);
 	}
-  } 
-
+	else { //use normal select class
+		changeSuffixClass(elementId, colClssAry["cellSelCol"]);
+	}
+	if (displayCellDescrp == "RcnclDate") { //reconcile date cell 
+		var recnclDate = document.getElementById(elementId).innerText; //get reconciled date from selected cell
+		if (recnclDate == "01-01-2000") { //if default set to same text and background colour class to make invisible
+			changeSuffixClass(elementId, colClssAry["cellSelInvisCol"]);
+		}
+	} 
+	FINISH("selectCell()");
 }
+
+//ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+//ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+//ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+//ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+//ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+//ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+//ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+//ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+//ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+//ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+//ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
+
+
 
 /* PROBABLY NOT GOING TO WORK BECAUSE JAVASCRIPT IS NOT MULTITHREADED SO THIS FUNCTION LOOP WILL JUST RUN AND HOGG ALL THE PROCESSOR TIME SO NOTHING EXTERNAL CAN MODIFY THE LOCKED VAR. Enters a loop that continually checks the lock flag to see if it is empty (" "). When it is empty a unique id is loaded into it and then it is checked again to make sure that the unique id is still the correct one and hasn't been replaced by another because of some race condition. Once verified the function exits.  */
 function waitForUnlock(lockFlagId, uniqueId) {
@@ -3139,51 +3294,71 @@ String.prototype.escapeSpecialChars = function() {
 };
 
 
-function startTimeout(nameOfCallingItem) {
-	checkTimeoutIndentNum++;
-	checkTimeoutNamesAry[0] = nameOfCallingItem;
-	var dateTest = new Date();
-	millisecStartTime = dateTest.getTime();
+
+
+function START(itemName) {
+	if (checkTimeMode != "Off") {
+		if (2000 < (timeMs() - checkTimeLastRun)) { //if it is more than 2 secs since last checktime START reset all variables
+			checkTimeLastRun = timeMs();
+			checkTimeStack = [];
+			checkTimeTabCount = 0;
+			console.log("EVERYTHING CLEARED !!");
+		}
+		console.log(getTab(checkTimeTabCount)+itemName+" {");
+		var curTimeAry = {"name":itemName, "time":timeMs(), "start":true, "tabCount":checkTimeTabCount};
+		checkTimeStack.push(curTimeAry); //push onto stack (really an array)
+		checkTimeTabCount++; //increment tabValue 
+	}
 }
 
-
-/* Checks the time since startTimeout() was called and if global variable checkTimeoutFunction is not set to "Off" and the elapsed time is equal to or greater than millisecThreshold a decision is made   */
-function checkTimeout(itemName, millisecThreshold) {
-	var dateTest = new Date();
-	if(((millisecStartTime + millisecThreshold) <= dateTest.getTime()) && (checkTimeoutFunction != "Off")) {
-		var timeReport = itemName+" - "+(dateTest.getTime() - millisecStartTime)+"mS";
-		if (checkTimeoutFunction == "Alert") {
-			alert(timeReport);
-		}
-		if (checkTimeoutFunction == "Console") {
-			console.log(timeReport);
+function FINISH(itemName) {
+	if (checkTimeMode != "Off") {
+		var curTimeAry = {"name":itemName, "time":timeMs(), "start":false};
+		checkTimeStack.push(curTimeAry); //push FINISH name etc. onto stack (really an array)
+		while ((2 <= checkTimeStack.length) && (checkTimeStack[checkTimeStack.length - 2]["start"] == true) && (checkTimeStack[checkTimeStack.length - 1]["start"] == false)) { // top 2 stack positions are a start and finish meaning, if nothing has gone wrong and all previous starts on same tab level have been finished, they should also have matching names
+			poppedFinish = popStack(checkTimeStack); //pop top of stack - this contains FINISH time of item displayed after closing "}"
+			poppedStart = popStack(checkTimeStack); //pop the START item too to get rid of it
+			var elapsedTime = poppedFinish["time"] - poppedStart["time"];
+			checkTimeTabCount--; //decrement tabValue
+			if (poppedFinish["name"] != poppedStart["name"]) {
+				console.log(getTab(checkTimeTabCount)+"}  "+elapsedTime+" NOT MATCHED! CLOSING BRACKET FOR - "+itemName);
+			}
+			else {
+				console.log(getTab(checkTimeTabCount)+"}  "+elapsedTime);
+			}
 		}
 	}
 }
 
-function startCheckTime(itemName) {
-	//append array with {name:itemName, time:currentTime,  print:notYet} (itemName to have tab(tabValue) prefixed)
-	//push aryIndex onto aryIndxStack with prefixed tab
-	//increment tabValue 
-
-}
-
-function endCheckTime() {
-	//pull aryIndex from aryIndxStack
-	//update time object at aryIndex position
-	//decrement tab value 
-	//if tab value == 0 print (itemName) down the way through array from latest printed marker setting each marker to printed
-}
 
 
 
-/* NOT WORKING ! */
-function delayMillisec(delaymS) {
-	var dateTest = new Date();
-	var endTime = dateTest.getTime() + delaymS;
-	while (dateTest.getTime() < endTime) {
-		//do nothing! - just wastes time
+
+function getTab(count) {
+	var tab = "";
+	if (count == 0) {
+		return "";
 	}
+	else {
+		for (var i = 1; i <= count; i++) {
+			tab = tab+".  ";
+		}
+		return tab;
+	}
+}
+
+function popStack(ary) {
+	if (0 < ary.length) {
+		return ary.pop();
+	}
+	else {
+		return -1;
+	}
+}
+
+function timeMs() {
+	var date = new Date();
+	return date.getTime();
 }
 
 
