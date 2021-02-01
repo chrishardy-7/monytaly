@@ -732,7 +732,8 @@ function createStndDisplData(
         $allowEdit,
         $allRecordsColNameRndAry,
         $displayBankAcc,
-        $colClssAry
+        $colClssAry,
+        $moneyDisplayStr
         ) {
     global $orgPersonsListAry;
     global $transCatListAry;
@@ -754,6 +755,7 @@ function createStndDisplData(
     $idrArry = array();
     $compoundTypeAry = []; //used to hold idRs of all compound lines. Each idR key will have a corresponding value that is either "Master" or "Slave"
     $compoundHiddenAry = []; //used to hold TRUE for a row that should be normally hidden (e.g. compound rows that are not normally visible because they are exluded by a filter action), FALSE if an ordinary or visible compound row that should normally be displayed. Each idR key will have a corresponding value that is either "Master" or "Slave"
+    $rowStatusArray = []; //will store any statuses created here in this php function and will be converted to a javascript array and used to dynamically store any statuses of rows that are changed by clicks etc.
     $previousLoopCompoundNum = -1; //initial setting so first loop iteration will always be seen as a new group - whether an actual group or just 0
     $tempCompoundIdrAry = [];
     $compoundGroupIdrAry = [];
@@ -882,14 +884,17 @@ function createStndDisplData(
     $displayLineSelClassesAry[] = $rowSelCellClass;
     $displayLineSelClassesAry[] = $rowSelCellClass;
     $displayLineSelClassesAry[] = $rowSelCellClass;
-    $displayLineSelClassesAry[] = $rowSelCellClass;
-
+    $displayLineSelClassesAry[] = $rowSelCellClass;    
     
     $recordsDataAryLength = count($recordsDataArry);
+
+
     foreach ($recordsDataArry as $recordsIdx=>$singleRecArry) { //loop through all persOrgs selected for display creating indexed array of values like "idR", "persOrgCategory" for each row to be displayed
         if (!(($download) && ($singleRecArry["compoundHidden"] == TRUE))) { //in download mode, if the row is a compound one that is normally hidden unless a member of the compound is clicked, don't create it
             $displayRowsAry = array();
             $displayRowsClassesAry = array();
+
+            $rowStatusArray[$singleRecArry["idR"]]["rowHidden"] = FALSE;
 
 
 //##############################
@@ -939,8 +944,23 @@ function createStndDisplData(
             $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
             $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; 
             $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
-            $displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass;
-            $displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass;
+
+            if ($moneyDisplayStr == "amountPaidIn") { //apends cells in the whole withdrawn column with blankedMoneyCol to warn that it is not in use
+                $displayRowsClassesAry[] = $moneyCellClass." ".$colClssAry["blankedMoneyCol"];
+            }
+            else {
+                $displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass;
+            }
+
+            if ($moneyDisplayStr == "amountWithdrawn") { //apends cells in the whole paidin column with blankedMoneyCol to warn that it is not in use
+                $displayRowsClassesAry[] = $moneyCellClass." ".$colClssAry["blankedMoneyCol"];
+            }
+            else {
+                $displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass;
+            }
+
+            //$displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass;
+            //$displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass;
             $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
             $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
             $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
@@ -1101,6 +1121,7 @@ function createStndDisplData(
     $returnAry["compoundHiddenAry"] = $compoundHiddenAry;
     $returnAry["compoundTypeAry"] = $compoundTypeAry;
     $returnAry["compoundGroupIdrAry"] = $compoundGroupIdrAry;
+    $returnAry["rowStatusArray"] = $rowStatusArray;
     
     return $returnAry;
 }
@@ -2088,7 +2109,7 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
         //-----
         echo '<div class='.$calDaysOfMnthDiv.'>';            
             $dayOfMnthButIdx = 0;
-            foreach ($dayOfMnthsAllAry as $dayOfMnthStr) {
+            foreach ($dayOfMnthsAllAry as $dayOfMnthStr) { //DAYS OF MONTH LOOP
                 $dayOfMnthClass = $dayOfMnthBtnClass;
                 if ($viewOnly) {
                     ?> <button
@@ -2105,7 +2126,9 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
                             type="button"
                             id="<?php echo $dayOfMnthUniqueId.$dayOfMnthButIdx;?>"
                             value="<?php echo $dayOfMnthStr;?>"
-                            onclick="setClassAndCopyNameUnique(
+                            onclick="
+                                if (notHiddenCompound()) { //only run this function to update the tables on the server if the row being edited isn't normally a hidden but has only been displayed because it's part of a filtered compound
+                                    setClassAndCopyNameUnique(
                                         '<?php echo $dayOfMnthUniqueId;?>',
                                         1,
                                         '<?php echo $dayOfMnthMaxId;?>',
@@ -2119,6 +2142,10 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
                                         '<?php echo $outerDivClass;?>'
                                     );
                                     <?php echo $uniqueId;?>updateRecsAndCellAutoDayOfMonth();
+                                }
+                                else {
+                                    messageChangeInhibited();
+                                }
                             "
                         >
                         <?php echo $dayOfMnthStr;?>
@@ -2133,7 +2160,7 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
         <!--     -->
         <?php echo '<div class='.$calMnthDiv.'>';
             $mnthButIdx = 0;
-            foreach ($mnthsAllAry as $mnthStr) {
+            foreach ($mnthsAllAry as $mnthStr) { //MONTH LOOP
                 $mnthClass = $mnthBtnClass;
                 if ($viewOnly) {
                     ?> <button
@@ -2150,7 +2177,9 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
                             type="button"
                             id="<?php echo $mnthUniqueId.$mnthButIdx;?>"
                             value="<?php echo $mnthStr;?>"
-                            onclick="setClassAndCopyNameUnique( //sets the clicked panel button to selected class and all others to unselected. Also copies selected date (i.e. 3) to month text box
+                            onclick="{
+                                if (notHiddenCompound()) { //only run this function to update the tables on the server if the row being edited isn't normally a hidden but has only been displayed because it's part of a filtered compound
+                                    setClassAndCopyNameUnique( //sets the clicked panel button to selected class and all others to unselected. Also copies selected date (i.e. 3) to month text box
                                         '<?php echo $mnthUniqueId;?>',
                                         1,
                                         '<?php echo $mnthMaxId;?>',
@@ -2160,6 +2189,11 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
                                     );
                                     <?php echo $uniqueId;?>setMaxDom(); //hides days of month higher than possible (i.e. 30 Feb!) and if one was previously set commutes it to next legal lower day and highlights cal in orange, also copies aggregate of day of month, month and year hidden text boxes to dateUniqueId text box as whole date: 2018-03-4                                   
                                     <?php echo $uniqueId;?>updateRecsAndCell(); //updates recordDate pointed to by recordUniqueId (row) and also updates the original selected element in the row an dcolumn display
+                                }
+                                else {
+                                    messageChangeInhibited();
+                                }
+                            }
                             "
                         >
                         <?php echo $mnthStr;?>
@@ -2173,7 +2207,7 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
         <!--     -->
         <?php echo '<div class='.$calYrDiv.'>';    
             $yrButIdx = 0;
-            foreach ($yrsAllAry as $yearStr) {
+            foreach ($yrsAllAry as $yearStr) { //YEARS LOOP
                 $yrClass = $yrBtnClass;
                 if ($viewOnly) {
                     ?> <button
@@ -2190,7 +2224,9 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
                             type="button"
                             id="<?php echo $yrUniqueId.$yrButIdx;?>"
                             value="<?php echo $yearStr; ?>"
-                            onclick="setClassAndCopyNameUnique(
+                            onclick="
+                                if (notHiddenCompound()) { //only run this function to update the tables on the server if the row being edited isn't normally a hidden but has only been displayed because it's part of a filtered compound
+                                    setClassAndCopyNameUnique(
                                         '<?php echo $yrUniqueId;?>',
                                         '<?php echo $baseYr;?>',
                                         '<?php echo $yrMaxId;?>',
@@ -2200,6 +2236,10 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
                                     );
                                     <?php echo $uniqueId;?>setMaxDom();
                                     <?php echo $uniqueId;?>updateRecsAndCell();
+                                }
+                                else {
+                                    messageChangeInhibited();
+                                }
                             "
                         >
                         <?php echo $yearStr; ?>
@@ -2556,29 +2596,34 @@ function butPanelJSInteracStrOnly(
         <?php echo $uniqueId;?>presetValNotUsedYet = false; //set to false so from here on the button function will operate normally with no reference to the presetVal
     }
     function <?php echo $uniqueId;?>clickPanelButs(event) { //uses clicked button id to get inner text and compare it with each panel button text to set the matching one to 'selected' and others to 'not selected'. Then calls ajaxRecordsItemAndCellUpdate() to update table record on server with clicked button value and eventually from data echoed back from the server update the cell that has activated this button panel
-        var selButId = event.target.id;
-        var idxMax = <?php echo $index - 1;?>; //maximum panel button id (they start at 0)     
-        var idPrefix = '<?php echo $itemUniqueId;?>'; //unique prefix (derived in php code above) to be used to distinguish these buttons from those in other instances of button panel
-        var selButStr = inrGet(selButId); //the text of the selected button on this button panel
-        for (i = 0; i <= idxMax; i++) { //loop through all the panel button ids
-            var butStr = inrGet(idPrefix+i); //for each iteration of the loop get the text from the relevant button        
-            if (selButStr == butStr) { //if the calling cell text matches the current loop button set that button to 'selected' by changing the class
-                document.getElementById(idPrefix+i).className = '<?php echo $btnSelectedClass;?>';
-            }
-            else { //if the calling cell text doesn't match the current loop button set that button to 'not selected' by changing the class
-                document.getElementById(idPrefix+i).className = '<?php echo $btnClass;?>';
-            }
-        } 
-        idOfCellToUpdate = valGet("<?php echo $itemCellUniqueId;?>"); //save current cell id so it can be used by ajaxRecordsItemAndCellUpdate() below (it will be altered by clickCellBelow() in next line)  
-        clickCellBelow(valGet("seltdRowCellId"), idrAry, "From Buttons"); //selects same cell in row below the current one, same as clicking by the mouse - this function may be internally allowed / inhibited as required
-        document.getElementById('<?php echo $homeInDivId;?>').focus(); //focuses on the home in area to blur (deselect) the button that has just been clicked
-        ajaxRecordsItemAndCellUpdate(
-            idOfCellToUpdate,
-            selButStr,
-            '<?php echo $filepath;?>',
-            '<?php echo $fileRndm;?>',
-            '<?php echo $cellClassWarn;?>'
-        )
+        if (notHiddenCompound()) { //only run this function to update the tables on the server if the row being edited isn't normally a hidden but has only been displayed because it's part of a filtered compound
+            var selButId = event.target.id;
+            var idxMax = <?php echo $index - 1;?>; //maximum panel button id (they start at 0)     
+            var idPrefix = '<?php echo $itemUniqueId;?>'; //unique prefix (derived in php code above) to be used to distinguish these buttons from those in other instances of button panel
+            var selButStr = inrGet(selButId); //the text of the selected button on this button panel
+            for (i = 0; i <= idxMax; i++) { //loop through all the panel button ids
+                var butStr = inrGet(idPrefix+i); //for each iteration of the loop get the text from the relevant button        
+                if (selButStr == butStr) { //if the calling cell text matches the current loop button set that button to 'selected' by changing the class
+                    document.getElementById(idPrefix+i).className = '<?php echo $btnSelectedClass;?>';
+                }
+                else { //if the calling cell text doesn't match the current loop button set that button to 'not selected' by changing the class
+                    document.getElementById(idPrefix+i).className = '<?php echo $btnClass;?>';
+                }
+            } 
+            idOfCellToUpdate = valGet("<?php echo $itemCellUniqueId;?>"); //save current cell id so it can be used by ajaxRecordsItemAndCellUpdate() below (it will be altered by clickCellBelow() in next line)  
+            clickCellBelow(valGet("seltdRowCellId"), idrAry, "From Buttons"); //selects same cell in row below the current one, same as clicking by the mouse - this function may be internally allowed / inhibited as required
+            document.getElementById('<?php echo $homeInDivId;?>').focus(); //focuses on the home in area to blur (deselect) the button that has just been clicked
+            ajaxRecordsItemAndCellUpdate(
+                idOfCellToUpdate,
+                selButStr,
+                '<?php echo $filepath;?>',
+                '<?php echo $fileRndm;?>',
+                '<?php echo $cellClassWarn;?>'
+            )
+        }
+        else {
+            messageChangeInhibited();
+        }
     }
 
     </script>

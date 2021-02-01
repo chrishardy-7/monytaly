@@ -106,6 +106,35 @@ class persistVar {
 }
 
 
+/* Provides control over which money columns are displayed so that rows with either withdrawn or paidin can be selectively hidden, or both can be displayed.  */
+class moneyCols {
+	public $name;
+
+	function __construct($name, $reset) {
+		$this->name = $name; // save locally so $nonVolatileArray can be modified as needed
+		if (!nonVolAryKeyExists($name) || $reset) { //if $nonVolatileArray key doesn't exist, or reset is true, set array entry to default "Both"
+	    	setNonVolAryItem($name, ""); //reset by creating non volatile array key and setting value to ""
+	    }
+	}
+
+	function setWithdrawnOnly() {
+		setNonVolAryItem($this->name, "amountWithdrawn"); //copy to non vol array
+	}
+
+	function setPaidinOnly() {
+		setNonVolAryItem($this->name, "amountPaidIn"); //copy to non vol array
+	}
+
+	function setBoth() {
+		setNonVolAryItem($this->name, ""); //copy to non vol array
+	}
+
+	function getStr() {
+		return getNonVolAryItem($this->name);
+	}
+}
+
+
 /*   */
 class familyCommand {
 	public $name;

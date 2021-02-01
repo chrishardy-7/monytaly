@@ -116,7 +116,6 @@ input: focus, textarea: focus, select: focus {
 
 .allExceptIframe {  /* no sub-definitions in @media sections */
         float: left;
-        background-color: #D0C8FF;
 }
 
 
@@ -416,6 +415,16 @@ input: focus, textarea: focus, select: focus {
     user-select:  none;          /* Likely future */
 }
 
+.borderGrey {
+    background-color: #C0C0C0;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+
 /*
 ##############################################      #######
 ##############################################      #######
@@ -438,13 +447,12 @@ input: focus, textarea: focus, select: focus {
 
     /* ############## Start of PIVOT TABLE DISPLAY divs ############## */
 
-    /* The css settings in this whole pivot section may still not be optimal - as browser size changes things used to fail, with gaps at the bottom of multiRowPivotTableContainerLeft and right of multiRowHeaderContainerRight ganged divs, a little but, until a reload. .containerForLeftRightPivotRows {height:32vw;} seems to fix things at the moment. a greater height of say 40vw doesn't work, nor a lesser one of 32vw. Things may still not ve right if the header rows take up less height, e.g short budget names are used. */
+    /* The css settings in this whole pivot section may still not be optimal - as browser size changes dimensions fail, with gaps at the bottom of multiRowPivotTableContainerLeft ganged div, a little bit, until a reload - upon which they are fine again. .containerForLeftRightPivotRows {height:30vw;} seems to fix things at the moment. a greater height of say 40vw doesn't work. Things may still not be right if the header rows take up greater height, e.g very long budget names are used. The best it can be for now! */
 
 	    .dataDisplayContainerPivot { 
 	    	display: flex;
 		    flex-direction: column;
 		    float: left;
-		    background-color: #00FF00;
 	        width: 96.348vw;
 	        height: 43.2264vw;
 	        font: 0.5208vw/150% Verdana, Tahoma, sans-serif;
@@ -460,7 +468,6 @@ input: focus, textarea: focus, select: focus {
 			        width: 11.37vw;
 			        margin-left: 0.2604vw;
 			        font-size: 0.62496vw;
-			        background-color:  #FFFFFF;
 			        border-bottom:  solid 0.15624vw #A0A0A0;
 			        overflow-x: hidden;
 			        float: left;
@@ -470,7 +477,6 @@ input: focus, textarea: focus, select: focus {
 
 			        width: 83.5vw;
 			        font-size: 0.62496vw;
-			        background-color:  #FFFFFF;
 			        border-bottom:  solid 0.15624vw #A0A0A0;
 			        overflow-x: hidden;
 			        float: left;
@@ -481,15 +487,13 @@ input: focus, textarea: focus, select: focus {
 		    	flex-grow: 1;
 		        display:flex;
 		        float:left;
-		        height:32vw;
-		        background-color: #EEAAAA;
+		        height:30vw;
 		    }
 
 			    .multiRowPivotTableContainerLeft {
 			        width: 11.37vw;
 			        margin-left: 0.2604vw;
 			        font-size: 0.62496vw;
-			        background-color:  #FFFFFF;
 			        border-bottom:  solid 0.15624vw #A0A0A0;
 			        overflow: hidden;
 			        float: left;
@@ -498,7 +502,6 @@ input: focus, textarea: focus, select: focus {
 			    .multiRowPivotTableContainerRight {
 			        width: 84.5vw;
 			        font-size: 0.62496vw;
-			        background-color:  #FFFFFF;
 			        border-bottom:  solid 0.15624vw #A0A0A0;
 			        overflow: auto;
 			        float: left;

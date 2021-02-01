@@ -40,7 +40,8 @@ $colClssAry = [	"unselCol"				=>	"white",
 				"columnFiltCol"			=>	"tan",
 				"compoundMaster"		=>	"yellowGradientHardBot",
 				"compoundSlave"			=>	"green",
-				"compoundSlaveFinal"	=>	"greenGradientHardTop"
+				"compoundSlaveFinal"	=>	"greenGradientHardTop",
+				"blankedMoneyCol"		=>	"borderGrey"
 			];
 
 
@@ -58,6 +59,8 @@ $showFamBut = new toggleBut("Show Families", "fas fa-plus-square", "subMenuBtn",
 $editFamBut = new toggleBut("Family Edit", "fas fa-users", "subMenuBtn", "subMenuBtnSel", ($subCommand == "FromMainMenu"));
 
 $tables = new dataBaseTables(); //used by custom buttons to get filter keys from string values
+$moneyDisplay = new moneyCols("monyColmnDisply", ($subCommand == "FromMainMenu"));
+
 
 //pr($tables->getKey("accWorkedOn", "Church Cash"));
 
@@ -210,8 +213,7 @@ else {
 // (e.g. array ([transCatgry] => 16,  [budget] => 15)  ) based on pivot table click rules defined in this function. $_fieldNameAry is also passed as it is used to generate the ids of the filtered columns
 // from the pivot table row and headings names. (this is quite a hard concept to explain as the words used - and by derivation the variable names - to describe the different names used in the 
 // standard display and the pivot table are subject to overlap and confusion!)
-function getFiltersAryFromPivotCell($rowFiltId, $colFiltId, $rowAndHeadNames, $pivotCellEmpty) {
-	$onlyRowsWhereThisFieldNotZero = ""; //default value for selector that is used to indicate when only rows with none zero values in either amountWithdrawn or amountPaidIn are required
+function getFiltersAryFromPivotCell($rowFiltId, $colFiltId, $rowAndHeadNames, $pivotCellEmpty, $moneyDisplay) {
 
 	$rowFiltIdIsNum = is_numeric($rowFiltId); //set to TRUE if $rowFiltId is a number (e,g, 251) but FALSE if it is a string (e.g. "rowName")
 	$colFiltIdIsNum = is_numeric($colFiltId); //set to TRUE if $colFiltId is a number (e,g, 45) but FALSE if it is a string (e.g. "credit")
@@ -225,15 +227,15 @@ function getFiltersAryFromPivotCell($rowFiltId, $colFiltId, $rowAndHeadNames, $p
 	if (!$colFiltIdIsNum && !$rowFiltIdIsNum) { //header section, 6 rows in either far LH column or far RH column
 		if ($rowFiltId == "brtfwd") {			//header section, brought fwd row name - show all brought fwd values
 			$filtersAry = 	[];
-			$onlyRowsWhereThisFieldNotZero = "amountPaidIn";
+			$moneyDisplay->setPaidinOnly();
 		}
 		elseif ($rowFiltId == "credit") {			//header section, credit row name - show all credits (receipts)
 			$filtersAry = 	[];
-			$onlyRowsWhereThisFieldNotZero = "amountPaidIn";
+			$moneyDisplay->setPaidinOnly();
 		}
 		elseif ($rowFiltId == "spend") {			//header section, spend row name - show all spends (payments)
 			$filtersAry = 	[];
-			$onlyRowsWhereThisFieldNotZero = "amountWithdrawn";
+			$moneyDisplay->setWithdrawnOnly();
 		}
 		else {
 			$filtersAry = 	[];
@@ -251,15 +253,15 @@ function getFiltersAryFromPivotCell($rowFiltId, $colFiltId, $rowAndHeadNames, $p
 		}
 		elseif ($rowFiltId == "brtfwd") {			//header section, credit row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
 			$filtersAry = 	[$colFieldName => $colFiltId];
-			$onlyRowsWhereThisFieldNotZero = "amountPaidIn";
+			$moneyDisplay->setPaidinOnly();
 		}
 		elseif ($rowFiltId == "credit") {			//header section, credit row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
 			$filtersAry = 	[$colFieldName => $colFiltId];
-			$onlyRowsWhereThisFieldNotZero = "amountPaidIn";
+			$moneyDisplay->setPaidinOnly();
 		}
 		elseif ($rowFiltId == "spend") {			//header section, spend row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
 			$filtersAry = 	[$colFieldName => $colFiltId];
-			$onlyRowsWhereThisFieldNotZero = "amountWithdrawn";
+			$moneyDisplay->setWithdrawnOnly();
 		}
 		elseif ($rowFiltId == "surplus") {			//header section, surplus row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
 			$filtersAry = 	[];
@@ -283,20 +285,19 @@ function getFiltersAryFromPivotCell($rowFiltId, $colFiltId, $rowAndHeadNames, $p
 	}
 
 	//pr($filtersAry);
-	return [$filtersAry, $onlyRowsWhereThisFieldNotZero];
+	return [$filtersAry];
 }
 
 
 
 
 $buttonPanelPresetVal = ""; //DEFAULT FOR presetVal. THIS IS USED ONLY FOR BUDGETS COLUMN JUST NOW - QUICK FIX - BUT NEEDS TO SORTED SO IT WORKS WITH ANY COLUMN (DERIVED FROM createPivotDisplData() OUTPUT)
-$onlyRowsWhereThisFieldNotZero = ""; //default value for selector that is used to indicate when only rows with none zero values in either amountWithdrawn or amountPaidIn are required
 if (getPlain($subSubCommand) == "Filters From Pivot") { //this if section runs when a pivot table cell is clicked and sets up appropriate filters to display data according to a set of rules	
 	$rowAndHeadIdSplit = explode("-", sanPost("pivCellId")); //split - as in "251-piv-45" becomes $rowFiltId = 251, $colFiltId = 45 (in some cases either could be a string, like "rowName" instead of a number)
 	$rowFiltId = $rowAndHeadIdSplit[0];
 	$colFiltId = $rowAndHeadIdSplit[2];
 	$pivotCellEmpty = (sanPost("pivCellVal") === "");
-	$filtersAryFromPivotCell = getFiltersAryFromPivotCell($rowFiltId, $colFiltId, sanPost("rowAndHeadNames"), $pivotCellEmpty); //use the pivot table clicked cell id (e.g. row,col "251-piv-45") and the pivot table row and head names (e.g. "transCatgry-budget") to replace any existing column filter with new one(s) e.g: array ([transCatgry] => 16,  [budget] => 15) based on pivot table click rules
+	$filtersAryFromPivotCell = getFiltersAryFromPivotCell($rowFiltId, $colFiltId, sanPost("rowAndHeadNames"), $pivotCellEmpty, $moneyDisplay); //use the pivot table clicked cell id (e.g. row,col "251-piv-45") and the pivot table row and head names (e.g. "transCatgry-budget") to replace any existing column filter with new one(s) e.g: array ([transCatgry] => 16,  [budget] => 15) based on pivot table click rules
 //pr($filtersAryFromPivotCell[0]);
 	$genFilter->mergeAryToIncludeFiltAry( $filtersAryFromPivotCell[0] ); //gets data as subarry at index 0 of main array - this is so index 1 can be used to indicate whether only rows with none zero values in either amountWithdrawn or amountPaidIn are required (for showing just income from grants or just expenditure of budgets)
 	$onlyRowsWhereThisFieldNotZero = $filtersAryFromPivotCell[1];
@@ -439,9 +440,11 @@ else {
 		//pr($recordsPivotArry);
 	}
 	else {
-		$recordsDataArry = sortCompoundRows(getMultDocDataAry($startDate, $endDate, $genFilter->getFiltStr(), "", $fam->getCmnd(), $groupColSelector, $restrictFilter->getFiltStr(), $onlyRowsWhereThisFieldNotZero)); //gets records data from allRecords table and then uses sortCompoundRows() to group compound rows together in the correct date position with master first followed by slaves in idR order
+		$recordsDataArry = sortCompoundRows(getMultDocDataAry($startDate, $endDate, $genFilter->getFiltStr(), "", $fam->getCmnd(), $groupColSelector, $restrictFilter->getFiltStr(), $moneyDisplay->getStr())); //gets records data from allRecords table and then uses sortCompoundRows() to group compound rows together in the correct date position with master first followed by slaves in idR order
 	}
 }
+
+//pr($moneyDisplay->getStr());
 
 //pr($genFilter->getFiltStr());
 
@@ -665,7 +668,7 @@ else { //loop through all records that have been retrieved from the allRecords t
 		$displayData = createPivotDisplData($recordsPivotArry, "pivotCellStd", "pivotCellRowName", "pivotCellRed", "pivotCellGreen", "pivotCellOrange", "pivotCellInvisible", "pivotCellRowNameRight", "budget", "transCatgry", "transCatgry", "Budget Fwd"); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scro;;able display area
 	}
 	else {
-			$displayData = createStndDisplData($recordsDataArry, $genFilter->getInclColIdxsAry(), "displayCellStd", "displayCellRowSel", "displayCellRowSelMoney", "displayCellFilt", "displayMoneyCellFiltClass", "displayCellMoney", "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", $endDate, $download, $allowedToEdit, $allRecordsColNameRndAry, $displayBankAcc, $colClssAry); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scrollable display area
+			$displayData = createStndDisplData($recordsDataArry, $genFilter->getInclColIdxsAry(), "displayCellStd", "displayCellRowSel", "displayCellRowSelMoney", "displayCellFilt", "displayMoneyCellFiltClass", "displayCellMoney", "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", $endDate, $download, $allowedToEdit, $allRecordsColNameRndAry, $displayBankAcc, $colClssAry, $moneyDisplay->getStr()); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scrollable display area
 	}
 
 	$idrArry = $displayData["idrArry"]; //simple indexed array of idRs
@@ -1112,6 +1115,7 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 						if ($displayBankAcc) { //display sum and comparison data specifically for bank account reconciliation at bottom of table 
 							$headingWidth = "";
 							$headingClass = "displayCellStd";
+
 							$linesDiff = $displayData["linesDiff"];
 							//$transactionsBal = (float)$displayData["totalRecncldDocsPaidIn"] - (float)$displayData["totalRecncldDocsWithdrawn"];
 							//$bankAccBal = (float)$displayData["bankStmtPaidIn"] - (float)$$displayData["bankStmtWithdrawn"];
@@ -1365,6 +1369,8 @@ else {
 	</iframe>
 	<?php
 }
+
+
 ?>
 
 
@@ -1469,10 +1475,17 @@ else {
 	var compoundTypeAry = <?php echo json_encode($displayData["compoundTypeAry"]);?>;
 	var compoundGroupIdrAry = <?php echo json_encode($displayData["compoundGroupIdrAry"]);?>;
 	var compoundHiddenAry = <?php echo json_encode($displayData["compoundHiddenAry"]);?>;
+
+	var rowStatusArray = <?php echo json_encode($displayData["rowStatusArray"]);?>;
+	
 	var restrictionsAry = <?php echo json_encode($restrictionsAry);?>;
 	var fieldNameAry = <?php echo json_encode($_fieldNameAry);?>;
 	var pivotButIsSet = <?php echo json_encode($pivotBut->isSet());?>;
+	var moneyDisplayStr = <?php echo json_encode($moneyDisplay->getStr());?>;
 	var bankAccNameAry = ["RBS 8252", "Clyde 5477"];
+
+
+
 
 	// INITIALISATION SECTION TO SET SELECTION TO ROW 0 AND SET UP THE CALENDAR, CATEGORY, ACCOUNT, AND BUDGET SELECTION PANELS TO ROW 0 VALUES. INITIALLY ALL PANELS EXCEPT CALENDAR WILL BE HIDDEN
 	window.onload = function() {
@@ -1531,7 +1544,8 @@ else {
         	allRecordsColNameRndAry,
         	headingAry,
         	bankAccNameAry,
-        	restrictionsAry
+        	restrictionsAry,
+        	moneyDisplayStr
 		);
 		FINISH("atomicCall()");
 	}

@@ -15,7 +15,9 @@ $editFamBut = new toggleBut("Family Edit", "fas fa-users", "subMenuBtn", "subMen
 $fam = new familyCommand("FamId", $editFamBut->isSet(), $showFamBut->isSet(), FALSE);
 
 $tables = new dataBaseTables(); //used by custom buttons to get filter keys from string values
-$genFilter = new filterColumns("genFilter", $tables); //filter from showRecsForFullYr.php for column filtering
+$genFilter = new filterColumns("genFilter", $tables, FALSE); //filter from showRecsForFullYr.php for column filtering
+$restrictFilter = new filterColumns("restrictFilter", $tables, FALSE); //create new restriction filter with $nonVolatileArray key of "genFilter" and reset all filters if this page called from main menu
+$moneyDisplay = new moneyCols("monyColmnDisply", FALSE);
 
 $inputArry = json_decode(htmlspecialchars_decode(sanPost("arryJsonStr")), TRUE); //convert JSON string of javascript object into associative array (associative indicated by TRUE)
 $outputArry = array();
@@ -36,11 +38,11 @@ $outputArry = updateWithdrawnPaidin($inputArry, $outputArry, $allowedToEdit); //
 
 $outputArry = updateEditableItem($inputArry, $outputArry, $allowedToEdit); //updates reference or notes cell in allRecords table
 
-if ($fam->justFam()) { //a specific family has been chosen to display and neither Show Families or Family Edit have been selected so remove all column filters so family can be displayed complete
-	$outputArry = getFilterStrAllBalData($inputArry, $outputArry, "", $fam->getCmnd()); //uses reconciled dates for calculation
+if ($fam->justFam()) { //a specific family has been chosen to display and neither Show Families or Family Edit have been selected so remove all column filters other than restricted so family can be displayed complete
+	$outputArry = getFilterStrAllBalData($inputArry, $outputArry, "", $fam->getCmnd(), $restrictFilter->getFiltStr(), ""); //uses reconciled dates for calculation
 }
 else {
-	$outputArry = getFilterStrAllBalData($inputArry, $outputArry, $genFilter->getFiltStr(), $fam->getCmnd()); //uses reconciled dates for calculation
+	$outputArry = getFilterStrAllBalData($inputArry, $outputArry, $genFilter->getFiltStr(), $fam->getCmnd(), $restrictFilter->getFiltStr(), $moneyDisplay->getStr()); //uses reconciled dates for calculation
 }
 
 $outputArry = updateDocFilename($inputArry, $outputArry, $allowedToEdit);

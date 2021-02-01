@@ -15,19 +15,16 @@ var altGrLastPressedTime = 0;
 var compoundNum = 0;
 
 var conLogMode = "Off";
-var consoleAryMode = "Off";
-var checkTimeMode = "Immediate"; //set to "Off", "Immediate" (prints as each START() FINISH() pair complete - for troubleshooting code problems) or "AfterRoot" which prints after any root pair finishes
+var consoleAryMode = "On";
+var checkTimeMode = "Off"; //set to "Off", "Immediate" (prints as each START() FINISH() pair complete - for troubleshooting code problems) or "AfterRoot" which prints after any root pair finishes
 var checkTimeLastRun = 0;
 var checkTimeTabCount = 0;
 var checkTimeStack = [];
 
-
-//new method
-var	checkTimeStack = [];
+var cellHidden = true; //controls whether normally hidden compound rows can be edited 
 
 
 function clickField(event) {
-
 	conLog("PERFORMANCE>NOW() = "+performance.now());
 	//STARTinit(); think not needed normally as START() has feature built in to do initialisation
 	var id = event.target.id;
@@ -36,7 +33,7 @@ function clickField(event) {
 	START("clickField()");
 	if (!fromClickCellCmnd) { //click from normal display area rather than calendar or selection panel buttons so cancel clickDown feature
 		autoClickDwnFromCalOrButPnl = false;
-		eval(autoClickDownSubId+'changeButClass')(""); //function within subButPanelJSclickDown() to select/unselect button by changing the class - default "" means unselected
+		getFunc(autoClickDownSubId, 'changeButClass')(""); //function within subButPanelJSclickDown() to select/unselect button by changing the class - default "" means unselected
 	}
 	fromClickCellCmnd = false;
 	
@@ -145,7 +142,7 @@ function doEverything(id, heldKey, calledFrom) {
 
 	showHideCompoundRows(valGet("seltdRowCellId"), compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, "Hide");
 
-	selectTableRowsForDoc(12, false, colClssAry, compoundTypeAry, valGet("seltdRowCellId"), "white", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "", "unselect"); //use the id of the previously clicked cell (stored in formValHolder for "seltdRowCellId") to unselect all the previously selected rows associated with the previous document
+	selectTableRowsForDoc(12, false, colClssAry, compoundTypeAry, moneyDisplayStr, valGet("seltdRowCellId"), "white", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "", "unselect"); //use the id of the previously clicked cell (stored in formValHolder for "seltdRowCellId") to unselect all the previously selected rows associated with the previous document
 	
 	if (id.split("-").length == 2) { //only store cell id if it is an actual cell with a hiphon in between the row and column indexes (prevents selectable items in button panels and elsewhere being stored)
 		valSet("seltdRowCellId", id); //stored the newly clicked cell id in formValHolder for "seltdRowCellId" (for use to unselect the row on a later pass of this func)
@@ -155,7 +152,7 @@ function doEverything(id, heldKey, calledFrom) {
 	
 	showHideCompoundRows(id, compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, "Show");
 
-	selectTableRowsForDoc(12, true, colClssAry, compoundTypeAry, id, "grey", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellLineSelRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "docLineCountDispId", "select"); //use the id of the current clicked cell id to select all the rows associated with the current document
+	selectTableRowsForDoc(12, true, colClssAry, compoundTypeAry, moneyDisplayStr, id, "grey", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellLineSelRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "docLineCountDispId", "select"); //use the id of the current clicked cell id to select all the rows associated with the current document
 	
 	selectCell(id, colClssAry, "displayCellSnglSel", "displayCellSnglSelEditable", "displayCellSnglSelMoney", "displayCellSnglSelRcnclBlank", displayCellDescrpAry, "blue", "blueEdit");           //use the id of the current clicked cell to set the current cell to edit
 	
@@ -223,7 +220,8 @@ function atomicAjaxCall(
 	allRecordsColNameRndAry,
 	headingAry,
 	bankAccNameAry,
-	restrictionsAry //not sure if needed but ready in case
+	restrictionsAry, //not sure if needed but ready in case
+	moneyDisplayStr
 	) { 
 	START("atomicAjaxCall()");
 
@@ -277,7 +275,7 @@ conLog("HERE ##################################### atomicAjaxCall()   PRE-AJAX S
 		arry = getBalDataSend(arry, cellId, recStartDate, recEndDate, valGet("runNormalBalFunc"), auxButtonTxt); //executes if runBalFunc = "Yes" (though php on server may return all balances as "0.00" if nonsensical column like date is clicked)
 		arry = docUpdateSend(arry, cellId, accountBankLinksArry, auxButtonTxt); //only executes if currentDocRnd != previousDocRnd or column 8 (reconciliation) has been selected
 			
-		conLog(JSON.stringify(arry, null, 4));
+		consoleAry(arry);
 
 		xmlhttp.onreadystatechange=function() {
 		    if (xmlhttp.readyState==4 && xmlhttp.status==200) {
@@ -285,7 +283,7 @@ conLog("HERE ##################################### atomicAjaxCall()   PRE-AJAX S
 		    	//alert (xmlhttp.responseText);
 		    	conLog(xmlhttp.responseText);
 		      	var arryBackFromPhp = JSON.parse(xmlhttp.responseText);
-		      	conLog(JSON.stringify(arryBackFromPhp, null, 4));
+		      	consoleAry(arryBackFromPhp);
 
 		      	clearRowExcptRecDateAjaxReceive(arry, arryBackFromPhp, cellId, colClssAry);
 		      	setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellDescrpAry, compoundTypeAry, colClssAry);
@@ -305,7 +303,8 @@ conLog("HERE ##################################### atomicAjaxCall()   PRE-AJAX S
 									reconcldBalId,
 									docOnlyWithdrawnId,
 									docOnlyPaidInId,
-									docOnlyBalId
+									docOnlyBalId,
+									moneyDisplayStr
 				);
 		      	docUpdateReceive(arry, arryBackFromPhp);
 		      	atomicAjaxCallCompleted = true;
@@ -565,21 +564,26 @@ function withdrawnPaidinAjaxSend(arry, editableCellIdValHldr, moneyWarnClass, di
 		START("withdrawnPaidinAjaxSend()");	
 		valSet(editableCellIdValHldr, 0); //resets the id value holder pointed to by editableCellIdValHldr
 		if (cellId != 0) { //the cell that was previously in focus before the current cell that triggered this atomicAjaxCall was an editable one, and may have a new value in it
-			var accountName = document.getElementById(cellId.split("-")[0]+"-"+getKeyFromValue(headingAry, "Account")).innerText //gets the name from the Account column
-			var isBankAcc = false;
-			if (-1 < bankAccNameAry.indexOf(accountName)) { //if the name from the account column is one of names that have been designated as a bank account
-				isBankAcc = true;
+			if (!compoundHiddenAry[cellId.split("-")[0]]) { //only run this function to update the tables on the server if the row being edited isn't normally a hidden but has only been displayed because it's part of a filtered compound
+				var accountName = document.getElementById(cellId.split("-")[0]+"-"+getKeyFromValue(headingAry, "Account")).innerText //gets the name from the Account column
+				var isBankAcc = false;
+				if (-1 < bankAccNameAry.indexOf(accountName)) { //if the name from the account column is one of names that have been designated as a bank account
+					isBankAcc = true;
+				}
+				if (displayCellDescrpAry[colId] == 'MoneyOut') {
+					var withdrnId = cellId;
+					var paidinId = cellId.split("-")[0]+"-"+(parseInt(cellId.split("-")[1]) + 1);
+				}
+				if (displayCellDescrpAry[colId] == 'MoneyIn') {
+					var withdrnId = cellId.split("-")[0]+"-"+(parseInt(cellId.split("-")[1]) - 1);
+					var paidinId = cellId;
+				}
+				arry["compoundGroupAry"] = compoundGroupAry(cellId, withdrnId, paidinId, compoundGroupIdrAry, colClssAry, isBankAcc); //create an array of cellIds corresponding to the compound group of withdrawn values potentially affected by the withdrawn or paidin edit
+				arry["withdrawnPaidinAjaxSendHasRun"] = true;
 			}
-			if (displayCellDescrpAry[colId] == 'MoneyOut') {
-				var withdrnId = cellId;
-				var paidinId = cellId.split("-")[0]+"-"+(parseInt(cellId.split("-")[1]) + 1);
-			}
-			if (displayCellDescrpAry[colId] == 'MoneyIn') {
-				var withdrnId = cellId.split("-")[0]+"-"+(parseInt(cellId.split("-")[1]) - 1);
-				var paidinId = cellId;
-			}
-			arry["compoundGroupAry"] = compoundGroupAry(cellId, withdrnId, paidinId, compoundGroupIdrAry, colClssAry, isBankAcc); //create an array of cellIds corresponding to the compound group of withdrawn values potentially affected by the withdrawn or paidin edit
-			arry["withdrawnPaidinAjaxSendHasRun"] = true;
+	        else {
+	            messageChangeInhibited();
+	        }	
 		}
 		FINISH("withdrawnPaidinAjaxSend()");
 	}
@@ -615,17 +619,22 @@ function directStrEditAjaxSend(arry, editableCellIdValHldr, cellWarnClass, displ
 		START("directStrEditAjaxSend()");
 		valSet(editableCellIdValHldr, 0); //resets the id value holder pointed to by editableCellIdValHldr
 		if (cellId != 0) { //the cell that was previously in focus before the current cell that triggered this atomicAjaxCall was an editable one, and may have a new value in it
-			var value = document.getElementById(cellId).innerText; //get string value held in the cell
-			var recordId = cellId.split("-")[0]; //row in allRecords table that needs to be updated
-			var allrecordsColNameRnd = allRecordsColNameRndAry[colId]; //random alphanumeric that corresponds to the column (field) name that needs to be updated - will be decoded by php on server		
-			arry["cellId"] = cellId; //save the id of the ecitable cell for use when the update confirmation comes back from the table on the server
-			arry["editableCellOrgClass"] = document.getElementById(cellId).className; //save original class for re-enstatement later
-			document.getElementById(cellId).className = cellWarnClass; //set the editable cell class to warning until it has been properly updated with data back from the table 
-			arry["editableCellIdR"] = recordId;
-			arry["editableCellId"] = cellId;
-			arry["allrecordsColNameRnd"] = allrecordsColNameRnd;
-			arry["editableCellVal"] = sanitiseText(value);
-			arry["directStrEditAjaxSendHasRun"] = true;
+			if (!compoundHiddenAry[cellId.split("-")[0]]) { //only run this function to update the tables on the server if the row being edited isn't normally a hidden but has only been displayed because it's part of a filtered compound
+				var value = document.getElementById(cellId).innerText; //get string value held in the cell
+				var recordId = cellId.split("-")[0]; //row in allRecords table that needs to be updated
+				var allrecordsColNameRnd = allRecordsColNameRndAry[colId]; //random alphanumeric that corresponds to the column (field) name that needs to be updated - will be decoded by php on server		
+				arry["cellId"] = cellId; //save the id of the ecitable cell for use when the update confirmation comes back from the table on the server
+				arry["editableCellOrgClass"] = document.getElementById(cellId).className; //save original class for re-enstatement later
+				document.getElementById(cellId).className = cellWarnClass; //set the editable cell class to warning until it has been properly updated with data back from the table 
+				arry["editableCellIdR"] = recordId;
+				arry["editableCellId"] = cellId;
+				arry["allrecordsColNameRnd"] = allrecordsColNameRnd;
+				arry["editableCellVal"] = sanitiseText(value);
+				arry["directStrEditAjaxSendHasRun"] = true;
+			}
+			else {
+	            messageChangeInhibited();
+	        }		
 		}
 		FINISH("directStrEditAjaxSend()");
 	}
@@ -675,18 +684,29 @@ function getBalDataReceive(
 	reconcldBalId,
 	docOnlyWithdrawnId,
 	docOnlyPaidInId,
-	docOnlyBalId
+	docOnlyBalId,
+	moneyDisplayStr
 	) {
 	if (existsAndTrue(arryBackFromPhp, "PHPgetFilterStrAllBalDataHasRun")) { //only run if complementary send function has already run
 		START("getBalDataReceive()");
-	    document.getElementById(OrdWithdrawnId).innerText = formatTo2DecPlcs(arryBackFromPhp["withdrawnNorm"], true); //set element to cleaned withdrawn value.
-	    document.getElementById(OrdPaidInId).innerText = formatTo2DecPlcs(arryBackFromPhp["paidInNorm"], true);
-	    document.getElementById(OrdBalId).innerText = formatTo2DecPlcs(arryBackFromPhp["balanceNorm"], true);
+		if (moneyDisplayStr == "amountWithdrawn") {
+			document.getElementById(OrdWithdrawnId).innerText = formatTo2DecPlcs(arryBackFromPhp["withdrawnNorm"], true); //set element to cleaned withdrawn value.
+			document.getElementById(reconcldWithdrawnId).innerText = formatTo2DecPlcs(arryBackFromPhp["withdrawnRec"], true);
+		}
+		else if (moneyDisplayStr == "amountPaidIn") {
+			document.getElementById(OrdPaidInId).innerText = formatTo2DecPlcs(arryBackFromPhp["paidInNorm"], true);
+	    	document.getElementById(reconcldPaidInId).innerText = formatTo2DecPlcs(arryBackFromPhp["paidInRec"], true);
+		}
+		else {
+			document.getElementById(OrdWithdrawnId).innerText = formatTo2DecPlcs(arryBackFromPhp["withdrawnNorm"], true); //set element to cleaned withdrawn value.
+			document.getElementById(reconcldWithdrawnId).innerText = formatTo2DecPlcs(arryBackFromPhp["withdrawnRec"], true);
 
-	    document.getElementById(reconcldWithdrawnId).innerText = formatTo2DecPlcs(arryBackFromPhp["withdrawnRec"], true);
-	    document.getElementById(reconcldPaidInId).innerText = formatTo2DecPlcs(arryBackFromPhp["paidInRec"], true);
-	    document.getElementById(reconcldBalId).innerText = formatTo2DecPlcs(arryBackFromPhp["balanceRec"], true);
+		    document.getElementById(OrdPaidInId).innerText = formatTo2DecPlcs(arryBackFromPhp["paidInNorm"], true);
+		    document.getElementById(reconcldPaidInId).innerText = formatTo2DecPlcs(arryBackFromPhp["paidInRec"], true);
 
+		    document.getElementById(OrdBalId).innerText = formatTo2DecPlcs(arryBackFromPhp["balanceNorm"], true);
+		    document.getElementById(reconcldBalId).innerText = formatTo2DecPlcs(arryBackFromPhp["balanceRec"], true);
+		}
 	    document.getElementById(docOnlyWithdrawnId).innerText = formatTo2DecPlcs(arryBackFromPhp["withdrawnDoc"], true);
 	    document.getElementById(docOnlyPaidInId).innerText = formatTo2DecPlcs(arryBackFromPhp["paidInDoc"], true);
 	    document.getElementById(docOnlyBalId).innerText = formatTo2DecPlcs(arryBackFromPhp["balanceDoc"], true);
@@ -738,6 +758,27 @@ function docUpdateReceive(arry, arryBackFromPhp) {
 //                                                                                                 #################
 //                                                                                                 #################
 
+
+/* Returns false if the currently selected row is a compound row that was hidden because of a filtering action but has been revealed because it's visible row was clicked. This is used to prevent edit actions on the normally hidden rows. Otherwise true is returned.  */
+function notHiddenCompound() {
+	return !compoundHiddenAry[valGet("storeSelectedRecordIdR")]; // //THIS IS A GLOBAL ARRAY - NOT PASSED AS AN ARGUMENT !!
+}
+
+function messageChangeInhibited() {
+	alert("Please remove filters before trying to change this row!");
+}
+
+/* Used to replace eval() which is deprecated and not advised. Creates a function name out of two passed strings, nameFirstPart, nameSecondPart, and returns a reference to the actual function so it can be called using the form:
+getFunc(nameFirstPart, nameSecondPart)(arguments...) 
+If the strings don't form a known function an alert with the concatonated strings suffixed by " Not Function!" will be generated and "" returned.  */
+function getFunc(nameFirstPart, nameSecondPart) {
+	var fn = window[nameFirstPart+nameSecondPart];
+	if (typeof fn === "function") {
+		return fn;
+	}
+	alert(nameFirstPart+nameSecondPart+" Not Function!");
+	return "";
+}
 
 /* Changes the visibility of rows that exist but are hidden by default in the current display view because they are excluded by filter settings. The criteria for controlling a row's visibility is that it has a matching compound number. showHide parameter determines whether the row will be be made visible or invisible by calling this function. */
 function showHideCompoundRows(cellId, compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, showHide) {
@@ -1153,21 +1194,21 @@ function toggleClickDown() {
 	START("toggleClickDown()");
 	if (autoClickDwnFromCalOrButPnl) { //toggle autoClickDwnFromCalOrButPnl to false
 		autoClickDwnFromCalOrButPnl = false;
-		eval(autoClickDownSubId+'changeButClass')(""); //function within subButPanelJSclickDown() to select/unselect button by changing the class - default "" means unselected
+		getFunc(autoClickDownSubId, 'changeButClass')(""); //function within subButPanelJSclickDown() to select/unselect button by changing the class - default "" means unselected
 	}
 	else {  //toggle autoClickDwnFromCalOrButPnl to true
 		autoClickDwnFromCalOrButPnl = true;
 		
-		eval(autoClickDownSubId+'changeButClass')("Selected"); //function within subButPanelJSclickDown() to select/unselect button by changing the class		
+		getFunc(autoClickDownSubId, 'changeButClass')("Selected"); //function within subButPanelJSclickDown() to select/unselect button by changing the class		
 	}
 	var colName =  staticArys["displayCellDescrpAry"][valGet("seltdRowCellId").split("-")[1]];
-	eval(butPanelIdSuffix+colName+'getFocusBack')(); //target the function in the current button panel to shift focus from the auto button
+	getFunc(butPanelIdSuffix+colName, 'getFocusBack')(); //target the function in the current button panel to shift focus from the auto button
 	FINISH("toggleClickDown()");
 }
 
 function consoleAry(arrayToDisplayInConsole) {
 	if (consoleAryMode == "On") {
-		conLog(JSON.stringify(arrayToDisplayInConsole, null, 4));
+		console.log(JSON.stringify(arrayToDisplayInConsole, null, 4));
 	}
 }
 
@@ -1429,6 +1470,7 @@ function selectTableRowsForDoc(
 	rowSel,				//if true indicates row should be selected, false indicates row should be unselected
 	colClssAry,			// array of suffix classes that are all used to difine the color of cells and rows
 	compoundTypeAry,	//array of row types for compound rows - like Master, Slave, FinalSlave, None
+	moneyDisplayStr,    //string to inform if either withdrawn or paidin are to be blanked out
 	elementId,			//id of clicked element
 	rowSelColorClass,		//sets background colour to indicate element has been chosen - tailored to each cell depending on array element for column and is a light grey colour
 	columnCsv,			//cvs of all column numbers that have been set to filter, i.e. "2, 5"
@@ -1455,8 +1497,11 @@ function selectTableRowsForDoc(
 		    	changeSuffixClass(rowColIdx, colClssAry["columnFiltCol"]); 
 		    }
 		    else {
-		    	if ((displayCellDescrpAry[i] == "MoneyOut") || (displayCellDescrpAry[i] == "MoneyIn")) { //check fro this section and use compound colours if necessary
-		    		if (compoundTypeAry[rowId] == "Master") {
+		    	if (displayCellDescrpAry[i] == "MoneyOut") { //check for this section and use compound colours if necessary
+		    		if (moneyDisplayStr == "amountPaidIn") {
+		    			changeSuffixClass(rowColIdx, colClssAry["blankedMoneyCol"]);
+		    		}
+		    		else if (compoundTypeAry[rowId] == "Master") {
 				    	changeSuffixClass(rowColIdx, colClssAry["compoundMaster"]);
 		    		}
 		    		else if (compoundTypeAry[rowId] == "Slave") {
@@ -1474,14 +1519,36 @@ function selectTableRowsForDoc(
 				    	}
 		    		}
 		    	}
-		    	else {
-			    	if (rowSel) { //not compound rows so use normal select or unselect colours
+		    	else if (displayCellDescrpAry[i] == "MoneyIn") { //check for this section and use compound colours if necessary
+		    		if (moneyDisplayStr == "amountWithdrawn") {
+		    			changeSuffixClass(rowColIdx, colClssAry["blankedMoneyCol"]);
+		    		}
+		    		else if (compoundTypeAry[rowId] == "Master") {
+				    	changeSuffixClass(rowColIdx, colClssAry["compoundMaster"]);
+		    		}
+		    		else if (compoundTypeAry[rowId] == "Slave") {
+				    	changeSuffixClass(rowColIdx, colClssAry["compoundSlave"]);
+		    		}
+		    		else if (compoundTypeAry[rowId] == "FinalSlave") {
+				    	changeSuffixClass(rowColIdx, colClssAry["compoundSlaveFinal"]);
+		    		}
+		    		else {
+		    			if (rowSel) { //not compound rows so use normal select or unselect colours
+				    		changeSuffixClass(rowColIdx, colClssAry["selCol"]);
+				    	}
+				    	else {
+				    		changeSuffixClass(rowColIdx, colClssAry["unselCol"]);
+				    	}
+		    		}			    	
+		    	}
+	    		else {
+	    			if (rowSel) { //not compound rows so use normal select or unselect colours
 			    		changeSuffixClass(rowColIdx, colClssAry["selCol"]);
 			    	}
 			    	else {
 			    		changeSuffixClass(rowColIdx, colClssAry["unselCol"]);
 			    	}
-			    }
+	    		}
 		    }
 		    if (displayCellDescrpAry[i] == "RcnclDate") { //process if loop is at appropriate column ######EVERYTHING IN THIS IF STATEMENT IS FOR THE RECONCILE COLUMN!! #######
 		    	var endDateRev = dateNumsOnly(endDate); //the endDate just needs the "-"s removed as it is already in the correct order "2020-04-03"
@@ -1560,21 +1627,20 @@ function selectButPanel(displayCellDescrpAry, fieldNameAry, butPanelControlAry, 
 		var objTestResult = cellMatchInObj(displayCellDescrpAry, elementId, conditionsObj);
 		if ((panelIdStrValue != "None") && ((objTestResult == "Match Success") || (objTestResult == "Nothing To Test")) ) { //the butPanelControlAry value indexed by elementId is not "None" and cellMatchInObj() passes test
 			document.getElementById(prefix+panelIdStrValue).style.display = 'inline';
-		var remoteFromEval = prefix+butPanelControlAry[elementId.split("-")[1]]+'initButPanel'; //removed from within eval statement for diagnosis to see what is taking a long time!
 			START("selectButPanel() 1st eval statement");
-			eval(remoteFromEval)(elementId); //target the initialisation function in the selected button panel using eval to assemble the name of the function which has been dynamically created in each button panel
+			getFunc(prefix+butPanelControlAry[elementId.split("-")[1]], 'initButPanel')(elementId); //target the initialisation function in the selected button panel using eval to assemble the name of the function which has been dynamically created in each button panel
 			FINISH("selectButPanel() 1st eval statement");
 		}
 		else {
 			document.getElementById(dummyButPanelId).style.display = 'inline'; //make visible the dummy button panel - no prefix required for this as it is incorporated into dummyButPanelId
 			START("selectButPanel() 2nd eval statement");
-			eval(dummyButPanelId+'initButPanel')(elementId); //target the initialisation function in the selected button panel using eval to assemble the name of the function which has been dynamically created in each button panel
+			getFunc(dummyButPanelId, 'initButPanel')(elementId); //target the initialisation function in the selected button panel using eval to assemble the name of the function which has been dynamically created in each button panel
 			FINISH("selectButPanel() 2nd eval statement");
 		}
 	}
 	else { //set for no edit so display default empty panel
 		document.getElementById(noEditButPanelId).style.display = 'inline'; //make visible the empty no edit button panel - no prefix required for this as it is incorporated into noEditButPanelId
-		eval(noEditButPanelId+'initButPanel')(elementId); //target the initialisation function in the selected button panel using eval to assemble the name of the function which has been dynamically created in each button panel
+		getFunc(noEditButPanelId, 'initButPanel')(elementId); //target the initialisation function in the selected button panel using eval to assemble the name of the function which has been dynamically created in each button panel
 	}
 	//checkTimeout("selectButPanel", 0);
 	FINISH("selectButPanel()");
@@ -2256,36 +2322,36 @@ xmlhttp.send("command="+fileRndm+"&tableName="+tableName+"&fieldName="+fieldName
 
 /* valueId points to an element containing a date string in the format 2018-10-23 that is used to update the table at the row pointed to by the part before the '-' in the cellId held in cellIdHolderId. The field that is updated is decided by the part after the '-' by using it as an index in an array of table field names. This is all done in the php script called by this function using pathToPhpFile and fileRndm. The php script inserts the data into the table and then reads it back out and echoes it back to this function. While this function is waiting for the returned data it sets the cell pointed to by cellIdHolderId to a warning class (usually orange background) and only clears it to normal class and updates it once the data is received back. This provides comfirmation that the table has been updated! The data from the table is cleaned to leave only 0-9 and '-'' and it is split and reordered to display the date in 23-10-2018 format.*/
 function ajaxRecordsDateAndCellUpdate(value, cellId, pathToPhpFile, fileRndm, cellWarnClass) {
-var random = (new Date).getTime(); //random number to add as GET variable to php calls to prevent xmlHttpReq caching (not used by php script).
-var sessionCommitRnd = ""; //legacy item - no longer used but needs to be removed throughout system
-var xmlhttp;    
-if (window.XMLHttpRequest)
-  {// code for IE7+, Firefox, Chrome, Opera, Safari
-  xmlhttp=new XMLHttpRequest();
-  }
-else
-  {// code for IE6, IE5
-  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
-  }
-//var value = document.getElementById(valueId).value; //get date in 2018-08-23 format
-var origClass = document.getElementById(cellId).className; //save original class for re-enstatement later
-document.getElementById(cellId).className = cellWarnClass; //set the cell class to warning until it has been properly updated with data back from the table
-xmlhttp.onreadystatechange=function() //only use this for test purposes to display the addressed column in the reporting area on the html page
-    {
-    if (xmlhttp.readyState==4 && xmlhttp.status==200)
-      {
-        dateFromTable = xmlhttp.responseText;
-        cleanedDateFromTable = dateFromTable.replace(/[^0-9-]/g,''); //use string replace with reg expression to replace anything but 0-9 and '-' with '' (nothing). Removes unwanted spaces/symbols etc. 
-        if (cleanedDateFromTable == value) { //check that the returned data matches that sent before removing the warning class from the display cell
-          document.getElementById(cellId).className = origClass;
-        }
-        dateAry = cleanedDateFromTable.split('-');
-        document.getElementById(cellId).innerText = dateAry[2]+'-'+dateAry[1]+'-'+dateAry[0]; //reverse year/month/dayOfMonth
-      }
-    } 
-xmlhttp.open("POST", pathToPhpFile, true);
-xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-xmlhttp.send("command="+fileRndm+"&value="+value+"&cellId="+cellId+"&sessionCommitRnd="+sessionCommitRnd+"&random="+random);
+	var random = (new Date).getTime(); //random number to add as GET variable to php calls to prevent xmlHttpReq caching (not used by php script).
+	var sessionCommitRnd = ""; //legacy item - no longer used but needs to be removed throughout system
+	var xmlhttp;    
+	if (window.XMLHttpRequest)
+	  {// code for IE7+, Firefox, Chrome, Opera, Safari
+	  xmlhttp=new XMLHttpRequest();
+	  }
+	else
+	  {// code for IE6, IE5
+	  xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+	  }
+	//var value = document.getElementById(valueId).value; //get date in 2018-08-23 format
+	var origClass = document.getElementById(cellId).className; //save original class for re-enstatement later
+	document.getElementById(cellId).className = cellWarnClass; //set the cell class to warning until it has been properly updated with data back from the table
+	xmlhttp.onreadystatechange=function() //only use this for test purposes to display the addressed column in the reporting area on the html page
+	    {
+	    if (xmlhttp.readyState==4 && xmlhttp.status==200)
+	      {
+	        dateFromTable = xmlhttp.responseText;
+	        cleanedDateFromTable = dateFromTable.replace(/[^0-9-]/g,''); //use string replace with reg expression to replace anything but 0-9 and '-' with '' (nothing). Removes unwanted spaces/symbols etc. 
+	        if (cleanedDateFromTable == value) { //check that the returned data matches that sent before removing the warning class from the display cell
+	          document.getElementById(cellId).className = origClass;
+	        }
+	        dateAry = cleanedDateFromTable.split('-');
+	        document.getElementById(cellId).innerText = dateAry[2]+'-'+dateAry[1]+'-'+dateAry[0]; //reverse year/month/dayOfMonth
+	      }
+	    } 
+	xmlhttp.open("POST", pathToPhpFile, true);
+	xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	xmlhttp.send("command="+fileRndm+"&value="+value+"&cellId="+cellId+"&sessionCommitRnd="+sessionCommitRnd+"&random="+random);
 }
 
 

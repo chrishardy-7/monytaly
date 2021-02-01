@@ -854,10 +854,14 @@ function getFilterStrBalData($columnToMatch, $recRowId, $recStartDate, $recEndDa
 
 
 /* Gets the sum of amountWithdrawn for all rows where record date is between the given dates and $fieldName field == $matchValue and $filterStr terms are met. Similarly gets the sum of amountPaidIn for the same where criteria and subtracts amountWithdrawn from it to create a balance. amountWithdrawn, amountPaidIn and the calculated balance are returned in an associative array. If $useReconciledInsteadOfRecordDate is used and set to TRUE the reconciled dates will be used instead, thus providing balance information that should match bank statement balances. Also returns similar information for only the entries that use the same document as that in $recRowId - this gives a quick and easy way of checking the totals for the document on display */
-function getFilterStrAllBalData($inputArry, $outputArry, $filterStr, $familyChoice) {
+function getFilterStrAllBalData($inputArry, $outputArry, $filterStr, $familyChoice, $restrictFilterStr, $onlyRowsWhereThisFieldNotZero) {
     global $conn;
     global $_fieldNameAry;
     if (array_key_exists("getBalDataSendHasRun", $inputArry) && array_key_exists("cellIdBal", $inputArry)) { //only do update if the calling JS function has run and cellIdBal exists
+        $definedColNotZero = "";
+        if ($onlyRowsWhereThisFieldNotZero != "") {
+            $definedColNotZero = ' AND ('.$onlyRowsWhereThisFieldNotZero.' != 0) ';
+        }
         $cellId = $inputArry["cellIdBal"];
         $recStartDate = $inputArry["recStartDate"];
         $recEndDate = $inputArry["recEndDate"];
@@ -915,14 +919,14 @@ function getFilterStrAllBalData($inputArry, $outputArry, $filterStr, $familyChoi
             if ($validFieldForBalances) {
                 if ($familyChoice == "NoKids") {
                 	
-                    $stmtNorm = $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) AND ('.$fieldName.' = '.$matchValue.') '.$filterStr.' AND statusR = "Live"'); //use the normal record dates for calculating the amounts
+                    $stmtNorm = $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) AND ('.$fieldName.' = '.$matchValue.') '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND statusR = "Live"'); //use the normal record dates for calculating the amounts
 
-                    $stmtRec =  $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE ((:recStartDate <= recordDate) AND (:recStartDate <= reconciledDate) AND (reconciledDate <= :recEndDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) AND ('.$fieldName.' = '.$matchValue.') '.$filterStr.' AND statusR = "Live"'); //use the reconciled dates for calculating the amounts
+                    $stmtRec =  $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE ((:recStartDate <= recordDate) AND (:recStartDate <= reconciledDate) AND (reconciledDate <= :recEndDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) AND ('.$fieldName.' = '.$matchValue.') '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND statusR = "Live"'); //use the reconciled dates for calculating the amounts
 
                 }
                 elseif ($familyChoice == "All") {
 
-                	$stmtNorm = $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE (((:recStartDate <= recordDate) AND (recordDate <= :recEndDate) AND (parent = 0)) OR ((0 < parent) AND (:recStartDate <= parentDate) AND (parentDate <= :recEndDate))) AND  ('.$fieldName.' = '.$matchValue.') '.$filterStr.' AND statusR = "Live"');
+                	$stmtNorm = $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE (((:recStartDate <= recordDate) AND (recordDate <= :recEndDate) AND (parent = 0)) OR ((0 < parent) AND (:recStartDate <= parentDate) AND (parentDate <= :recEndDate))) AND  ('.$fieldName.' = '.$matchValue.') '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND statusR = "Live"');
 
                     $stmtRec =  $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE
                                                 (
@@ -935,14 +939,14 @@ function getFilterStrAllBalData($inputArry, $outputArry, $filterStr, $familyChoi
                                                         ) 
                                                 ) 
                                                 AND  
-                                                    ('.$fieldName.' = '.$matchValue.') '.$filterStr.' AND statusR = "Live"');
+                                                    ('.$fieldName.' = '.$matchValue.') '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND statusR = "Live"');
 
                 }
                 else {
 
-                	$stmtNorm = $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE parent = '.$familyChoice.' AND  ('.$fieldName.' = '.$matchValue.') '.$filterStr.' AND statusR = "Live"');
+                	$stmtNorm = $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE parent = '.$familyChoice.' AND  ('.$fieldName.' = '.$matchValue.') '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND statusR = "Live"');
 
-                    $stmtRec =  $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE parent = '.$familyChoice.' AND  ('.$fieldName.' = '.$matchValue.') '.$filterStr.' AND statusR = "Live"');
+                    $stmtRec =  $conn->prepare('SELECT SUM(amountWithdrawn) AS withdrawn, SUM(amountPaidIn) AS paidIn FROM allRecords WHERE parent = '.$familyChoice.' AND  ('.$fieldName.' = '.$matchValue.') '.$filterStr.$restrictFilterStr.$definedColNotZero.' AND statusR = "Live"');
                     
                 }
                 $stmtNorm->execute(array('recStartDate' => $recStartDate, 'recEndDate' => $recEndDate));  
@@ -984,6 +988,7 @@ function getFilterStrAllBalData($inputArry, $outputArry, $filterStr, $familyChoi
           $outputArry["ERROR in funcsToRdWrTblesForAccCcc.php / getFilterStrAllBalData()"] = "#".$familyChoice."#"." ". $e->getMessage();
           }
         $outputArry["PHPgetFilterStrAllBalDataHasRun"] = TRUE; //flag that indicates this PHP function has run and that the receiving JS function should run to handle the returned data
+        $outputArry["onlyRowsWhereThisFieldNotZero"] = $onlyRowsWhereThisFieldNotZero;
     }
     return $outputArry;
 }
