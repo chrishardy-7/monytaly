@@ -120,17 +120,15 @@ function dateRemoveHyphs($date) {
  */
 function createPivotDisplData(
         $recordsDataArry,
+        $colClssAry,
         $pivotCellClass,
         $pivotCellRowNameClass,
-        $pivotCellRedClass,
-        $pivotCellGreenClass,
-        $pivotCellOrangeClass,
-        $pivotCellInvisibleClass,
         $pivotCellRowNameRightClass,
         $columnForHeadings,
         $columnForRows,
         $colForBroughtFwdKey,
-        $broughtFwdStr
+        $broughtFwdStr,
+        $showExpiredBudgets //set to TRUE to highlight cells that contain sums of transactions that include expired budgets and also highlight budgets headers that are expired at current date, otherwise FALSE
     ) {
     global $tables;
 
@@ -139,49 +137,48 @@ function createPivotDisplData(
     $creditColumnToSumKey = "amountPaidIn";
 
     $broughtFwdKey = $tables->getKey($colForBroughtFwdKey, $broughtFwdStr); //DOCUMENT CAVEAT THAT THIS KEY MUST BE PRESENT AND PRODUCED EVEN IF PERSON NAMES ARE BEING USED, OR ANY OTHER COMBINATIONS
-
     $dataExists = FALSE;
 
     $rowsAry = 			  [];
-    $rowsNameAry = 		  [];
+    $rowsNameAry = 		  []; //for holding initial row names derived by looping down the whole date range of the designated rows column and adding each new name as it's found, unsorted
     $compoundHiddenAry =  [];
 
-    $headingsAry = 						[];
+    $headingsAry = 						[]; //for holding initial heading names derived by looping down the whole date range of the designated headings column and adding each new name as it's found, unsorted
     $headingsTotalBroughtFwdSumAry = 	[];
-    $headingsTotalCreditSumAry = 		[];
-    $headingsTotalSpendSumAry = 		[];
+    $headingsTotalReceiptsSumAry = 		[];
+    $headingsTotalPaymentsSumAry = 		[];
     $headingsTotalSurplusSumAry = 		[];
-    $headingsbalanceAry = 				[];
+    $headingsCarriedFwdAry = 				[];
     $spacerRowAry = 					[]; 
 
     $headingsClassesAry = 					[];
     $headingsTotalBroughtFwdSumClassesAry = [];
-    $headingsTotalCreditSumClassesAry = 	[];
-    $headingsTotalSpendSumClassesAry = 		[];
+    $headingsTotalReceiptsSumClassesAry = 	[];
+    $headingsTotalPaymentsSumClassesAry = 		[];
     $headingsTotalSurplusSumClassesAry =	[];
-    $headingsbalanceClassesAry = 			[];
+    $headingsCarriedFwdClassesAry = 			[];
     $headingsSpacerClassesAry = 			[];
 
     $headingCellIdsAry = 					[];
     $headsTotalBroughtFwdSumCellIdsAry =	[];
-    $headsTotalCreditSumCellIdsAry = 		[];
-    $headsTotalSpendSumCellIdsAry = 		[];
+    $headsTotalReceiptsSumCellIdsAry = 		[];
+    $headsTotalPaymentsSumCellIdsAry = 		[];
     $headsTotalSurplusSumCellIdsAry =		[];
-    $headsBalanceCellIdsAry = 				[];
+    $headsCarriedFwdCellIdsAry = 				[];
     $headsSpacerCellIdsAry = 				[];
 
     $headingsTotalBroughtFwdSum = 	0.00;
-    $headingsTotalCreditSum = 		0.00;
-    $headingsTotalSpendSum = 		0.00;
+    $headingsTotalReceiptsSum = 		0.00;
+    $headingsTotalPaymentsSum = 		0.00;
 
     foreach ($recordsDataArry as $singleRecArry) { //ROW LOOP - through allRecords DATA, loop through all rows of supplied data from allRecords table creating array of heading names and an array of row names
         $headingVal =  $tables->getStrValue($columnForHeadings, $singleRecArry[$columnForHeadings]); //create a heading from the column selected for headings at the current row iteration
-        if (!in_array($headingVal, $headingsAry)) { //if it's not in the array already append it
+        if (!in_array($headingVal, $headingsAry)) { //if it's not in the array already, append it
             $headingsAry[] = $headingVal;  
             $dataExists = TRUE;          
         }
         $rowsNameVal =  $tables->getStrValue($columnForRows, $singleRecArry[$columnForRows]); //create a row name from the column selected for row names at the  current row iteration
-        if (!in_array($rowsNameVal, $rowsNameAry)) { //if it's not in the array already append it
+        if (!in_array($rowsNameVal, $rowsNameAry)) { //if it's not in the array already, append it
             $rowsNameAry[] = $rowsNameVal;
 			$dataExists = TRUE;
         }        
@@ -190,63 +187,72 @@ function createPivotDisplData(
     if (!$dataExists) { //terminate things here, nothing to display!
     	$returnAry["headerAry"] = [];
     	$returnAry["rowsAry"] = [];
+    	$returnAry["compoundHiddenAry"] = [];
     	return $returnAry;
     }
 
-    sort($headingsAry); //get things in alphabetical order
+    $headingsAry = sortAryBySuffixDate($headingsAry);
     sort($rowsNameAry);
 
     if ($headingsAry[0] == "") { //if first budget is "" this means unallocated 
         $headingsAry[0] = "STILL TO ALLOCATE BUDGET!";
     }
 
-    foreach ($headingsAry as $headingText) { //COLUMN LOOP create headings section initialised rows that have the same number of positions as there are headings. To be populated with sums/classes/ids later
+    foreach ($headingsAry as $headingsIdx=>$headingText) { //COLUMN LOOP create headings section initialised rows that have the same number of positions as there are headings. To be populated with sums/classes/ids later
 
     	// 7 Lines
     	//$headingsAry has been populated in initial row loop above
     	$headingsTotalBroughtFwdSumAry[] = 	0;
-        $headingsTotalCreditSumAry[] = 		0;
-        $headingsTotalSpendSumAry[] = 		0;
+        $headingsTotalReceiptsSumAry[] = 	0;
+        $headingsTotalPaymentsSumAry[] = 	0;
         $headingsTotalSurplusSumAry[] = 	0;
-        $headingsbalanceAry[] = 			0;
+        $headingsCarriedFwdAry[] = 			0;
         $spacerRowAry[] = 					"ZZZ";
 
+        if (($headingsIdx == 0) || ($showExpiredBudgets && budgetExpired(date("Y-m-d"), $headingText))) {
+            $headingsClassesAry[] = $pivotCellClass;
+        }
+        else {
+            $headingsClassesAry[] = $pivotCellClass." ".$colClssAry["budgetEndInPast"];
+        }
+
+
         // 7 Lines
-        $headingsClassesAry[] = 					$pivotCellClass;
+        //$headingsClassesAry[] = 					$pivotCellClass." ".$colClssAry["zeroValueGood"];
         $headingsTotalBroughtFwdSumClassesAry[] = 	$pivotCellClass;
-        $headingsTotalCreditSumClassesAry[] = 		$pivotCellClass;
-        $headingsTotalSpendSumClassesAry[] = 		$pivotCellClass;
+        $headingsTotalReceiptsSumClassesAry[] = 	$pivotCellClass;
+        $headingsTotalPaymentsSumClassesAry[] = 	$pivotCellClass;
         $headingsTotalSurplusSumClassesAry[] = 		$pivotCellClass;
-        $headingsbalanceClassesAry[] = 				$pivotCellClass;
-        $headingsSpacerClassesAry[] = 				$pivotCellInvisibleClass;
+        $headingsCarriedFwdClassesAry[] = 			$pivotCellClass;
+        $headingsSpacerClassesAry[] = 				$pivotCellClass." ".$colClssAry["unselInvisCol"];
 
         $colHeadingTblIdx = $tables->getKey($columnForHeadings, $headingText);
         // 7 Lines
         $headingCellIdsAry[] = 					"heading-piv-".$colHeadingTblIdx; //create headings cell ids from column heading table index. Will facilitate click filtering
         $headsTotalBroughtFwdSumCellIdsAry[] = 	"brtfwd-piv-".$colHeadingTblIdx; 
-        $headsTotalCreditSumCellIdsAry[] = 		"credit-piv-".$colHeadingTblIdx; 
-        $headsTotalSpendSumCellIdsAry[] = 		"spend-piv-".$colHeadingTblIdx; 
+        $headsTotalReceiptsSumCellIdsAry[] = 	"credit-piv-".$colHeadingTblIdx; 
+        $headsTotalPaymentsSumCellIdsAry[] = 	"spend-piv-".$colHeadingTblIdx; 
         $headsTotalSurplusSumCellIdsAry[] = 	"surplus-piv-".$colHeadingTblIdx;
-        $headsBalanceCellIdsAry[] = 			"bal-piv-".$colHeadingTblIdx; 
+        $headsCarriedFwdCellIdsAry[] = 			"bal-piv-".$colHeadingTblIdx; 
         $headsSpacerCellIdsAry[] = 				"spacer-piv-".$colHeadingTblIdx; 
     }
 
     // 7 Lines
-    array_unshift($headingCellIdsAry, 					"heading-piv-rowTotal"); //designates column with row totals, inserted to right of header row name column
+    array_unshift($headingCellIdsAry, 					"heading-piv-rowTotal"); //designates column with row totals, appearing to right of header row name column (so done is here, before row totals below)
     array_unshift($headsTotalBroughtFwdSumCellIdsAry, 	"brtfwd-piv-rowTotal");
-    array_unshift($headsTotalCreditSumCellIdsAry, 		"credit-piv-rowTotal");
-    array_unshift($headsTotalSpendSumCellIdsAry, 		"spend-piv-rowTotal");
+    array_unshift($headsTotalReceiptsSumCellIdsAry, 	"credit-piv-rowTotal");
+    array_unshift($headsTotalPaymentsSumCellIdsAry, 	"spend-piv-rowTotal");
     array_unshift($headsTotalSurplusSumCellIdsAry, 		"surplus-piv-rowTotal");
-    array_unshift($headsBalanceCellIdsAry, 				"bal-piv-rowTotal");
+    array_unshift($headsCarriedFwdCellIdsAry, 			"bal-piv-rowTotal");
     array_unshift($headsSpacerCellIdsAry, 				"spacer-piv-rowTotal");
 
     // 7 Lines
-    array_unshift($headingCellIdsAry, 					"heading-piv-rowName");  //designates column with row names
+    array_unshift($headingCellIdsAry, 					"heading-piv-rowName");  //designates column with header row names, inserted at far left of header rows
     array_unshift($headsTotalBroughtFwdSumCellIdsAry, 	"brtfwd-piv-rowName");
-    array_unshift($headsTotalCreditSumCellIdsAry, 		"credit-piv-rowName");
-    array_unshift($headsTotalSpendSumCellIdsAry, 		"spend-piv-rowName");
+    array_unshift($headsTotalReceiptsSumCellIdsAry, 	"credit-piv-rowName");
+    array_unshift($headsTotalPaymentsSumCellIdsAry, 	"spend-piv-rowName");
     array_unshift($headsTotalSurplusSumCellIdsAry, 		"surplus-piv-rowName");
-    array_unshift($headsBalanceCellIdsAry, 				"bal-piv-rowName");
+    array_unshift($headsCarriedFwdCellIdsAry, 			"bal-piv-rowName");
     array_unshift($headsSpacerCellIdsAry, 				"spacer-piv-rowName");
     
 
@@ -261,10 +267,9 @@ function createPivotDisplData(
 
         $rowSum = 0;
         foreach ($headingsAry as $headingIdx => $heading) { //COLUMN LOOP in this foreach() section sum all the spend data for the current pivot table row name 
-        	$rowsClassesTempAry[] = $pivotCellClass; //append a new cell class of pivot cell class
         	$rowCellIdsTempAry[] = $rowTableId."-piv-".$tables->getKey($columnForHeadings, $heading); //create cell id from row name table index concatonated with "-piv-" and column heading table index. Will facilitate click filtering
 
-
+        	$budgetExpired = FALSE;
             $colSum = 0;
             $headingTableIdx = $tables->getKey($columnForHeadings, $heading); //gets table index of heading name. If name is "" (empty), 0 is returned in keeping with allRecords column data
             foreach ($recordsDataArry as $singleRecArry) { //ROW LOOP - loops through all the selected rows of data from allRecords
@@ -281,16 +286,27 @@ function createPivotDisplData(
                             
                         }
                         else { //not "Brought Fwd" category so sum as normal to "Credit" row
-                            $headingsTotalCreditSumAry[$headingIdx] =   fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey]    + $headingsTotalCreditSumAry[$headingIdx], TRUE);
-                            $headingsTotalCreditSum =                   fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey]    + $headingsTotalCreditSum, TRUE);
+                            $headingsTotalReceiptsSumAry[$headingIdx] =   fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey]    + $headingsTotalReceiptsSumAry[$headingIdx], TRUE);
+                            $headingsTotalReceiptsSum =                   fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey]    + $headingsTotalReceiptsSum, TRUE);
                         }
-                        $headingsTotalSpendSumAry[$headingIdx] = 	fourThreeOrTwoDecimals($singleRecArry[$spendColumnToSumKey] 	+ $headingsTotalSpendSumAry[$headingIdx], TRUE);
-                        $headingsTotalSpendSum = 					fourThreeOrTwoDecimals($singleRecArry[$spendColumnToSumKey] 	+ $headingsTotalSpendSum, TRUE);
+                        if ($showExpiredBudgets && budgetExpired($singleRecArry["recordDate"], $heading)) {
+                        	$budgetExpired = TRUE;
+                        }
+                        $headingsTotalPaymentsSumAry[$headingIdx] = 	fourThreeOrTwoDecimals($singleRecArry[$spendColumnToSumKey] 	+ $headingsTotalPaymentsSumAry[$headingIdx], TRUE);
+                        $headingsTotalPaymentsSum = 					fourThreeOrTwoDecimals($singleRecArry[$spendColumnToSumKey] 	+ $headingsTotalPaymentsSum, TRUE);
                     }
                 }
             }
             $rowTempAry[] = fourThreeOrTwoDecimals($colSum); //append sum to array - format to two decimal places with single leading zero for amounts < £1.00
             $rowSum = $colSum + $rowSum;
+
+            if ($showExpiredBudgets && $budgetExpired) {
+            	$rowsClassesTempAry[] = $pivotCellClass." ".$colClssAry["budgetExpired"]; //append a warning colour class as budget used in some transaction dates represesnted by this cell have expired
+            }
+            else {
+            	$rowsClassesTempAry[] = $pivotCellClass; //append a new cell class of pivot cell class
+            }
+
         }
 
         //DO ALL THE FOLLOWING FOR EACH ROW OF THE PIVOT TABLE
@@ -304,11 +320,11 @@ function createPivotDisplData(
 	        if ($rowSumDecimalised == 0) {
 	        	$rowTotalClass = $pivotCellOrangeClass; //change class to orange for zero value (means no value assigned to row name)
 	        }
+
 	        array_unshift($rowsClassesTempAry, $rowTotalClass); //insert modified cell class for totals column to the right of the row name class
 	        array_unshift($rowsClassesTempAry, $pivotCellRowNameClass); //insert cell class for first (row names) column at beginning of row of classes - left justified
 
 	        $rowsAry[$rowIdx]["displayRowsClassesAry"] = $rowsClassesTempAry; //append row classes 
-
 	        
 	        array_unshift($rowCellIdsTempAry, $rowTableId."-piv-rowTotal"); //use "rowTotal" as the last part of the id to designate column of row totals
 	        array_unshift($rowCellIdsTempAry, $rowTableId."-piv-rowName");  //use "rowName" as the last part of the id to designate column with row names
@@ -319,85 +335,85 @@ function createPivotDisplData(
     // 7 Lines
     array_unshift($headingsAry, "Totals"); //add to right of header names column to name totals column
     array_unshift($headingsTotalBroughtFwdSumAry, fourThreeOrTwoDecimals($headingsTotalBroughtFwdSum, TRUE)); //add credit totals column to right of header row names (LH) column
-    array_unshift($headingsTotalCreditSumAry, fourThreeOrTwoDecimals($headingsTotalCreditSum, TRUE)); // "   "
-    array_unshift($headingsTotalSpendSumAry, fourThreeOrTwoDecimals($headingsTotalSpendSum, TRUE)); //  "   "
+    array_unshift($headingsTotalReceiptsSumAry, fourThreeOrTwoDecimals($headingsTotalReceiptsSum, TRUE)); // "   "
+    array_unshift($headingsTotalPaymentsSumAry, fourThreeOrTwoDecimals($headingsTotalPaymentsSum, TRUE)); //  "   "
     //$headingsTotalSurplusSumAry calculated and populated in column loop below
-    //$headingsbalanceAry calculated and populated in column loop below
+    //$headingsCarriedFwdAry calculated and populated in column loop below
     array_unshift($spacerRowAry, ""); //add additional rightmost cell to spacer column so it has the same number as all others
 
 
     // 7 Lines
     array_unshift($headingsClassesAry, 						$pivotCellClass); 	//insert cell class for totals column to right of header names classes
     array_unshift($headingsTotalBroughtFwdSumClassesAry, 	$pivotCellClass);
-    array_unshift($headingsTotalCreditSumClassesAry,		$pivotCellClass);
-    array_unshift($headingsTotalSpendSumClassesAry, 		$pivotCellClass);
+    array_unshift($headingsTotalReceiptsSumClassesAry,		$pivotCellClass);
+    array_unshift($headingsTotalPaymentsSumClassesAry, 		$pivotCellClass);
     array_unshift($headingsTotalSurplusSumClassesAry,		$pivotCellClass);
-    array_unshift($headingsbalanceClassesAry, 				$pivotCellClass);
+    array_unshift($headingsCarriedFwdClassesAry, 			$pivotCellClass);
     array_unshift($headingsSpacerClassesAry,         		$pivotCellClass);
 
 
-    foreach ($headingsTotalCreditSumAry as $sumsIdx => $headingsTotalCredSum) { //COLUMN LOOP run loop to do subtraction on each column total and create balance array (also class choosing and formatting)
-        $headingsbalanceAry[$sumsIdx] = fourThreeOrTwoDecimals($headingsTotalBroughtFwdSumAry[$sumsIdx] + $headingsTotalCredSum - $headingsTotalSpendSumAry[$sumsIdx], TRUE); //bal from brought fwd + credit - spend
-        $headingsTotalSurplusSumAry[$sumsIdx] = fourThreeOrTwoDecimals($headingsTotalCredSum - $headingsTotalSpendSumAry[$sumsIdx], TRUE); //bal from credit - spend
+    foreach ($headingsTotalReceiptsSumAry as $sumsIdx => $headingsTotalCredSum) { //COLUMN LOOP run loop to do subtraction on each column total and create balance array (also class choosing and formatting)
+        $headingsCarriedFwdAry[$sumsIdx] = fourThreeOrTwoDecimals($headingsTotalBroughtFwdSumAry[$sumsIdx] + $headingsTotalCredSum - $headingsTotalPaymentsSumAry[$sumsIdx], TRUE); //bal from brought fwd + credit - spend
+        $headingsTotalSurplusSumAry[$sumsIdx] = fourThreeOrTwoDecimals($headingsTotalCredSum - $headingsTotalPaymentsSumAry[$sumsIdx], TRUE); //bal from credit - spend
 
         //this section conditionally sets the colour and converts 0 to "-" in some cases according to the values in various cells of the brought fwd and credit (receipts) row
         if ($headingsTotalBroughtFwdSumAry[$sumsIdx] == 0) { //Brought Fwd is 0
         	$headingsTotalBroughtFwdSumAry[$sumsIdx] = "-"; //make Brought Fwd invisible because no value
-        	if ($headingsTotalCreditSumAry[$sumsIdx] < 0) {
-	        	$headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellRedClass; //set Credit class to red for -ve value
+        	if ($headingsTotalReceiptsSumAry[$sumsIdx] < 0) {
+	        	$headingsTotalReceiptsSumClassesAry[$sumsIdx] = $pivotCellClass." ".$colClssAry["negativeValue"]; //set Receipts class to red for -ve value
 	        }
-	        if ($headingsTotalCreditSumAry[$sumsIdx] == 0) {
-	        	$headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellOrangeClass; //set Credit class to orange for -zero value
-	        	$headingsTotalCreditSumAry[$sumsIdx] = "-"; //make Credit invisible because no value
-	        	$headingsTotalBroughtFwdSumClassesAry[$sumsIdx] = $pivotCellOrangeClass; //set Brought Fwd class to orange because both it and Credit are 0
+	        if ($headingsTotalReceiptsSumAry[$sumsIdx] == 0) {
+	        	$headingsTotalReceiptsSumClassesAry[$sumsIdx] = $pivotCellClass." ".$colClssAry["zeroValueBad"]; //set Receipts class to orange for -zero value
+	        	$headingsTotalReceiptsSumAry[$sumsIdx] = "-"; //make Receipts invisible because no value
+	        	$headingsTotalBroughtFwdSumClassesAry[$sumsIdx] = $pivotCellClass." ".$colClssAry["zeroValueBad"]; //set Brought Fwd class to orange because both it and Receipts are 0
 	        }
         }
         else {
         	if ($headingsTotalBroughtFwdSumAry[$sumsIdx] < 0) { //Brought Fwd is -ve
-        		$headingsTotalBroughtFwdSumClassesAry[$sumsIdx] = $pivotCellRedClass; //set Brought Fwd class to red for -ve value
-        		if ($headingsTotalCreditSumAry[$sumsIdx] < 0) {
-		        	$headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellRedClass; //set Credit class to red for -ve value
+        		$headingsTotalBroughtFwdSumClassesAry[$sumsIdx] = $pivotCellClass." ".$colClssAry["negativeValue"]; //set Brought Fwd class to red for -ve value
+        		if ($headingsTotalReceiptsSumAry[$sumsIdx] < 0) {
+		        	$headingsTotalReceiptsSumClassesAry[$sumsIdx] = $pivotCellClass." ".$colClssAry["negativeValue"]; //set Receipts class to red for -ve value
 		        }
-		        if ($headingsTotalCreditSumAry[$sumsIdx] == 0) {
-		        	$headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellOrangeClass; //set Credit class to orange for -zero value
+		        if ($headingsTotalReceiptsSumAry[$sumsIdx] == 0) {
+		        	$headingsTotalReceiptsSumClassesAry[$sumsIdx] = $pivotCellClass." ".$colClssAry["zeroValueBad"]; //set Receipts class to orange for -zero value
 		        }
         	}
         	else {
-        		if ($headingsTotalCreditSumAry[$sumsIdx] < 0) {
-		        	$headingsTotalCreditSumClassesAry[$sumsIdx] = $pivotCellRedClass; //set Credit class to red for -ve value
+        		if ($headingsTotalReceiptsSumAry[$sumsIdx] < 0) {
+		        	$headingsTotalReceiptsSumClassesAry[$sumsIdx] = $pivotCellClass." ".$colClssAry["negativeValue"]; //set Receipts class to red for -ve value
 		        }
-		        if ($headingsTotalCreditSumAry[$sumsIdx] == 0) {
-		        	$headingsTotalCreditSumAry[$sumsIdx] = "-"; //make Credit invisible because no value
+		        if ($headingsTotalReceiptsSumAry[$sumsIdx] == 0) {
+		        	$headingsTotalReceiptsSumAry[$sumsIdx] = "-"; //make Receipts invisible because no value
 		        }
         	}
 
         }
 
         //this section conditionally sets the color of the balance row cells according to whether they're 0, +ve or -ve
-        if ($headingsbalanceAry[$sumsIdx] < 0) {
-        	$headingsbalanceClassesAry[$sumsIdx] = $pivotCellRedClass; //set class to red for -ve value
+        if ($headingsCarriedFwdAry[$sumsIdx] < 0) {
+        	$headingsCarriedFwdClassesAry[$sumsIdx] = $pivotCellClass." ".$colClssAry["negativeValue"]; //set class to red for -ve value
         }
-        if ($headingsbalanceAry[$sumsIdx] == 0) {
-        	$headingsbalanceClassesAry[$sumsIdx] = $pivotCellGreenClass; //set class to orange for zero value
+        if ($headingsCarriedFwdAry[$sumsIdx] == 0) {
+        	$headingsCarriedFwdClassesAry[$sumsIdx] = $pivotCellClass." ".$colClssAry["zeroValueGood"]; //set class to green for zero carried forward value (which is normally good)
         }
     }
 
     // 7 Lines
     array_unshift($headingsAry, 							$columnForHeadings); //insert headings title at beginning of headingsAry 
     array_unshift($headingsTotalBroughtFwdSumAry, 			"Brought Fwd"); 	 //insert "Brought Fwd" at beginning of headingsTotalBroughtFwdSumAry to move totals over to the right and align things
-    array_unshift($headingsTotalCreditSumAry, 				"Receipts"); 		 // "   "
-    array_unshift($headingsTotalSpendSumAry, 				"Payments"); 		 // "   "
+    array_unshift($headingsTotalReceiptsSumAry, 			"Receipts"); 		 // "   "
+    array_unshift($headingsTotalPaymentsSumAry, 			"Payments"); 		 // "   "
     array_unshift($headingsTotalSurplusSumAry, 				"Surplus"); 	 	 // "   "
-    array_unshift($headingsbalanceAry, 						"Carried Fwd"); 	 // "   "
+    array_unshift($headingsCarriedFwdAry, 					"Carried Fwd"); 	 // "   "
     array_unshift($spacerRowAry, 							$columnForRows); 	 // "   "
 
     // 7 Lines
     array_unshift($headingsClassesAry, 						$pivotCellRowNameRightClass); //insert at beginning class for header names - right justified
     array_unshift($headingsTotalBroughtFwdSumClassesAry, 	$pivotCellRowNameRightClass);
-    array_unshift($headingsTotalCreditSumClassesAry, 		$pivotCellRowNameRightClass);
-    array_unshift($headingsTotalSpendSumClassesAry, 		$pivotCellRowNameRightClass);
+    array_unshift($headingsTotalReceiptsSumClassesAry, 		$pivotCellRowNameRightClass);
+    array_unshift($headingsTotalPaymentsSumClassesAry, 		$pivotCellRowNameRightClass);
     array_unshift($headingsTotalSurplusSumClassesAry, 		$pivotCellRowNameRightClass);
-    array_unshift($headingsbalanceClassesAry, 				$pivotCellRowNameRightClass);
+    array_unshift($headingsCarriedFwdClassesAry, 			$pivotCellRowNameRightClass);
     array_unshift($headingsSpacerClassesAry, 				$pivotCellRowNameClass); //insert at beginning class for column names title - left justified
 
 
@@ -407,15 +423,15 @@ function createPivotDisplData(
     // 7 Lines
     $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsAry,                   	 "headerRowsClassesAry"=>$headingsClassesAry, 				    "headerCellIdsAry"=>$headingCellIdsAry];
     $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalBroughtFwdSumAry,   "headerRowsClassesAry"=>$headingsTotalBroughtFwdSumClassesAry,	"headerCellIdsAry"=>$headsTotalBroughtFwdSumCellIdsAry];
-    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalCreditSumAry,       "headerRowsClassesAry"=>$headingsTotalCreditSumClassesAry,	    "headerCellIdsAry"=>$headsTotalCreditSumCellIdsAry];
-    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalSpendSumAry,        "headerRowsClassesAry"=>$headingsTotalSpendSumClassesAry, 	    "headerCellIdsAry"=>$headsTotalSpendSumCellIdsAry];
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalReceiptsSumAry,     "headerRowsClassesAry"=>$headingsTotalReceiptsSumClassesAry,	"headerCellIdsAry"=>$headsTotalReceiptsSumCellIdsAry];
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalPaymentsSumAry,     "headerRowsClassesAry"=>$headingsTotalPaymentsSumClassesAry, 	"headerCellIdsAry"=>$headsTotalPaymentsSumCellIdsAry];
     $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsTotalSurplusSumAry,      "headerRowsClassesAry"=>$headingsTotalSurplusSumClassesAry, 	"headerCellIdsAry"=>$headsTotalSurplusSumCellIdsAry];
-    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsbalanceAry,              "headerRowsClassesAry"=>$headingsbalanceClassesAry, 		    "headerCellIdsAry"=>$headsBalanceCellIdsAry];
+    $returnAry["headerAry"][] = ["headerRowsAry"=> $headingsCarriedFwdAry,           "headerRowsClassesAry"=>$headingsCarriedFwdClassesAry, 		"headerCellIdsAry"=>$headsCarriedFwdCellIdsAry];
     $returnAry["headerAry"][] = ["headerRowsAry"=> $spacerRowAry,                    "headerRowsClassesAry"=>$headingsSpacerClassesAry, 			"headerCellIdsAry"=>$headsSpacerCellIdsAry]; 
 
     $returnAry["rowsAry"] = $rowsAry; //add row data
     $returnAry["compoundHiddenAry"] = $compoundHiddenAry; //all positions default to "false" designating row is not hidden - needed to fool flex/none display attribute in php display section into always flex
-    
+
     return $returnAry;
 }
 
@@ -430,10 +446,90 @@ function createPivotDisplData(
 
 
 
+function budgetExpired($recordDate, $budgetName) {
+    $transDateAsYYMM = convertDateToYYMM($recordDate); //transaction date as YYMM
+    $lastFiveCharsOfBudgetName = substr(getDateSuffix($budgetName), -5); //budget date as YYMM or else "NoDat" if the budget name doesn't end in date
+    if ($lastFiveCharsOfBudgetName != "NoDat") {
+        if ($lastFiveCharsOfBudgetName < $transDateAsYYMM) { //budget date (for single month budget) or end date (for budget with start and end date) is earlier than the transaction date
+            return TRUE; //budget expiry date earlier than transaction date
+        }
+        else {
+            return FALSE; //budget not expired for this record date
+        }
+    } 
+}
+
+
+/* Takes the passed $date string in format "2021-02-09" and converts it to YYMM format "2102".  */
+function convertDateToYYMM($date) {
+    return substr($date, 2, 2).substr($date, 5, 2); //extract two digit year substring and concatonate it with extracted month substring
+}
+
+function sortAryBySuffixDate($array) {
+    $dateKeysAry = []; //temporary array that will have keys of the decoded date suffix or the original value (where date suffix doesn't exist)
+    $arrayLength = count($array); //get the number of items in the array which equates to the maximum index (+1)
+    $indexMaxCharsNeeded = strlen(strval($arrayLength - 1)); //get the number of string characters that would be needed to represent the maximum possible index for $array
+    sort($array); //do initial sort to get in value order (sort of to force a 'sort in place' action)
+    foreach ($array as $index=>$value) {
+        $dateKeysAry[getDateSuffix($value).str_pad($index, $indexMaxCharsNeeded, "0", STR_PAD_LEFT)] = $value; //create a new array entry with key set to decoded date suffix or the original value (where date suffix doesn't exist). Left padded $index is appended to the key so two keys that are the same - which is highly likely - will be made different and will sort in place
+    }
+    ksort($dateKeysAry, SORT_NATURAL);
+    return array_values($dateKeysAry);
+}
 
 
 
-
+/* Extracts the last 5 characters from $value (which could be a abreviated month-year date suffix in the form "Feb20") and if it is a date decodes it to a number, reversed in the form 2002 so it will sort properly if used in an array. If any extracted suffix doesn't properly decode to a date the original value is returned instead. A CORRESPONDING JAVASCRIPT FUNCTION EXISTS.  */
+function getDateSuffix($value) {
+    $lastFiveChars = substr(trim($value), -5); //get the last 5 characters of the value which may be a date code e.g. "Feb20"
+        $monthThreeCharName = substr($lastFiveChars, 0, 3); //extract what is potentially the three character month name e.g. 'Feb'
+        $yearTwoDigitNum = substr($lastFiveChars, 3);  //extract what is potentially the two character year number e.g. "20"
+        if (is_numeric($yearTwoDigitNum)) { //check that the two char year number actually is a number as a partial validation of the five characters being a date code
+            switch ($monthThreeCharName) { //do a switch-case iteration to see if the three characters are month abreviation and if so convert to numeric equivalent
+                case "Jan":
+                    return $yearTwoDigitNum."01"; //return the concatonated revesed date in numeric form e.g. "20"."01"
+                    break;
+                case "Feb":
+                    return $yearTwoDigitNum."02";
+                    break;
+                case "Mar":
+                    return $yearTwoDigitNum."03";
+                    break;
+                case "Apr":
+                    return $yearTwoDigitNum."04";
+                    break;
+                case "May":
+                    return $yearTwoDigitNum."05";
+                    break;
+                case "Jun":
+                    return $yearTwoDigitNum."06";
+                    break;
+                case "Jul":
+                    return $yearTwoDigitNum."07";
+                    break;
+                case "Aug":
+                    return $yearTwoDigitNum."08";
+                    break;
+                case "Sep":
+                    return $yearTwoDigitNum."09";
+                    break;
+                case "Oct":
+                    return $yearTwoDigitNum."10";
+                    break;
+                case "Nov":
+                    return $yearTwoDigitNum."11";
+                    break;
+                case "Dec":
+                    return $yearTwoDigitNum."12";
+                    break;
+                default: //if the three char month name turns out not to be a month then return value
+                    return $value."-NoDat";
+            }
+        }
+        else { //last two characters is not a number so just return $value
+            return $value."-NoDat";
+        }
+}
 
 
 
@@ -891,6 +987,7 @@ function createStndDisplData(
 
     foreach ($recordsDataArry as $recordsIdx=>$singleRecArry) { //loop through all persOrgs selected for display creating indexed array of values like "idR", "persOrgCategory" for each row to be displayed
         if (!(($download) && ($singleRecArry["compoundHidden"] == TRUE))) { //in download mode, if the row is a compound one that is normally hidden unless a member of the compound is clicked, don't create it
+        	$budgetExpired = FALSE; //flag that will be set if section that sets colour classes sets the budget expiry colour for the current row
             $displayRowsAry = array();
             $displayRowsClassesAry = array();
 
@@ -941,29 +1038,43 @@ function createStndDisplData(
 
 
 
-            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
-            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; 
-            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; //record date class
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; // person-organisation class
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; //transaction class
 
             if ($moneyDisplayStr == "amountPaidIn") { //apends cells in the whole withdrawn column with blankedMoneyCol to warn that it is not in use
-                $displayRowsClassesAry[] = $moneyCellClass." ".$colClssAry["blankedMoneyCol"];
+                $displayRowsClassesAry[] = $moneyCellClass." ".$colClssAry["blankedMoneyCol"]; //withdrawn class - blanked
             }
             else {
-                $displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass;
+                $displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass; //withdrawn class - normal or compound
             }
 
             if ($moneyDisplayStr == "amountWithdrawn") { //apends cells in the whole paidin column with blankedMoneyCol to warn that it is not in use
-                $displayRowsClassesAry[] = $moneyCellClass." ".$colClssAry["blankedMoneyCol"];
+                $displayRowsClassesAry[] = $moneyCellClass." ".$colClssAry["blankedMoneyCol"]; //paidin class - blanked
             }
             else {
-                $displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass;
+                $displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass; //paidin class - normal or compound
             }
 
-            //$displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass;
-            //$displayRowsClassesAry[] = $moneyCellClass." ".$colorSuffixClass;
-            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
-            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
-            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; //account class
+
+            //SECTION FOR COLOURING BUDGETS THAT HAVE EXPIRED FOR THE TRANSACTION DATE THEY HAVE BEEN APPLIED TO
+            $transDateAsYYMM = convertDateToYYMM($singleRecArry["recordDate"]); //transaction date as YYMM
+            $lastFiveCharsOfBudgetName = substr(getDateSuffix(aryValueOrZeroStr($budgetListAry, $singleRecArry["budget"])), -5); //budget date as YYMM or else "NoDat" if the budget name doesn't end in date
+            if ($lastFiveCharsOfBudgetName != "NoDat") {
+            	if ($lastFiveCharsOfBudgetName < $transDateAsYYMM) { //budget date (for single month budget) or end date (for budget with start and end date) is earlier than the transaction date
+            		$displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["budgetExpired"]; //budget class - budget expiry date earlier than transaction date colour
+            		$budgetExpired = TRUE;
+            	}
+            	else {
+            		$displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; //budget class - normal
+            	}
+            } 
+            else {
+            	$displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; //budget class - normal
+            }
+
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; //reference class
 
                     //set appropriate class for reconcile date display to indicate status (by default it is already set in class sections above to $standardCellClass)
             if ($endDate < $singleRecArry["reconciledDate"]) { //reconcile date is later than the end of the latest displayed month so show as unreconciled (usually red)
@@ -982,16 +1093,19 @@ function createStndDisplData(
                 $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
             }
 
-            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
-            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
-            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
-            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"];
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; //umbrella class
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; //doc type class
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; //note class
+            $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; //family class
 
             
-
+            //SECTION FOR SETTING FILTER COLOUR FOR FILTERED COLUMNS - OVERRIDES ANY PREVIOUSLY SET COLOUR CLASSES EXCEPT BUDGET EXPIRED COLOURS
             foreach ($IncludeFiltIdxAry as $colIdx) { //set filter class for those columns that have been filtered - shouldn't (don't know if it is explicitly prevented) be used for reconciled date column
                 if (($displayCellDescrpAry[$colIdx] == "MoneyOut") || ($displayCellDescrpAry[$colIdx] == "MoneyIn")) { //needs right alignment because withdrawn or paidin cell
                     $displayRowsClassesAry[$colIdx] = $moneyCellClass." ".$colClssAry["columnFiltCol"];
+                }
+                elseif (($displayCellDescrpAry[$colIdx] == "Budget") && $budgetExpired)  {
+                	//do not set filter colour as budget expired colour has been set and needs to be seen in the filter column. If the whole column is expired the filter colour will be seen in the header
                 }
                 else { //ordinary cell so normal left alignment
                     $displayRowsClassesAry[$colIdx] = $standardCellClass." ".$colClssAry["columnFiltCol"];
@@ -1001,7 +1115,7 @@ function createStndDisplData(
             
             //load data for current row starting at the left column (0)
             $recDateAry = explode("-", $singleRecArry["recordDate"]); 
-            $displayRowsAry[] = $recDateAry[2]."-".$recDateAry[1]."-".$recDateAry[0]; //create date in reverse format to that stored in allRecords table - i.e. display like 23-03-2019
+            $displayRowsAry[] = $recDateAry[2]."-".$recDateAry[1]."-".$recDateAry[0]; //create date in reverse format to that stored in allRecords table (2019-03-23) - i.e. display like 23-03-2019
             $displayRowsAry[] = aryValueOrZeroStr($orgPersonsListAry, $singleRecArry["personOrOrg"]);
             $displayRowsAry[] = aryValueOrZeroStr($transCatListAry, $singleRecArry["transCatgry"]);
             $displayRowsAry[] = fourThreeOrTwoDecimals($singleRecArry["amountWithdrawn"]); //format both withdrawn and paidin to two decimal places with single leading zero for amounts < £1.00
@@ -2351,7 +2465,7 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
 }
 
 
-/* Creates a fixed empty panel to be displayed and take up the appropriate space in the display area when active panels like calendar or item selection panel of buttons are not needed.  Initially the outer div is set to display:none so the panel will be invisible unless it is specifically set to display:inline by javascript. Large test is displayed in this panel - "Key In Data Directly". */
+/* Creates a fixed empty panel to be displayed and take up the appropriate space in the display area when active panels like calendar or item selection panel of buttons are not needed.  Initially the outer div is set to display:none so the panel will be invisible unless it is specifically set to display:inline by javascript. Large text is displayed in this panel - "Key In Data Directly". */
 function butPanelJSdummy(
     $uniqueId,          //id to provide target info and distinguish this from other instances of this button panel (for javascript interaction with panel elements)
     $outerDivClass)      //class of containing div that acts as a container for the buttons
@@ -2490,9 +2604,6 @@ function butPanelJSInteracStrOnly(
     echo '<div class='.$outerDivClass.' id='.$uniqueId.' style="display:none;">' ;
         ?>
         <form style="float:left;" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data">
-
-            
-
         <?php
         if (($addButName) && !($viewOnly)) { //only show 'ADD' button if name is provided and viewOnly is set to FALSE
             echo '<button
@@ -2530,7 +2641,7 @@ function butPanelJSInteracStrOnly(
                     ?> <button class="<?php echo $btnClass; ?>" type="button" id="<?php echo $itemUniqueId.$index; ?>" ><?php echo $yr; ?></button><?php
                 }                   
                 else {
-                    ?> <button  
+                    ?> <button
                             class="<?php echo $btnClass;?>"
                             type="button"
                             id="<?php echo $itemUniqueId.$index;?>"

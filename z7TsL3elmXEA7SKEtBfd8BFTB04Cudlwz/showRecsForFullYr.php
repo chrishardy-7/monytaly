@@ -36,12 +36,17 @@ $colClssAry = [	"unselCol"				=>	"white",
 				"cellSelEditCol"		=>	"blueEdit", 
 				"waitingForServer"		=>	"orange",
 				"rcnclTooEarlyCol"		=>	"orangeWhiteTxt", 
+				"zeroValueBad"			=>	"orangeWhiteTxt",
+				"zeroValueGood"			=>	"darkGreen",
 				"notRcnclCol"			=>	"redWhiteTxt",
+				"negativeValue"			=>	"redWhiteTxt",
 				"columnFiltCol"			=>	"tan",
 				"compoundMaster"		=>	"yellowGradientHardBot",
 				"compoundSlave"			=>	"green",
 				"compoundSlaveFinal"	=>	"greenGradientHardTop",
-				"blankedMoneyCol"		=>	"borderGrey"
+				"blankedMoneyCol"		=>	"borderGrey",
+				"budgetExpired"			=>	"salmon",
+				"budgetEndInPast"		=>	"lightGreen"
 			];
 
 
@@ -358,8 +363,12 @@ if ($subSubCommand == "Bank2021") { //sets up pivot table for all of 2019-20 fil
 }
 
 
-if ($subSubCommand == "EileenReclaim") { //
+if ($subSubCommand == "EileenReclaim1") { //
 	$fam->inputFamId(5694);
+}
+
+if ($subSubCommand == "EileenReclaim2") { //
+	$fam->inputFamId(5869);
 }
 
 //########################	shortcut button section end
@@ -665,7 +674,7 @@ else { //loop through all records that have been retrieved from the allRecords t
 
 
 	if ($pivotBut->isSet()) {
-		$displayData = createPivotDisplData($recordsPivotArry, "pivotCellStd", "pivotCellRowName", "pivotCellRed", "pivotCellGreen", "pivotCellOrange", "pivotCellInvisible", "pivotCellRowNameRight", "budget", "transCatgry", "transCatgry", "Budget Fwd"); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scro;;able display area
+		$displayData = createPivotDisplData($recordsPivotArry, $colClssAry, "pivotCellStd", "pivotCellRowName", "pivotCellRowNameRight", "budget", "transCatgry", "transCatgry", "Budget Fwd", TRUE); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scro;;able display area
 	}
 	else {
 			$displayData = createStndDisplData($recordsDataArry, $genFilter->getInclColIdxsAry(), "displayCellStd", "displayCellRowSel", "displayCellRowSelMoney", "displayCellFilt", "displayMoneyCellFiltClass", "displayCellMoney", "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", $endDate, $download, $allowedToEdit, $allRecordsColNameRndAry, $displayBankAcc, $colClssAry, $moneyDisplay->getStr()); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scrollable display area
@@ -752,15 +761,19 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 		}, 10);
 	}
 
-	var notRun = true;
-	//stores scroll position to make working on a particular edit line easier. Also used to resize the LH pivot table window so it can scroll in syncronisum with the RH one and not have an extra lower bit
-	function storeScrollPos() {
+
+	//scrolls the RH pivot header section and LH pivot category section in synchronism with the RH pivot category section and stores the scroll position so it survives page reloads
+	function storePivotScrollPos() {
 		var pivotX = document.getElementById("multiRowPivotTableContainerRight").scrollLeft; //get horizontal scroll position for RH pivot table rows section
 		sessionStorage.setItem('pivotXScrollpos', pivotX); //store scroll position for use later
 		document.getElementById("multiRowHeaderContainerRight").scrollLeft = pivotX; //set RH pivot table header horzontal scroll position to samme position as rows (so thaey are effectively ganged)
 		var pivotY = document.getElementById("multiRowPivotTableContainerRight").scrollTop;  //get vertical scroll position for RH pivot table rows section
-		sessionStorage.setItem('pivotYScrollpos', pivotX); //store scroll position for use later
+		sessionStorage.setItem('pivotYScrollpos', pivotY); //store scroll position for use later
 		document.getElementById("multiRowPivotTableContainerLeft").scrollTop = pivotY; //set LH vertical scroll position of LH pivot table rows section to same position as rows (making them ganged)
+	}
+
+	//stores the transaction spreadsheet section scroll position to make working on a particular edit line easier.
+	function storeTransScrollPos() {
 	    var y = document.getElementById("docScrollDiv").scrollTop; 
 	    sessionStorage.setItem('docScrollpos', y); //store y scroll for use later
 	}
@@ -771,14 +784,18 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 	window.onload = "alert('!')"; //don't know why this is here or what it's meant to do
 
 	function recoverScrollPos() {
-		if(sessionStorage.getItem('docScrollpos')) {
-			document.getElementById("docScrollDiv").scrollTop = sessionStorage.getItem('docScrollpos');
+		if (pivotButIsSet) { //only recover pivot table scroll positions if pivot table is being displayed
+			if(sessionStorage.getItem('pivotYScrollpos')) {
+				document.getElementById("multiRowPivotTableContainerRight").scrollTop = sessionStorage.getItem('pivotYScrollpos');
+			}		
+			if(sessionStorage.getItem('pivotXScrollpos')) {
+				document.getElementById("multiRowPivotTableContainerRight").scrollLeft = sessionStorage.getItem('pivotXScrollpos');
+			}
 		}
-		if(sessionStorage.getItem('pivotXScrollpos')) {
-			document.getElementById("multiRowPivotTableContainerRight").scrollTop = sessionStorage.getItem('pivotXScrollpos');
-		}
-		if(sessionStorage.getItem('pivotYScrollpos')) {
-			document.getElementById("multiRowPivotTableContainerRight").scrollLeft = sessionStorage.getItem('pivotYScrollpos');
+		else { //recover transactions scroll position
+			if(sessionStorage.getItem('docScrollpos')) {
+				document.getElementById("docScrollDiv").scrollTop = sessionStorage.getItem('docScrollpos');
+			}
 		}
 	}
 
@@ -799,19 +816,20 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 
 			<?php
 		
-			if ($pivotBut->isSet()) {  //PIVOT SET SO SHOW PIVOT TABLE
-												//PIVOT TABLE HEADER DISPLAY SECTION - START				?>
+			if ($pivotBut->isSet()) {  //################################################################################## PIVOT SET SO SHOW PIVOT TABLE
+											//PIVOT TABLE HEADER DISPLAY SECTION - START	
+												 //PIVOT TABLE LEFT TWO COLUMNS OF HEADER SECTION - START			?>
 				<div class="dataDisplayContainerPivot">
 					<div class="containerForLeftRightPivotHeaders">
 						<div class="multiRowHeaderContainerLeft" id="headings"  onclick="clickField(event)">
 							<?php
 							foreach ($displayData["headerAry"] as $hdrRowIdx => $headerRow) { //ROW LOOP
-								//########################################################### INDIVIDUAL ROW - START
+								//######################## INDIVIDUAL ROW - START
 								?>
 								<div style="float:left; ">
 									<div style=" display:flex; align-items: stretch; ">
 										<?php
-									    foreach	($headerRow["headerRowsAry"] as $headingIdx => $heading) { //COLUMN LOOP - traies to display all columns so height is set by largest heading text, but truncated at 2 col
+									    foreach	($headerRow["headerRowsAry"] as $headingIdx => $heading) { //COLUMN LOOP - tries to display all columns so height is set by largest heading text, but truncated at 2 col
 									    	?>
 											<div 	class=<?php echo '\''.$headerRow["headerRowsClassesAry"][$headingIdx].'\'';?> //to allow multiple classes with spaces to be displayed \' is used around class
 													id=<?php echo $headerRow["headerCellIdsAry"][$headingIdx];?>>
@@ -828,15 +846,16 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 								    </div>
 							    </div>
 							    <?php
-							    //########################################################### INDIVIDUAL ROW - END
-							}
+							    //############################# INDIVIDUAL ROW - END
+							}	//PIVOT TABLE LEFT TWO COLUMNS OF HEADER SECTION - END	
 							?>
 						</div>
 
+
 						<div class="multiRowHeaderContainerRight" id="multiRowHeaderContainerRight"  onclick="clickField(event)">
-							<?php
+							<?php             //PIVOT TABLE RIGHT COLUMNS HEADER SECTION - START
 							foreach ($displayData["headerAry"] as $hdrRowIdx => $headerRow) { //ROW LOOP
-								//########################################################### INDIVIDUAL ROW - START
+								//################## INDIVIDUAL ROW - START
 								?>
 								<div style="float:left; ">
 									<div style=" display:flex; align-items: stretch; ">
@@ -860,18 +879,20 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 								    </div>
 							    </div>
 							    <?php
-							    //########################################################### INDIVIDUAL ROW - END
-							}
+							    //###################### INDIVIDUAL ROW - END
+							} 					//PIVOT TABLE RIGHT COLUMNS HEADER SECTION - FINISH
 							?>
 						</div>
 					</div>
+
+
 					<?php
 										//PIVOT TABLE HEADER DISPLAY SECTION - END
 					?>
 					<div class="containerForLeftRightPivotRows">
-						<?php //PIVOT TABLE LEFT TWO COLUMNS CATEGORY LIST AND TOTALS SCROLLABLE DISPLAY - START
+						<?php             //PIVOT TABLE LEFT TWO COLUMNS CATEGORY LIST AND TOTALS DISPLAY - START
 						?>   			
-						<div class="multiRowPivotTableContainerLeft" id="multiRowPivotTableContainerLeft" onscroll="storeScrollPos()" onclick="clickField(event)" onkeyup="changeField(event)" onpaste="changeField(event)">
+						<div class="multiRowPivotTableContainerLeft" id="multiRowPivotTableContainerLeft" onclick="clickField(event)" onkeyup="changeField(event)" onpaste="changeField(event)">
 							<?php
 							foreach ($displayData["rowsAry"] as $rowIdx => $curRow) { //ROW LOOP
 								$rowId = $displayData["idrArry"][$rowIdx];
@@ -903,11 +924,11 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 							}
 							?>
 						</div>
-						<?php   			//PIVOT TABLE LEFT TWO COLUMNS CATEGORY LIST AND TOTALS SCROLLABLE DISPLAY - END
+						<?php   			//PIVOT TABLE LEFT TWO COLUMNS CATEGORY LIST AND TOTALS DISPLAY - END
 
 									//PIVOT TABLE RIGHT COLUMNS SCROLLABLE DISPLAY - START
 						?>
-						<div class="multiRowPivotTableContainerRight" id="multiRowPivotTableContainerRight" onscroll="storeScrollPos()" onclick="clickField(event)" onkeyup="changeField(event)" onpaste="changeField(event)">
+						<div class="multiRowPivotTableContainerRight" id="multiRowPivotTableContainerRight" onscroll="storePivotScrollPos()" onclick="clickField(event)" onkeyup="changeField(event)" onpaste="changeField(event)">
 							<?php
 							foreach ($displayData["rowsAry"] as $rowIdx => $curRow) { //ROW LOOP
 								$rowId = $displayData["idrArry"][$rowIdx];
@@ -1050,7 +1071,7 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 
 								//NORMAL TRANSACTIONS SCROLLABLE DISPLAY - START
 					?>
-					<div class="transactionsScrollableDisplayArea" id="docScrollDiv" onscroll="storeScrollPos()" onclick="clickField(event)" onkeyup="changeField(event)" onpaste="changeField(event)">
+					<div class="transactionsScrollableDisplayArea" id="docScrollDiv" onscroll="storeTransScrollPos()" onclick="clickField(event)" onkeyup="changeField(event)" onpaste="changeField(event)">
 						<?php
 						foreach ($displayData["rowsAry"] as $rowIdx => $curRow) { //ROW LOOP
 							$rowId = $displayData["idrArry"][$rowIdx];

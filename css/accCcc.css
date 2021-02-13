@@ -292,6 +292,24 @@ input: focus, textarea: focus, select: focus {
     user-select:  none;          /* Likely future */
 }
 
+.lightGreen {
+    background-color: #C0FFC0;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.darkGreen {
+    background-color: #20FF20;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
 .green {
 	background-color: #80FF80;
     cursor:  pointer;
@@ -342,6 +360,15 @@ input: focus, textarea: focus, select: focus {
 
 .red {
     background-color: #FF8080;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.salmon {
+    background-color: #FCB6CA;
     cursor:  pointer;
     -webkit-user-select:  none;  /* Chrome all / Safari all */
     -moz-user-select:  none;     /* Firefox all */
@@ -915,6 +942,7 @@ input: focus, textarea: focus, select: focus {
         min-height:  1.51032vw;
         padding:  0.15624vw 0.5208vw;
         font-size:  0.72912vw;
+        word-wrap:  break-word;
     }
 
     /* ^^^^^^^^^^^^ butPanelJSInteracStrOnly END ^^^^^^^^^^ */
@@ -1061,7 +1089,7 @@ input: focus, textarea: focus, select: focus {
     }
 
     .pivotCellStd, .pivotCellGreen, .pivotCellOrange, .pivotCellRed, .pivotCellInvisible, .pivotCellRowName, .pivotCellRowNameRight {
-        color:  #000000;
+      /*  color:  #000000; */
         font-size:  0.57288vw;
         word-wrap:  break-word;
         width:  3.59352vw;
@@ -1071,7 +1099,7 @@ input: focus, textarea: focus, select: focus {
         border-width:  0.05208vw;
         border-color:  #C0C0C0;
         padding:  0.15624vw;
-        background-color:  #FFFFFF;
+     /*   background-color:  #FFFFFF; */
         cursor:  pointer;
         -webkit-user-select:  none;  /* Chrome all / Safari all */
         -moz-user-select:  none;     /* Firefox all */

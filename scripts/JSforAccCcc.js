@@ -25,6 +25,13 @@ var cellHidden = true; //controls whether normally hidden compound rows can be e
 
 
 function clickField(event) {
+
+	//################## TEST AREA START
+
+
+
+	//################## TEST AREA END
+
 	conLog("PERFORMANCE>NOW() = "+performance.now());
 	//STARTinit(); think not needed normally as START() has feature built in to do initialisation
 	var id = event.target.id;
@@ -140,9 +147,9 @@ function doEverything(id, heldKey, calledFrom) {
 
 	// ########################### LOCAL JAVASCRIPT STUFF - DOES NOT INTERACT WITH SERVER ###################
 
-	showHideCompoundRows(valGet("seltdRowCellId"), compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, "Hide");
+	showHideCompoundRows(valGet("seltdRowCellId"), compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, pivotButIsSet, "Hide");
 
-	selectTableRowsForDoc(12, false, colClssAry, compoundTypeAry, moneyDisplayStr, valGet("seltdRowCellId"), "white", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "", "unselect"); //use the id of the previously clicked cell (stored in formValHolder for "seltdRowCellId") to unselect all the previously selected rows associated with the previous document
+	selectTableRowsForDoc(12, false, colClssAry, compoundTypeAry, moneyDisplayStr, valGet("seltdRowCellId"), "white", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "", pivotButIsSet, "unselect"); //use the id of the previously clicked cell (stored in formValHolder for "seltdRowCellId") to unselect all the previously selected rows associated with the previous document
 	
 	if (id.split("-").length == 2) { //only store cell id if it is an actual cell with a hiphon in between the row and column indexes (prevents selectable items in button panels and elsewhere being stored)
 		valSet("seltdRowCellId", id); //stored the newly clicked cell id in formValHolder for "seltdRowCellId" (for use to unselect the row on a later pass of this func)
@@ -150,9 +157,9 @@ function doEverything(id, heldKey, calledFrom) {
 
 	valSet("storeSelectedRecordIdR", id.split("-")[0]); //store the id of the clicked row, which is the idR of the row in allRecords - used by Duplicate Row and Delete Row
 	
-	showHideCompoundRows(id, compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, "Show");
+	showHideCompoundRows(id, compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, pivotButIsSet, "Show");
 
-	selectTableRowsForDoc(12, true, colClssAry, compoundTypeAry, moneyDisplayStr, id, "grey", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellLineSelRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "docLineCountDispId", "select"); //use the id of the current clicked cell id to select all the rows associated with the current document
+	selectTableRowsForDoc(12, true, colClssAry, compoundTypeAry, moneyDisplayStr, id, "grey", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellLineSelRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "docLineCountDispId", pivotButIsSet, "select"); //use the id of the current clicked cell id to select all the rows associated with the current document
 	
 	selectCell(id, colClssAry, "displayCellSnglSel", "displayCellSnglSelEditable", "displayCellSnglSelMoney", "displayCellSnglSelRcnclBlank", displayCellDescrpAry, "blue", "blueEdit");           //use the id of the current clicked cell to set the current cell to edit
 	
@@ -167,7 +174,8 @@ function doEverything(id, heldKey, calledFrom) {
 	}
 	else {
 		selectButPanel(staticArys["displayCellDescrpAry"], fieldNameAry, staticArys["butPanelControlAry"], id, butPanelIdSuffix, dummyButPanelId, noEditButPanelId, "dateAndItemSelectRecnclDivId", {}, restrictionsAry, "No Edit"); //use the id of the current clicked cell (freshly stored in formValHolder for "seltdRowCellId") to display the appropriate but panel
-		//document.getElementById("defaultButPanel").style.display = 'inline';
+
+		//selectButPanel(staticArys["displayCellDescrpAry"], fieldNameAry, staticArys["subButPanelControlAry"], id, subButPanelIdSuffix, dummySubButPanelId, noEditButPanelId, "dateAndItemSelectRecnclDivId", {}, restrictionsAry, "Edit"); //for subButtons
 	}
 
 
@@ -740,11 +748,11 @@ function docUpdateReceive(arry, arryBackFromPhp) {
 		START("docUpdateReceive()");
 		if (valGet("previousObscureFile") == "obscureTest.php") { //set previousObscureFile value holder to obscureTest2.php and obscureTest.php alternately to fool pdfjs
 			valSet("previousObscureFile", "obscureTest2.php"); //toggle file name
-			document.getElementById("pdfIframe").src  = "./web/viewer.html?file="+docFilename2+"#page="+pageNum+"&zoom=100";
+			document.getElementById("pdfIframe").src  = "./web/viewer.html?file="+docFilename2+"#page="+pageNum+"&zoom=95";
 		}
 		if (valGet("previousObscureFile") == "obscureTest2.php") {
 			valSet("previousObscureFile", "obscureTest.php"); //toggle file name
-			document.getElementById("pdfIframe").src  = "./web/viewer.html?file="+docFilename+"#page="+pageNum+"&zoom=100";
+			document.getElementById("pdfIframe").src  = "./web/viewer.html?file="+docFilename+"#page="+pageNum+"&zoom=95";
 		}
 		FINISH("docUpdateReceive()");
 	}
@@ -757,6 +765,67 @@ function docUpdateReceive(arry, arryBackFromPhp) {
 //                                                                                                 #################
 //                                                                                                 #################
 //                                                                                                 #################
+
+/* Takes the passed $date string in format "09-02-2021" and converts it to YYMM format "2102".  */
+function convertYYYYMMDDdateToYYMM(date) {
+    return date.substr(8, 2)+date.substr(3, 2); //extract two digit year substring and concatonate it with extracted month substring
+}
+
+/* Extracts the last 5 characters from value (which could be a abreviated month-year date suffix in the form "Feb20") and if it is a date decodes it to a number, reversed in the form 2002 so it will sort properly if used in an array. If any extracted suffix doesn't properly decode to a date the original value is returned instead. A CORRESPONDING PHP FUNCTION EXISTS. */
+function getDateSuffix(value) {
+    lastFiveChars = value.trim().substr(-5); //get the last 5 characters of the value which may be a date code e.g. "Feb20"
+        monthThreeCharName = lastFiveChars.substr(0, 3); //extract what is potentially the three character month name e.g. 'Feb'
+        yearTwoDigitNum = lastFiveChars.substr(3);  //extract what is potentially the two character year number e.g. "20"
+        if (!isNaN(yearTwoDigitNum)) { //check that the two char year number actually is a number as a partial validation of the five characters being a date code
+            switch (monthThreeCharName) { //do a switch-case iteration to see if the three characters are month abreviation and if so convert to numeric equivalent
+                case "Jan":
+                    return yearTwoDigitNum+"01"; //return the concatonated revesed date in numeric form e+g+ "20"+"01"
+                    break;
+                case "Feb":
+                    return yearTwoDigitNum+"02";
+                    break;
+                case "Mar":
+                    return yearTwoDigitNum+"03";
+                    break;
+                case "Apr":
+                    return yearTwoDigitNum+"04";
+                    break;
+                case "May":
+                    return yearTwoDigitNum+"05";
+                    break;
+                case "Jun":
+                    return yearTwoDigitNum+"06";
+                    break;
+                case "Jul":
+                    return yearTwoDigitNum+"07";
+                    break;
+                case "Aug":
+                    return yearTwoDigitNum+"08";
+                    break;
+                case "Sep":
+                    return yearTwoDigitNum+"09";
+                    break;
+                case "Oct":
+                    return yearTwoDigitNum+"10";
+                    break;
+                case "Nov":
+                    return yearTwoDigitNum+"11";
+                    break;
+                case "Dec":
+                    return yearTwoDigitNum+"12";
+                    break;
+                default: //if the three char month name turns out not to be a month then return value
+                    return value+"-NoDat";
+            }
+        }
+        else { //last two characters is not a number so just return value
+            return value+"-NoDat";
+        }
+}
+
+
+
+
 
 
 /* Returns false if the currently selected row is a compound row that was hidden because of a filtering action but has been revealed because it's visible row was clicked. This is used to prevent edit actions on the normally hidden rows. Otherwise true is returned.  */
@@ -781,10 +850,10 @@ function getFunc(nameFirstPart, nameSecondPart) {
 }
 
 /* Changes the visibility of rows that exist but are hidden by default in the current display view because they are excluded by filter settings. The criteria for controlling a row's visibility is that it has a matching compound number. showHide parameter determines whether the row will be be made visible or invisible by calling this function. */
-function showHideCompoundRows(cellId, compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, showHide) {
+function showHideCompoundRows(cellId, compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, pivotButIsSet, showHide) {
 	START("showHideCompoundRows()");
 	var rowId = cellId.split("-")[0];
-	if (compoundTypeAry[rowId] != "None") {
+	if (!pivotButIsSet && (compoundTypeAry[rowId] != "None")) {
 		var compoundNumIdrAry = getcompoundNumIdrAry(compoundGroupIdrAry, rowId); //indexed subarray of idRs grouped by a common compound number
 		for (var i = 0; i < compoundNumIdrAry.length; i++) { //loop through all idRs of compound group belonging to clicked cell
 			if (compoundHiddenAry[compoundNumIdrAry[i]] == true) { //only process if row belongs to the list of compounds hidden by default (filtered)
@@ -1271,6 +1340,11 @@ function sanitiseText(inputText) {
 	return fourthPass;
 }
 
+/* Removes any consecutive space characters leaving just single ones between other characters. Also removes any leading or trailing spaces. So "  One    Two  " returns as "One Two". Use after sanitiseText() to really clean input! */
+function removeExtraSpaces(inputText) {
+	return inputText.replace(/\s+/g,' ').trim();
+}
+
 function replaceNewLine(inputText) {
 	START("replaceNewLine()");
 	var replacedText = inputText.replace( /\r?\n/gi, '' );
@@ -1485,99 +1559,124 @@ function selectTableRowsForDoc(
 	from
 	) {
 	START("selectTableRowsForDoc()");
-	var columnAry = columnCsv.split(",");
-	var currentDocRnd = document.getElementById(elementId.split("-")[0]+"-docRnd").name; //get the random that is associated with the current doc
-	var recsAry = document.getElementsByName(currentDocRnd); //get an array of all the elements that have the name attribute set to the same random as the current doc 
-	for(idx = 0; idx < recsAry.length; idx++) { //loop through all records that have the same doc random
-		var rowId = recsAry[idx].id.split("-")[0]; //get the id of the current element and extract the first integer - the bit before the '-' which is the row id
-		//conLog(recsAry[idx].value+" "+rowId);
-		for(i = 0; i <= maxColIdx; i++) { //loop through all the columns in the row
-		    rowColIdx = rowId+"-"+i; //reconstruct the element id for each element the loop addresses
-		    if (-1 < columnAry.indexOf(i.toString())) { //if column is found in columnAry (derived from columnCsv) it is a filtered column
-		    	changeSuffixClass(rowColIdx, colClssAry["columnFiltCol"]); 
-		    }
-		    else {
-		    	if (displayCellDescrpAry[i] == "MoneyOut") { //check for this section and use compound colours if necessary
-		    		if (moneyDisplayStr == "amountPaidIn") {
-		    			changeSuffixClass(rowColIdx, colClssAry["blankedMoneyCol"]);
-		    		}
-		    		else if (compoundTypeAry[rowId] == "Master") {
-				    	changeSuffixClass(rowColIdx, colClssAry["compoundMaster"]);
-		    		}
-		    		else if (compoundTypeAry[rowId] == "Slave") {
-				    	changeSuffixClass(rowColIdx, colClssAry["compoundSlave"]);
-		    		}
-		    		else if (compoundTypeAry[rowId] == "FinalSlave") {
-				    	changeSuffixClass(rowColIdx, colClssAry["compoundSlaveFinal"]);
-		    		}
-		    		else {
-		    			if (rowSel) { //not compound rows so use normal select or unselect colours
-				    		changeSuffixClass(rowColIdx, colClssAry["selCol"]);
+	if (!pivotButIsSet) {
+		var columnAry = columnCsv.split(",");
+		var currentDocRnd = document.getElementById(elementId.split("-")[0]+"-docRnd").name; //get the random that is associated with the current doc
+		var recsAry = document.getElementsByName(currentDocRnd); //get an array of all the elements that have the name attribute set to the same random as the current doc 
+		for(idx = 0; idx < recsAry.length; idx++) { //ROW LOOP - loop through all records that have the same doc random
+			var rowId = recsAry[idx].id.split("-")[0]; //get the idR of the current element and extract the first integer - the bit before the '-' which is the row id
+			//conLog(recsAry[idx].value+" "+rowId);
+			for(i = 0; i <= maxColIdx; i++) { //COLUMN LOOP - loop through all the columns in the current row
+			    cellId = rowId+"-"+i; //reconstruct the element id for each element the loop addresses
+			    
+
+			    	if (displayCellDescrpAry[i] == "MoneyOut") { //check for this section and use compound colours if necessary
+			    		if (moneyDisplayStr == "amountPaidIn") {
+			    			changeSuffixClass(cellId, colClssAry["blankedMoneyCol"]); //blank
+			    		}
+			    		else if (compoundTypeAry[rowId] == "Master") {
+					    	changeSuffixClass(cellId, colClssAry["compoundMaster"]); //compound master
+			    		}
+			    		else if (compoundTypeAry[rowId] == "Slave") {
+					    	changeSuffixClass(cellId, colClssAry["compoundSlave"]); //compound slave
+			    		}
+			    		else if (compoundTypeAry[rowId] == "FinalSlave") {
+					    	changeSuffixClass(cellId, colClssAry["compoundSlaveFinal"]); //compound slave final
+			    		}
+			    		else {
+			    			if (rowSel) { //not compound rows so use normal select or unselect colours
+					    		changeSuffixClass(cellId, colClssAry["selCol"]);
+					    	}
+					    	else {
+					    		changeSuffixClass(cellId, colClssAry["unselCol"]);
+					    	}
+			    		}
+			    	}
+			    	else if (displayCellDescrpAry[i] == "MoneyIn") { //check for this section and use compound colours if necessary
+			    		if (moneyDisplayStr == "amountWithdrawn") {
+			    			changeSuffixClass(cellId, colClssAry["blankedMoneyCol"]); //blank
+			    		}
+			    		else if (compoundTypeAry[rowId] == "Master") {
+					    	changeSuffixClass(cellId, colClssAry["compoundMaster"]); //compound master
+			    		}
+			    		else if (compoundTypeAry[rowId] == "Slave") {
+					    	changeSuffixClass(cellId, colClssAry["compoundSlave"]); //compound slave
+			    		}
+			    		else if (compoundTypeAry[rowId] == "FinalSlave") {
+					    	changeSuffixClass(cellId, colClssAry["compoundSlaveFinal"]);
+			    		}
+			    		else {
+			    			if (rowSel) { //not compound rows so use normal select or unselect colours
+					    		changeSuffixClass(cellId, colClssAry["selCol"]);
+					    	}
+					    	else {
+					    		changeSuffixClass(cellId, colClssAry["unselCol"]);
+					    	}
+			    		}			    	
+			    	}
+			    	else if (displayCellDescrpAry[i] == "Budget") {
+			    		var transDateYYMM = convertYYYYMMDDdateToYYMM(document.getElementById(rowId+"-0").innerText);
+			    		var budgetDateYYMM = getDateSuffix(document.getElementById(cellId).innerText);
+			    		if ((budgetDateYYMM.substr(-5) != "NoDat") && (budgetDateYYMM < transDateYYMM)) {
+			    			changeSuffixClass(cellId, colClssAry["budgetExpired"]); //compound slave
+			    		}
+			    		else {
+			    			if (-1 < columnAry.indexOf(i.toString())) { //if column is found in columnAry (derived from columnCsv) it is a filtered column
+						    	changeSuffixClass(cellId, colClssAry["columnFiltCol"]); //set to filter colour
+						    }
+			    			else if (rowSel) { //not compound rows so use normal select or unselect colours
+					    		changeSuffixClass(cellId, colClssAry["selCol"]);
+					    	}
+					    	else {
+					    		changeSuffixClass(cellId, colClssAry["unselCol"]);
+					    	}
+			    		}
+			    	}
+			    	else if (displayCellDescrpAry[i] == "RcnclDate") { //process if loop is at appropriate column ######EVERYTHING IN THIS IF STATEMENT IS FOR THE RECONCILE COLUMN!! #######
+				    	var endDateRev = dateNumsOnly(endDate); //the endDate just needs the "-"s removed as it is already in the correct order "2020-04-03"
+				    	var transDateRev = reverseDateNumsOnly(document.getElementById(rowId+"-"+displayCellDescrpAry.indexOf("TransDate")).innerText);
+				    	var recnclDateRev = reverseDateNumsOnly(document.getElementById(cellId).innerText);
+				    	console.log("TRANS REC "+transDateRev+" "+recnclDateRev);
+				    	if (recnclDateRev == "20000101") { //default date so blank display of this by setting font to same color as background
+				    		if (rowSel) {
+					    		changeSuffixClass(cellId, colClssAry["selInvisCol"]);
+					    	}
+					    	else {
+					    		changeSuffixClass(cellId, colClssAry["unselInvisCol"]);
+					    	}
+			    		}
+				     	else if (endDateRev < recnclDateRev) { //if reconciled date is ahead of the end date of the selection of records so set to warning class
+				    		changeSuffixClass(cellId, colClssAry["notRcnclCol"]); //set the reconciled cell to warning class 'reconcileWarnClass' (probably red)
+				    	}
+				    	else if (recnclDateRev < transDateRev) { //if reconciled date is earlier than the transaction date so set to error class
+				    		changeSuffixClass(cellId, colClssAry["rcnclTooEarlyCol"]); //set the reconciled cell to early class (probably orangeish)
+				    	}
+				    	else {} //do nothing - leave the reconcile date cell whatever background color has been set as it is a normal date
+				    }
+					else if (-1 < columnAry.indexOf(i.toString())) { //if column is found in columnAry (derived from columnCsv) it is a filtered column
+				    	changeSuffixClass(cellId, colClssAry["columnFiltCol"]); //set to filter colour
+				    }
+		    		else { //not compound rows so use normal select or unselect colours
+		    			if (rowSel) {
+				    		changeSuffixClass(cellId, colClssAry["selCol"]);
 				    	}
 				    	else {
-				    		changeSuffixClass(rowColIdx, colClssAry["unselCol"]);
+				    		changeSuffixClass(cellId, colClssAry["unselCol"]);
 				    	}
 		    		}
-		    	}
-		    	else if (displayCellDescrpAry[i] == "MoneyIn") { //check for this section and use compound colours if necessary
-		    		if (moneyDisplayStr == "amountWithdrawn") {
-		    			changeSuffixClass(rowColIdx, colClssAry["blankedMoneyCol"]);
-		    		}
-		    		else if (compoundTypeAry[rowId] == "Master") {
-				    	changeSuffixClass(rowColIdx, colClssAry["compoundMaster"]);
-		    		}
-		    		else if (compoundTypeAry[rowId] == "Slave") {
-				    	changeSuffixClass(rowColIdx, colClssAry["compoundSlave"]);
-		    		}
-		    		else if (compoundTypeAry[rowId] == "FinalSlave") {
-				    	changeSuffixClass(rowColIdx, colClssAry["compoundSlaveFinal"]);
-		    		}
-		    		else {
-		    			if (rowSel) { //not compound rows so use normal select or unselect colours
-				    		changeSuffixClass(rowColIdx, colClssAry["selCol"]);
-				    	}
-				    	else {
-				    		changeSuffixClass(rowColIdx, colClssAry["unselCol"]);
-				    	}
-		    		}			    	
-		    	}
-	    		else {
-	    			if (rowSel) { //not compound rows so use normal select or unselect colours
-			    		changeSuffixClass(rowColIdx, colClssAry["selCol"]);
-			    	}
-			    	else {
-			    		changeSuffixClass(rowColIdx, colClssAry["unselCol"]);
-			    	}
-	    		}
-		    }
-		    if (displayCellDescrpAry[i] == "RcnclDate") { //process if loop is at appropriate column ######EVERYTHING IN THIS IF STATEMENT IS FOR THE RECONCILE COLUMN!! #######
-		    	var endDateRev = dateNumsOnly(endDate); //the endDate just needs the "-"s removed as it is already in the correct order "2020-04-03"
-		    	var transDateRev = reverseDateNumsOnly(document.getElementById(elementId.split("-")[0]+"-"+displayCellDescrpAry.indexOf("TransDate")).innerText);
-		    	var recnclDateRev = reverseDateNumsOnly(document.getElementById(rowColIdx).innerText);
-		    	if (recnclDateRev == "20000101") { //default date so blank display of this by setting font to same color as background
-		    		if (rowSel) {
-			    		changeSuffixClass(rowColIdx, colClssAry["selInvisCol"]);
-			    	}
-			    	else {
-			    		changeSuffixClass(rowColIdx, colClssAry["unselInvisCol"]);
-			    	}
-	    		}
-		     	else if (endDateRev < recnclDateRev) { //if reconciled date is ahead of the end date of the selection of records so set to warning class
-		    		changeSuffixClass(rowColIdx, colClssAry["notRcnclCol"]); //set the reconciled cell to warning class 'reconcileWarnClass' (probably red)
-		    	}
-		    	else if (recnclDateRev < transDateRev) { //if reconciled date is earlier than the transaction date so set to error class
-		    		changeSuffixClass(rowColIdx, colClssAry["rcnclTooEarlyCol"]); //set the reconciled cell to early class (probably orangeish)
-		    	}
-		    	else {} //do nothing - leave the reconcile date cell whatever background color has been set as it is a normal date
-		    }
+
+				    
+			}
+			//checkTimeout("selectTableRowsForDoc("+from+") col Loop", 0);
 		}
-		//checkTimeout("selectTableRowsForDoc("+from+") col Loop", 0);
-	}
-	if (docLineCountDispId != "") { //"" is used if clearing a document selection with this function, the id of the doc line count display cell will only have a valid value during doc selection
-		document.getElementById(docLineCountDispId).innerText = idx; //display number of transactions associated with the selected document document
+		if (docLineCountDispId != "") { //"" is used if clearing a document selection with this function, the id of the doc line count display cell will only have a valid value during doc selection
+			document.getElementById(docLineCountDispId).innerText = idx; //display number of transactions associated with the selected document document
+		}
 	}
 	FINISH("selectTableRowsForDoc()");
 }
+
+
 
 
 /* Defaults to returning "Nothing To Test" unless the column name (from dispCellDescrpAry) of the cell indexed by elementId matches any property in conditionsObj, in which case returns "Match Fail" unless any specified cell on the same row as the cell indexed by elementId has matching cell csv values as set out in conditionsObj in which case "Match Success" is returned. i.e. if conditionsObj is:
@@ -1897,9 +1996,12 @@ function setMaxDayOfMnth(yearTxtBoxId, monthTxtBoxId, dayOfMnthTxtBoxId, dayOfMn
 	document.getElementById(wholeDateTxtBoxId).value = wholeDate;
 }
 
+
 /*   */
 function checkForTextInAry(textListAry, text, id, normalClass, highlightClass, submitButId, name) {
   //window.alert(text);
+  //document.getElementById(id).value = removeExtraSpaces(sanitiseText(text));
+
   var indexMax = textListAry.length -1;
   document.getElementById(id+"lbl").style.display = 'none';
   document.getElementById(id).className = normalClass;

@@ -45,14 +45,15 @@ if (empty($_calledFromIndexPage)) { //prevents someone trying to open this page 
 	}
 	else {
 	?>
-	<button class="btnSelected" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-FromMainMenu-EileenReclaim";?>><i class="fas fa-check"></i> Nov Reclaim</button>
+	<button class="btnSelected" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-FromMainMenu-EileenReclaim1";?>><i class="fas fa-check"></i> Nov Reclaim</button>
+	<button class="btnSelected" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-FromMainMenu-EileenReclaim2";?>><i class="fas fa-check"></i> Jan Reclaim</button>
 	<button class="btnSelected" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-FromMainMenu";?>><i class="fas fa-check"></i> Records</button>
 	<button class="btnSelected" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-FromMainMenu-Restricted2021";?>><i class="fas fa-check"></i> Restricted 2020-21</button>
 	<button class="btnSelected" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-FromMainMenu-Unrestricted2021";?>><i class="fas fa-check"></i> Unrestricted 2020-21</button>
 	<button class="btnSelected" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-FromMainMenu-Bank2021";?>><i class="fas fa-check"></i> Bank 2020-21</button>
 	<button class="btn" type="submit" name="command" value=<?php echo $menuRandomsArray["New Password"]."-FromMainMenu";?>><i class="fas fa-arrow-up"></i> Change Password</button>
 	<button class="btn" type="submit" name="command" value=<?php echo $menuRandomsArray["Help Page"]."-FromMainMenu";?>><i class="fas fa-arrow-up"></i> Help</button>
-	<div style="width:8vw; height:1vw; display:inline-block;"></div>
+	<div style="width:4vw; height:1vw; display:inline-block;"></div>
 	<button class="btn" type="submit" name="command" value=<?php echo $menuRandomsArray["Logout"]."-FromMainMenu";?>><i class="fas fa-sign-out-alt"></i> Logout</button>
 	<?php
 	}
