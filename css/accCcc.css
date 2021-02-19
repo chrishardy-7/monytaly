@@ -367,8 +367,27 @@ input: focus, textarea: focus, select: focus {
     user-select:  none;          /* Likely future */
 }
 
-.salmon {
-    background-color: #FCB6CA;
+.orangeYel {
+    background-color: #FEDD38;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.blueGrn {
+    background-color: #30C8FE;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.blueGrnOrangeYelGradientLR {
+    background-color: red;
+    background-image: linear-gradient(to right, #30C8FE, #30C8FE 50%, #FEDD38 50%, #FEDD38 100%);
     cursor:  pointer;
     -webkit-user-select:  none;  /* Chrome all / Safari all */
     -moz-user-select:  none;     /* Firefox all */
@@ -377,7 +396,7 @@ input: focus, textarea: focus, select: focus {
 }
 
 .tan {
-    background-color: #FFFF80;
+    background-color: #FFFFB0;
     cursor:  pointer;
     -webkit-user-select:  none;  /* Chrome all / Safari all */
     -moz-user-select:  none;     /* Firefox all */
@@ -424,7 +443,7 @@ input: focus, textarea: focus, select: focus {
 }
 
 .grey {
-    background-color: #E8E8E8;
+    background-color: #EAEAEA;
     cursor:  pointer;
     -webkit-user-select:  none;  /* Chrome all / Safari all */
     -moz-user-select:  none;     /* Firefox all */
@@ -433,8 +452,8 @@ input: focus, textarea: focus, select: focus {
 }
 
 .greyInvis {
-    color: #E0E0E0;
-    background-color: #E0E0E0;
+    color: #EAEAEA;
+    background-color: #EAEAEA;
     cursor:  pointer;
     -webkit-user-select:  none;  /* Chrome all / Safari all */
     -moz-user-select:  none;     /* Firefox all */
@@ -998,7 +1017,7 @@ input: focus, textarea: focus, select: focus {
     }
 
     .recHeadingCellFilt {
-        background-color:  #FFFF80;
+        background-color:  #FFFFB0;
     }
 
     .recStickyCell {

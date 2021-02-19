@@ -766,67 +766,117 @@ function docUpdateReceive(arry, arryBackFromPhp) {
 //                                                                                                 #################
 //                                                                                                 #################
 
-/* Takes the passed $date string in format "09-02-2021" and converts it to YYMM format "2102".  */
-function convertYYYYMMDDdateToYYMM(date) {
-    return date.substr(8, 2)+date.substr(3, 2); //extract two digit year substring and concatonate it with extracted month substring
+
+/* Attempts to extract a budget end date from the last group of characters of the budget name - using getDateSuffixYYMMDD() - and compares the date with the transaction date. If the budget start date is later than the transaction date TRUE is returned. Otherwise FALSE. A CORRESPONDING PHP FUNCTION EXISTS. */
+function budgetNotYetActiveJS(recordDate, budgetName) {
+	var transDateYYMMDD = convertYYYYMMDDdateToYYMMDD(recordDate);
+	var budgetDateYYMMDD = getDateSuffixYYMMDD(budgetName, false, false);
+	if ((budgetDateYYMMDD.substr(-6) != "NoDate") && (transDateYYMMDD < budgetDateYYMMDD)) {
+		return true;
+	}
+	else {
+		return false;
+	}
 }
 
-/* Extracts the last 5 characters from value (which could be a abreviated month-year date suffix in the form "Feb20") and if it is a date decodes it to a number, reversed in the form 2002 so it will sort properly if used in an array. If any extracted suffix doesn't properly decode to a date the original value is returned instead. A CORRESPONDING PHP FUNCTION EXISTS. */
-function getDateSuffix(value) {
-    lastFiveChars = value.trim().substr(-5); //get the last 5 characters of the value which may be a date code e.g. "Feb20"
-        monthThreeCharName = lastFiveChars.substr(0, 3); //extract what is potentially the three character month name e.g. 'Feb'
-        yearTwoDigitNum = lastFiveChars.substr(3);  //extract what is potentially the two character year number e.g. "20"
+/* Attempts to extract a budget end date from the last group of characters of the budget name - using getDateSuffixYYMMDD() - and compares the date with the transaction date. If the transaction date is later than the budget end date TRUE is returned. Otherwise FALSE. A CORRESPONDING PHP FUNCTION EXISTS. */
+function budgetExpiredJS(recordDate, budgetName) {
+	var transDateYYMMDD = convertYYYYMMDDdateToYYMMDD(recordDate);
+	var budgetDateYYMMDD = getDateSuffixYYMMDD(budgetName, true, true);
+	if ((budgetDateYYMMDD.substr(-6) != "NoDate") && (budgetDateYYMMDD < transDateYYMMDD)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+/* Takes the passed $date string in format "09-02-2021" and converts it to YYMMDD format "210209".  */
+function convertYYYYMMDDdateToYYMMDD(date) {
+    return date.substr(8, 2)+date.substr(3, 2)+date.substr(0, 2); //extract two digit year substring and concatonate it with extracted month substring
+}
+
+/* If $setForLastDayOfMonth is set to TRUE this function extracts the last group (if setForLastGroup is TRUE) or 2nd last group (if setForLastGroup is FALSE) of characters from value. The extracted group should be an abreviated month-year date string in the form "7Feb20", "15Feb20" or "Feb20") and, if it can be interpreted as a date, it is decoded to a number, reversed, in the form "200207", "200215" or in the case where no day of month suffix is included it sets the day of month output to the last day e.g. "200228" (taking into account that for leap years Feb's last day will be 29). This allows proper sorting using a simple sort algorithm or comparisons with other dates similarly formatted. If any extracted group of characters in the passed value doesn't properly decode to a date the original value with "-NoDate" (the preceding hyphen ensures that in sorting routines with SORT_NATURAL a value of "" will come first before any numbers) concatonated onto it is returned. If setForLastDayOfMonth is set to FALSE it works in a similar manner when there is a provided day of month suffix, but where there are none the day of month output is now set to "01". NOTE: only works with 2 character year designator and assumes every date is in the century 2000. Months designators must all be 3 character with leading Capital i.e. Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec.  A CORRESPONDING PHP FUNCTION EXISTS. */
+function getDateSuffixYYMMDD(value, setForLastDayOfMonth, setForLastGroup) {
+	var groupsAry = value.trim().split(" ");  //create an array from the groups of characters separated by a space in value string
+	if (setForLastGroup) { //set group to be extracted according to setForLastGroup being TRUE (last group) or FALSE (2nd last group)
+        var group = (groupsAry.length -1) in groupsAry ? groupsAry[groupsAry.length -1] : ""; //get last group (string separated by spaces). Uses in operator to check index exists and defaults to "" if not
+    }
+    else {
+        var group = (groupsAry.length -2) in groupsAry ? groupsAry[groupsAry.length -2] : ""; //get 2nd last group (string separated by spaces). Uses in operator to check index exists and defaults to "" if not
+    }
+    var lastFiveChars = group.substr(-5); //get the last 5 characters of the value which may be a date code e.g. "Feb20"
+    var potentialDayOfMonthChars = group.substr(0, (group.length -5)); //get first, day of month, part of group if it exists - should be 1 or 2 characters (or 0 characters if it doesn't exist)
+    var monthThreeCharName = lastFiveChars.substr(0, 3); //extract what is potentially the three character month name e.g. 'Feb'
+    var yearTwoDigitNum = lastFiveChars.substr(3);  //extract what is potentially the two character year number e.g. "20"
+    if (((potentialDayOfMonthChars.length == 1) || (potentialDayOfMonthChars.length == 2)) && !isNaN(potentialDayOfMonthChars)) { //an actual days of month string so use this in returned date
+        if (potentialDayOfMonthChars.length == 1) {
+            var dayOfMonthChars = "0"+potentialDayOfMonthChars;
+        }
+        else {
+            var dayOfMonthChars = potentialDayOfMonthChars;
+        }
+        var dayInFeb = dayOfMonthChars;
+        var dayInLongMonth = dayOfMonthChars;
+        var dayInShortMonth = dayOfMonthChars;
+    }
+    else if (setForLastDayOfMonth) { //no days of month string found and End of month requested so use last day of month
+    	var dateOfLastDayOfFebForGivenYear = new Date("20"+yearTwoDigitNum, "02", 0); //generates the date for the last day of february taking into account the given year
+        var dayInFeb = dateOfLastDayOfFebForGivenYear.getDate();
+        var dayInLongMonth = "31";
+        var dayInShortMonth = "30";
+    }
+    else { //no days of month string found but no End of month requested so use first day of month
+        var dayInFeb = "01";
+        var dayInLongMonth = "01";
+        var dayInShortMonth = "01";
+    }
         if (!isNaN(yearTwoDigitNum)) { //check that the two char year number actually is a number as a partial validation of the five characters being a date code
             switch (monthThreeCharName) { //do a switch-case iteration to see if the three characters are month abreviation and if so convert to numeric equivalent
                 case "Jan":
-                    return yearTwoDigitNum+"01"; //return the concatonated revesed date in numeric form e+g+ "20"+"01"
+                    return yearTwoDigitNum+"01"+dayInLongMonth; //return the concatonated revesed date in numeric form e+g+ "20"+"01"
                     break;
                 case "Feb":
-                    return yearTwoDigitNum+"02";
+                    return yearTwoDigitNum+"02"+dayInFeb;
                     break;
                 case "Mar":
-                    return yearTwoDigitNum+"03";
+                    return yearTwoDigitNum+"03"+dayInLongMonth;
                     break;
                 case "Apr":
-                    return yearTwoDigitNum+"04";
+                    return yearTwoDigitNum+"04"+dayInShortMonth;
                     break;
                 case "May":
-                    return yearTwoDigitNum+"05";
+                    return yearTwoDigitNum+"05"+dayInLongMonth;
                     break;
                 case "Jun":
-                    return yearTwoDigitNum+"06";
+                    return yearTwoDigitNum+"06"+dayInShortMonth;
                     break;
                 case "Jul":
-                    return yearTwoDigitNum+"07";
+                    return yearTwoDigitNum+"07"+dayInLongMonth;
                     break;
                 case "Aug":
-                    return yearTwoDigitNum+"08";
+                    return yearTwoDigitNum+"08"+dayInLongMonth;
                     break;
                 case "Sep":
-                    return yearTwoDigitNum+"09";
+                    return yearTwoDigitNum+"09"+dayInShortMonth;
                     break;
                 case "Oct":
-                    return yearTwoDigitNum+"10";
+                    return yearTwoDigitNum+"10"+dayInLongMonth;
                     break;
                 case "Nov":
-                    return yearTwoDigitNum+"11";
+                    return yearTwoDigitNum+"11"+dayInShortMonth;
                     break;
                 case "Dec":
-                    return yearTwoDigitNum+"12";
+                    return yearTwoDigitNum+"12"+dayInLongMonth;
                     break;
                 default: //if the three char month name turns out not to be a month then return value
-                    return value+"-NoDat";
+                    return value+"-NoDate";
             }
         }
         else { //last two characters is not a number so just return value
-            return value+"-NoDat";
+            return value+"-NoDate";
         }
 }
-
-
-
-
-
 
 /* Returns false if the currently selected row is a compound row that was hidden because of a filtering action but has been revealed because it's visible row was clicked. This is used to prevent edit actions on the normally hidden rows. Otherwise true is returned.  */
 function notHiddenCompound() {
@@ -1615,10 +1665,11 @@ function selectTableRowsForDoc(
 			    		}			    	
 			    	}
 			    	else if (displayCellDescrpAry[i] == "Budget") {
-			    		var transDateYYMM = convertYYYYMMDDdateToYYMM(document.getElementById(rowId+"-0").innerText);
-			    		var budgetDateYYMM = getDateSuffix(document.getElementById(cellId).innerText);
-			    		if ((budgetDateYYMM.substr(-5) != "NoDat") && (budgetDateYYMM < transDateYYMM)) {
-			    			changeSuffixClass(cellId, colClssAry["budgetExpired"]); //compound slave
+			    		if (budgetNotYetActiveJS(document.getElementById(rowId+"-0").innerText, document.getElementById(cellId).innerText)) {
+			    			changeSuffixClass(cellId, colClssAry["budgetNotYetActive"]);
+			    		}
+			    		else if (budgetExpiredJS(document.getElementById(rowId+"-0").innerText, document.getElementById(cellId).innerText)) {
+			    			changeSuffixClass(cellId, colClssAry["budgetExpired"]);
 			    		}
 			    		else {
 			    			if (-1 < columnAry.indexOf(i.toString())) { //if column is found in columnAry (derived from columnCsv) it is a filtered column
@@ -1636,7 +1687,7 @@ function selectTableRowsForDoc(
 				    	var endDateRev = dateNumsOnly(endDate); //the endDate just needs the "-"s removed as it is already in the correct order "2020-04-03"
 				    	var transDateRev = reverseDateNumsOnly(document.getElementById(rowId+"-"+displayCellDescrpAry.indexOf("TransDate")).innerText);
 				    	var recnclDateRev = reverseDateNumsOnly(document.getElementById(cellId).innerText);
-				    	console.log("TRANS REC "+transDateRev+" "+recnclDateRev);
+				    	//console.log("TRANS REC "+transDateRev+" "+recnclDateRev);
 				    	if (recnclDateRev == "20000101") { //default date so blank display of this by setting font to same color as background
 				    		if (rowSel) {
 					    		changeSuffixClass(cellId, colClssAry["selInvisCol"]);
@@ -1651,7 +1702,14 @@ function selectTableRowsForDoc(
 				    	else if (recnclDateRev < transDateRev) { //if reconciled date is earlier than the transaction date so set to error class
 				    		changeSuffixClass(cellId, colClssAry["rcnclTooEarlyCol"]); //set the reconciled cell to early class (probably orangeish)
 				    	}
-				    	else {} //do nothing - leave the reconcile date cell whatever background color has been set as it is a normal date
+				    	else {
+				    		if (rowSel) {
+					    		changeSuffixClass(cellId, colClssAry["selCol"]);
+					    	}
+					    	else {
+					    		changeSuffixClass(cellId, colClssAry["unselCol"]);
+					    	}
+				    	} //do nothing - leave the reconcile date cell whatever background color has been set as it is a normal date
 				    }
 					else if (-1 < columnAry.indexOf(i.toString())) { //if column is found in columnAry (derived from columnCsv) it is a filtered column
 				    	changeSuffixClass(cellId, colClssAry["columnFiltCol"]); //set to filter colour
@@ -3536,3 +3594,4 @@ function timeToCons(descriptionPrefix) {
     msTimeDiv100000 = msTimeMeasure / 100000;
     console.log(descriptionPrefix+": Time = "+ (((msTimeDiv100000)-Math.floor(msTimeDiv100000))*100).toFixed(3)  );
 }
+

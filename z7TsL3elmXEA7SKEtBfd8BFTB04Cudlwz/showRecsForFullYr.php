@@ -19,7 +19,7 @@ $download = FALSE; //flag to indicate record data should be downloaded
 
 //TEST AREA START ###########################
 
-
+//pr(budgetExpired("02-04-2020", "Capability May20 Mar20"));
 
 //TEST AREA END #############################
 
@@ -27,26 +27,32 @@ $download = FALSE; //flag to indicate record data should be downloaded
 //  ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ ENSURE THE FILE NAMES IN parseFile() POINT TO SOMETHING OR THIS WHOLE SCRIPT WILL HANG !!! ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ
 //parseFile("/home/chris/Desktop/expandText.css", "/parse/accCccVW.css"); //used to change css file from px units to vw units
 
-$colClssAry = [	"unselCol"				=>	"white", 
-				"unselInvisCol"			=>	"whiteInvis", 
-				"selCol"				=>	"grey", 
-				"selInvisCol"			=>	"greyInvis",
-				"cellSelCol"			=>	"blue",
-				"cellSelInvisCol"		=>	"blueInvis",
-				"cellSelEditCol"		=>	"blueEdit", 
-				"waitingForServer"		=>	"orange",
-				"rcnclTooEarlyCol"		=>	"orangeWhiteTxt", 
-				"zeroValueBad"			=>	"orangeWhiteTxt",
-				"zeroValueGood"			=>	"darkGreen",
-				"notRcnclCol"			=>	"redWhiteTxt",
-				"negativeValue"			=>	"redWhiteTxt",
-				"columnFiltCol"			=>	"tan",
-				"compoundMaster"		=>	"yellowGradientHardBot",
-				"compoundSlave"			=>	"green",
-				"compoundSlaveFinal"	=>	"greenGradientHardTop",
-				"blankedMoneyCol"		=>	"borderGrey",
-				"budgetExpired"			=>	"salmon",
-				"budgetEndInPast"		=>	"lightGreen"
+$colClssAry = [	"unselCol"					=>	"white", 
+				"unselInvisCol"				=>	"whiteInvis", 
+				"selCol"					=>	"grey", 
+				"selInvisCol"				=>	"greyInvis",
+				"cellSelCol"				=>	"blue",
+
+				"cellSelInvisCol"			=>	"blueInvis",
+				"cellSelEditCol"			=>	"blueEdit", 
+				"waitingForServer"			=>	"orange",
+				"rcnclTooEarlyCol"			=>	"orangeWhiteTxt", 
+				"zeroValueBad"				=>	"orangeWhiteTxt",
+
+				"zeroValueGood"				=>	"darkGreen",
+				"notRcnclCol"				=>	"redWhiteTxt",
+				"negativeValue"				=>	"redWhiteTxt",
+				"columnFiltCol"				=>	"tan",
+				"compoundMaster"			=>	"yellowGradientHardBot",
+
+				"compoundSlave"				=>	"green",
+				"compoundSlaveFinal"		=>	"greenGradientHardTop",
+				"blankedMoneyCol"			=>	"borderGrey",
+				"budgetBothExprdAndNyActv"	=>	"blueGrnOrangeYelGradientLR",
+				"budgetNotYetActive"		=>	"blueGrn",
+
+				"budgetExpired"				=>	"orangeYel",
+				"budgetEndInPast"			=>	"lightGreen"
 			];
 
 
@@ -62,6 +68,7 @@ $nonVolatileArray["docNameNumStr"] = ""; //NOT SURE IF THIS IS THE RIGHT PLACE F
 
 $showFamBut = new toggleBut("Show Families", "fas fa-plus-square", "subMenuBtn", "subMenuBtnSel", ($subCommand == "FromMainMenu"));
 $editFamBut = new toggleBut("Family Edit", "fas fa-users", "subMenuBtn", "subMenuBtnSel", ($subCommand == "FromMainMenu"));
+$findDuplsBut = new toggleBut("Dupls", "fas fa-equals", "subMenuBtn", "subMenuBtnSel", ($subCommand == "FromMainMenu"));
 
 $tables = new dataBaseTables(); //used by custom buttons to get filter keys from string values
 $moneyDisplay = new moneyCols("monyColmnDisply", ($subCommand == "FromMainMenu"));
@@ -448,8 +455,13 @@ else {
 		$recordsPivotArry = getPivotTableAry($startDate, $endDate, $genFilter->getFiltStr(), "", $fam->getCmnd(), $restrictFilter->getFiltStr(), "budget, transCatgry"); //for pivot table filters need to be applied as normal
 		//pr($recordsPivotArry);
 	}
+	elseif ($findDuplsBut->isSet()) {
+		$recordsDataArry = sortCompoundRows(getDuplicatesDataAry($startDate, $endDate, $genFilter->getFiltStr(), "", $restrictFilter->getFiltStr()));
+	}
 	else {
-		$recordsDataArry = sortCompoundRows(getMultDocDataAry($startDate, $endDate, $genFilter->getFiltStr(), "", $fam->getCmnd(), $groupColSelector, $restrictFilter->getFiltStr(), $moneyDisplay->getStr())); //gets records data from allRecords table and then uses sortCompoundRows() to group compound rows together in the correct date position with master first followed by slaves in idR order
+		$recordsDataArry = sortCompoundRows(getMultDocDataAry($startDate, $endDate, $genFilter->getFiltStr(), "", $fam->getCmnd(), $groupColSelector, $restrictFilter->getFiltStr(), $moneyDisplay->getStr()));
+		//$recordsDataArry = sortCompoundRows(getDuplicatesDataAry($startDate, $endDate, $genFilter->getFiltStr(), "", $restrictFilter->getFiltStr()));
+		//gets records data from allRecords table and then uses sortCompoundRows() to group compound rows together in the correct date position with master first followed by slaves in idR order
 	}
 }
 
@@ -1363,6 +1375,7 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 					<button class="subMenuBtn" type="button" onclick="atomicCall('Clear')"><i class="fas fa-trash-alt"></i> Bin</button>
 				<!--	<button class="subMenuBtn" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-".$genrlAryRndms["deleteRec"];?>><i class="fas fa-trash-alt"></i> Bin</button> -->
 				<?php
+					$findDuplsBut->drawBut();
 				}
 
 			?>

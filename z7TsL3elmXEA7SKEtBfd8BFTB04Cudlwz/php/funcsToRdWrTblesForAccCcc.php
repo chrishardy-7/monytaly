@@ -1045,6 +1045,43 @@ function getPivotTableAry($recStartDate, $recEndDate, $filterStr, $order, $famil
             $groupByStr = " GROUP BY ".$groupBy;
         }
         if ($familyChoice == "NoKids") { //only show family parents among other general records
+            $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, MIN(recordDate) AS minRecordDate, MAX(recordDate) AS maxRecordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, SUM(amountWithdrawn) AS sumAmountWithdrawn, amountPaidIn, SUM(amountPaidIn) AS sumAmountPaidIn, statusR, recordNotes FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) '.$filterStr.$restrictFilterStr.' AND statusR = "Live"'.$groupByStr.' ORDER BY budget DESC');
+        }
+        elseif ($familyChoice == "All") { //show all records including general, parents and children
+            $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, MIN(recordDate) AS minRecordDate, MAX(recordDate) AS maxRecordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, SUM(amountWithdrawn) AS sumAmountWithdrawn, amountPaidIn, SUM(amountPaidIn) AS sumAmountPaidIn, statusR, recordNotes FROM allRecords WHERE (((:recStartDate <= recordDate) AND (recordDate <= :recEndDate) AND (parent = 0)) OR ((:recStartDate <= parentDate) AND (parentDate <= :recEndDate))) '.$filterStr.$restrictFilterStr.' AND statusR = "Live"'.$groupByStr.' ORDER BY sumAmountWithdrawn DESC');
+        }
+        else { //show only parents and children of the family id passed as a numeric argument in $familyChoice
+            $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, MIN(recordDate) AS minRecordDate, MAX(recordDate) AS maxRecordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, SUM(amountWithdrawn) AS sumAmountWithdrawn, amountPaidIn, SUM(amountPaidIn) AS sumAmountPaidIn, statusR, recordNotes FROM allRecords WHERE parent = '.$familyChoice.' '.$filterStr.$restrictFilterStr.' AND statusR = "Live"'.$groupByStr.' ORDER BY sumAmountWithdrawn DESC'); //order by doc filename first so split docs don't occur - may mean docs appear in wierd order
+        }
+        if ($familyChoice == "everything") { //only show everything in date order without regard for whether it's a child or parent or ordinary item
+            $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, MIN(recordDate) AS minRecordDate, MAX(recordDate) AS maxRecordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, SUM(amountWithdrawn) AS sumAmountWithdrawn, amountPaidIn, SUM(amountPaidIn) AS sumAmountPaidIn, statusR, recordNotes FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) '.$filterStr.$restrictFilterStr.' AND statusR = "Live"'.$groupByStr.' ORDER BY sumAmountWithdrawn DESC');
+        }
+        $stmt->execute(array('recStartDate' => $recStartDate, 'recEndDate' => $recEndDate));    
+        $docsDetails = array();
+        //return multiple rows, one per persOrg - contains columns from allRecords that most probably will be used
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) { //copy the summed withdrawn and paidin data to the ordinary withdrawn and paidin array positions
+            $row["amountWithdrawn"] = $row["sumAmountWithdrawn"];
+            $row["amountPaidIn"] = $row["sumAmountPaidIn"];
+            $docsDetails[] = $row; 
+        }
+    } catch(PDOException $e) {
+      echo 'ERROR: ' . $e->getMessage();
+      }
+      //pr($docsDetails);
+      return $docsDetails;
+}
+
+
+/* PROBABLY NOT MUCH DIFF FROM getMultDocDataAry() YET, BUT MAYBE IF IT IS EDITED A BIT! Need to write a description for this function - the while loop might need to be changed because perhaps record rows where a doc isn't allocated to a persOrg should be returned too. CHANGED TEMPORARILY! */
+//$familySetting can be one of 3 values: "NoKids", "All", 527. If the number is sent then only records with the parent value set to that number will be returned (which includes the parent and children)
+function getPivotTableAryDEPR($recStartDate, $recEndDate, $filterStr, $order, $familyChoice, $restrictFilterStr, $groupBy) {
+    global $conn;
+    try {
+        $groupByStr = "";
+        if ($groupBy) { //if $groupBy contains a group info (i.e. 'transCatgry') create a GROUP BY term
+            $groupByStr = " GROUP BY ".$groupBy;
+        }
+        if ($familyChoice == "NoKids") { //only show family parents among other general records
             if ($groupBy) {
                 $stmt = $conn->prepare('SELECT idR, fileName, docType, recordType, dateTimeRecCreated, recordDate, parent, compound, personOrOrg, transCatgry, accWorkedOn, budget, referenceInfo, umbrella, reconcilingAcc, reconciledDate, reconcileDocId, amountWithdrawn, SUM(amountWithdrawn) AS sumAmountWithdrawn, amountPaidIn, SUM(amountPaidIn) AS sumAmountPaidIn, statusR, recordNotes FROM allRecords WHERE ((:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) AND ((parent = 0) OR (parent = idR)) '.$filterStr.$restrictFilterStr.' AND statusR = "Live"'.$groupByStr.' ORDER BY budget DESC');
             }
@@ -1094,6 +1131,93 @@ function getPivotTableAry($recStartDate, $recEndDate, $filterStr, $order, $famil
       }
       //pr($docsDetails);
       return $docsDetails;
+}
+
+
+//
+function getDuplicatesDataAry($recStartDate, $recEndDate, $filterStr, $order, $restrictFilterStr) {
+    global $conn;
+    $docsDetailsAry = [];
+    $recordsAry = [];
+
+    try {
+
+        $stmtDupl = $conn->prepare('SELECT recordDate, personOrOrg, amountWithdrawn, amountPaidin FROM allRecords WHERE ((amountWithdrawn != 0) || (amountPaidin != 0)) GROUP BY recordDate, personOrOrg, amountWithdrawn,amountPaidin HAVING COUNT(*) > 1');
+        $stmtDupl->execute(array());
+        while ($rowDupl = $stmtDupl->fetch(PDO::FETCH_ASSOC)) { //load all transaction records into recordsAry
+            //pr($rowDupl);
+        
+
+            $stmt = $conn->prepare('SELECT * FROM allRecords WHERE (((:recStartDate <= recordDate) AND (recordDate <= :recEndDate) AND (parent = 0)) OR ((:recStartDate <= parentDate) AND (parentDate <= :recEndDate))) AND 
+
+                (recordDate = :recDateDupl) AND 
+                (personOrOrg = :persOrgDupl) AND 
+                (amountWithdrawn = :withdrawnDupl) AND 
+                (amountPaidin = :paidinDupl)
+
+                '.$filterStr.$restrictFilterStr.' AND statusR = "Live" ORDER BY '.$order.' recordDate, fileName');
+
+
+            $stmt->execute(array(
+                'recStartDate'=>$recStartDate,
+                'recEndDate'=>$recEndDate,
+                'recDateDupl'=>$rowDupl['recordDate'],
+                'persOrgDupl'=>$rowDupl['personOrOrg'],
+                'withdrawnDupl'=>$rowDupl['amountWithdrawn'],
+                'paidinDupl'=>$rowDupl['amountPaidin']
+            )); 
+
+            while ($rowFromTable = $stmt->fetch(PDO::FETCH_ASSOC)) { //load all transaction records into recordsAry
+                $rowFromTable["compoundHidden"] = FALSE;
+                $recordsAry[] = $rowFromTable;
+            }
+        }
+
+
+
+
+        //section that extracts as csv all idRs of compound rows from the main $stmt query, whether master or slave. Also extracts as csv the compound number associated with each of these compound groups
+        $compoundIdrAry = [];
+        $compoundIdrAryIdx = 0;
+        $compoundNumAry = [];
+        $compoundNumAryIdx = 0;
+        foreach ($recordsAry as $singleRow) {
+            if (0 < $singleRow["compound"]) {
+                $compoundIdrAry[$compoundIdrAryIdx] = $singleRow["idR"];
+                $compoundIdrAryIdx++;
+            }
+            if ((0 < $singleRow["compound"]) & !in_array($singleRow["compound"], $compoundNumAry)) {
+                $compoundNumAry[$compoundNumAryIdx] = $singleRow["compound"];
+                $compoundNumAryIdx++;
+            }
+        }
+        $compoundIdrCsv = implode(",", $compoundIdrAry);
+        $compoundNumCsv = implode(",", $compoundNumAry);
+
+        if (($compoundNumCsv != "") && ($compoundIdrCsv != "")) { //if compound records exist from main queries (above) then run the subsidiary query to find compound rows that should be added to main rows but hidden until revealed by click on a row that forms part of a compound group
+            $stmtCompoundHidden = $conn->prepare('SELECT * FROM allRecords WHERE compound IN ('.$compoundNumCsv.') AND idR NOT IN ('.$compoundIdrCsv.') AND statusR = "Live" ORDER BY '.$order.' recordDate, fileName');
+            $stmtCompoundHidden->execute(array());
+            while ($rowFromTableHidden = $stmtCompoundHidden->fetch(PDO::FETCH_ASSOC)) { //load all transaction records into recordsAry
+                $rowFromTableHidden["compoundHidden"] = TRUE;
+                $recordsAry[] = $rowFromTableHidden;
+            }
+        }
+
+
+
+        foreach ($recordsAry as $row) {
+            if ($groupBy) { //if group by information is passed to this function copy the summed withdrawn and paidin data to the ordinary withdrawn and paidin array positions
+                $row["amountWithdrawn"] = $row["sumAmountWithdrawn"];
+                $row["amountPaidIn"] = $row["sumAmountPaidIn"];
+            }
+            $docsDetailsAry[] = $row;
+        }
+
+    } catch(PDOException $e) {
+      echo 'ERROR: ' . $e->getMessage();
+      }
+      //pr($docsDetailsAry);
+      return $docsDetailsAry;
 }
 
 
