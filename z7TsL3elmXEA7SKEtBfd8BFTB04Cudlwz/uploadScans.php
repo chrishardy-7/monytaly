@@ -12,6 +12,9 @@ $nameOfThisPage = "Upload Scans";
 //include_once("./".$sdir."createMenuRndms.php");
 include_once("./".$sdir."head.php");
 
+$startFreshPage = new persistVar("startFreshPage", FALSE); //trys to create and initialise a persistant variable called "startFreshPage". If it already exists it will neither be recreated nor initialised
+$startFreshPage->set(FALSE); //set to FALSE so that the next call of showRecsForFullYr.php from the main menu button will not clear filters and set buttons etc. (which is the usual behaviour)
+
 $nonVolatileArray["onTheHoofRandsAry"] = array(); //clear the array so any old plain-random pairs are deleted.
 
 

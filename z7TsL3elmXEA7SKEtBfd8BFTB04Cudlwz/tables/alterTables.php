@@ -34,7 +34,7 @@ try {
 //$stmt = $conn->prepare('ALTER TABLE fffff CHANGE oldname newname VARCHAR(100) NOT NULL DEFAULT ""'); //change orgPerAccCatName to categoryName in all php docs
 //$stmt->execute(array());
 
-//$stmt = $conn->prepare('ALTER TABLE mmmm MODIFY ttt INT(11) NOT NULL DEFAULT 0');
+//$stmt = $conn->prepare('ALTER TABLE tttt CHANGE rrr sss INT(11) NOT NULL DEFAULT 0');
 //$stmt->execute(array());
 
 //$stmt = $conn->prepare('ALTER TABLE eeee MODIFY cccc INT(11) NOT NULL DEFAULT 0');

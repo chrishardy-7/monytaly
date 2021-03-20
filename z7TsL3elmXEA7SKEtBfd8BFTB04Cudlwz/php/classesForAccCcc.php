@@ -359,7 +359,7 @@ class filterColumns {
 	    }
 	}
 
-	function setIncludeFilterUsingCellId($cellId) { //uses the clicked cell id (this is only active during CNTRL hold) to set an include only filter corresponding to the item in the clicked row/column i.e. "umbrella" column and item in row "Furniture Project"
+	function setIncludeFilterUsingCellId($cellId) { //uses the clicked cell id to set an include only filter corresponding to the item in the clicked row/column i.e. "umbrella" column and item in row "Furniture Project"
 		$cellIdAry = explode("-", $cellId);
 		$recRowId = $cellIdAry[0];
 		$colID = $cellIdAry[1];
@@ -384,7 +384,7 @@ class filterColumns {
 		setNonVolAryItem($this->nonVolFiltAryKey."Include", $this->includeFiltersAry);
 	}
 
-	function setExcludeFilterUsingCellId($cellId) { //uses the clicked cell id (this is only active during CNTRL hold) to set an exclude filter corresponding to the item in the clicked row/column i.e. "umbrella" column and item in row "Furniture Project"
+	function setExcludeFilterUsingCellId($cellId) { //uses the clicked cell id to set an exclude filter corresponding to the item in the clicked row/column i.e. "umbrella" column and item in row "Furniture Project"
 		$cellIdAry = explode("-", $cellId);
 		$recRowId = $cellIdAry[0];
 		$colID = $cellIdAry[1];
@@ -402,6 +402,31 @@ class filterColumns {
 		}
 		setNonVolAryItem($this->nonVolFiltAryKey."Exclude", $this->excludeFiltersAry);
 		//pr($this->excludeFiltersAry);
+	}
+
+	function setIncludeFilterUsingCellIdAndCellContentStr($cellId, $filterValueStr) { //uses the clicked cell id and the passed $filterValueStr to set an include only filter for the clicked column i.e. "umbrella" column (derived from the $cellId) and string value "Furniture Project"
+		$cellIdAry = explode("-", $cellId);
+		$recRowId = $cellIdAry[0];
+		$colID = $cellIdAry[1];
+		$fieldName = getFieldName($colID); //create fieldName from column id (0 - 12) e.g. "transCatgry" or "budget"
+		//pr("Check = ".$recRowId." end check! ");
+		$fieldValue = $this->tables->getKey($fieldName, $filterValueStr); //converts the filter string value to index number from appropriate table e.g. 5, 7, 
+		if (($fieldName == "referenceInfo") || ($fieldName == "recordNotes")) { //as value is not an index key but string enclose in single quotes for mariaDb query so it is not interpreted as a field name!
+			$fieldValue = '\''.$fieldValue.'\''; //create string enclosed in single quotes for mariaDb query so it is not interpreted as a field name!!
+		}
+		if (array_key_exists($fieldName, $this->includeFiltersAry)) { //requested filter column already exists in $includeFiltersAry
+
+			if ($this->includeFiltersAry[$fieldName] == $fieldValue) { //same filter value has been chosen so interpret this as command to cancel this filter
+				unset($this->includeFiltersAry[$fieldName]); //remove key ($fieldName, e.g. "budget") and value (e.g. 7) from array so this column is no longer filtered
+			}
+			else { //set a new value for the filter
+				$this->includeFiltersAry[$fieldName] = $fieldValue;
+			}
+		}
+		else { //create new filter with $fieldName (e.g. "budget") as key and $fieldValue (e.g. 7) as value
+			$this->includeFiltersAry[$fieldName] = $fieldValue;
+		}
+		setNonVolAryItem($this->nonVolFiltAryKey."Include", $this->includeFiltersAry);
 	}
 
 	function getFiltStr() {

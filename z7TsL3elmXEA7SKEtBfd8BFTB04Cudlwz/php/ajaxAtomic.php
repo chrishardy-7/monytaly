@@ -45,7 +45,7 @@ else {
 	$outputArry = getFilterStrAllBalData($inputArry, $outputArry, $genFilter->getFiltStr(), $fam->getCmnd(), $restrictFilter->getFiltStr(), $moneyDisplay->getStr()); //uses reconciled dates for calculation
 }
 
-$outputArry = updateDocFilename($inputArry, $outputArry, $allowedToEdit);
+$outputArry = updateDocFilename($inputArry, $outputArry, $_fieldNameAry, $tables, $allowedToEdit);
 
 //$outputArry["PLAIN-allrecordsColNameRnd"] = $inputArry["allrecordsColNameRnd"];
 

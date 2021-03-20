@@ -8,7 +8,8 @@ $nameOfThisPage = "Edit Flex";
 
 //include_once("./".$sdir."createMenuRndms.php");
 
-
+$startFreshPage = new persistVar("startFreshPage", FALSE); //trys to create and initialise a persistant variable called "startFreshPage". If it already exists it will neither be recreated nor initialised
+$startFreshPage->set(FALSE); //set to FALSE so that the next call of showRecsForFullYr.php from the main menu button will not clear filters and set buttons etc. (which is the usual behaviour)
 
 $divEachWidth = 15.46776;
 $col1W = 2.3436;

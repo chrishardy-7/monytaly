@@ -15,8 +15,8 @@ var altGrLastPressedTime = 0;
 var compoundNum = 0;
 
 var conLogMode = "Off";
-var consoleAryMode = "On";
-var checkTimeMode = "Off"; //set to "Off", "Immediate" (prints as each START() FINISH() pair complete - for troubleshooting code problems) or "AfterRoot" which prints after any root pair finishes
+var consoleAryMode = "Off";
+var checkTimeMode = "Off"; //set to "Off" or "On" (prints as each START() FINISH() pair complete - for troubleshooting code problems
 var checkTimeLastRun = 0;
 var checkTimeTabCount = 0;
 var checkTimeStack = [];
@@ -147,9 +147,9 @@ function doEverything(id, heldKey, calledFrom) {
 
 	// ########################### LOCAL JAVASCRIPT STUFF - DOES NOT INTERACT WITH SERVER ###################
 
-	showHideCompoundRows(valGet("seltdRowCellId"), compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, pivotButIsSet, "Hide");
+	//showHideCompoundRows(valGet("seltdRowCellId"), compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, pivotButIsSet, "Hide");
 
-	selectTableRowsForDoc(12, false, colClssAry, compoundTypeAry, moneyDisplayStr, valGet("seltdRowCellId"), "white", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "", pivotButIsSet, "unselect"); //use the id of the previously clicked cell (stored in formValHolder for "seltdRowCellId") to unselect all the previously selected rows associated with the previous document
+	selectTableRowsForDoc(12, false, colClssAry, compoundTypeAry, compoundColNumAry, moneyDisplayStr, valGet("seltdRowCellId"), "white", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "", pivotButIsSet, "unselect"); //use the id of the previously clicked cell (stored in formValHolder for "seltdRowCellId") to unselect all the previously selected rows associated with the previous document
 	
 	if (id.split("-").length == 2) { //only store cell id if it is an actual cell with a hiphon in between the row and column indexes (prevents selectable items in button panels and elsewhere being stored)
 		valSet("seltdRowCellId", id); //stored the newly clicked cell id in formValHolder for "seltdRowCellId" (for use to unselect the row on a later pass of this func)
@@ -157,9 +157,9 @@ function doEverything(id, heldKey, calledFrom) {
 
 	valSet("storeSelectedRecordIdR", id.split("-")[0]); //store the id of the clicked row, which is the idR of the row in allRecords - used by Duplicate Row and Delete Row
 	
-	showHideCompoundRows(id, compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, pivotButIsSet, "Show");
+	//showHideCompoundRows(id, compoundGroupIdrAry, compoundTypeAry, compoundHiddenAry, pivotButIsSet, "Show");
 
-	selectTableRowsForDoc(12, true, colClssAry, compoundTypeAry, moneyDisplayStr, id, "grey", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellLineSelRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "docLineCountDispId", pivotButIsSet, "select"); //use the id of the current clicked cell id to select all the rows associated with the current document
+	selectTableRowsForDoc(12, true, colClssAry, compoundTypeAry, compoundColNumAry, moneyDisplayStr, id, "grey", valGet("filteredColsCsv"), 'displayCellFilt', 'displayMoneyCellFiltClass', valGet("endDate"), displayCellDescrpAry, "displayCellLineSelRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", "docLineCountDispId", pivotButIsSet, "select"); //use the id of the current clicked cell id to select all the rows associated with the current document
 	
 	selectCell(id, colClssAry, "displayCellSnglSel", "displayCellSnglSelEditable", "displayCellSnglSelMoney", "displayCellSnglSelRcnclBlank", displayCellDescrpAry, "blue", "blueEdit");           //use the id of the current clicked cell to set the current cell to edit
 	
@@ -173,6 +173,9 @@ function doEverything(id, heldKey, calledFrom) {
 		selectButPanel(staticArys["displayCellDescrpAry"], fieldNameAry, staticArys["subButPanelControlAry"], id, subButPanelIdSuffix, dummySubButPanelId, noEditButPanelId, "dateAndItemSelectRecnclDivId", conditionsObj, restrictionsAry, "Edit"); //for subButtons
 	}
 	else {
+
+		var restrictionsAry = {"allowColumnEdit": ["personOrOrg", "transCatgry", "accWorkedOn", "budget", "umbrella", "docType"]};
+		
 		selectButPanel(staticArys["displayCellDescrpAry"], fieldNameAry, staticArys["butPanelControlAry"], id, butPanelIdSuffix, dummyButPanelId, noEditButPanelId, "dateAndItemSelectRecnclDivId", {}, restrictionsAry, "No Edit"); //use the id of the current clicked cell (freshly stored in formValHolder for "seltdRowCellId") to display the appropriate but panel
 
 		//selectButPanel(staticArys["displayCellDescrpAry"], fieldNameAry, staticArys["subButPanelControlAry"], id, subButPanelIdSuffix, dummySubButPanelId, noEditButPanelId, "dateAndItemSelectRecnclDivId", {}, restrictionsAry, "Edit"); //for subButtons
@@ -217,6 +220,7 @@ function atomicAjaxCall(
 	recEndDate,
 	heldKey,
 	compoundNum,
+	compoundColNumAry,
 	compoundTypeAry,
 	compoundGroupIdrAry,
 	altGrLastPressedTime,
@@ -294,7 +298,7 @@ conLog("HERE ##################################### atomicAjaxCall()   PRE-AJAX S
 		      	consoleAry(arryBackFromPhp);
 
 		      	clearRowExcptRecDateAjaxReceive(arry, arryBackFromPhp, cellId, colClssAry);
-		      	setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellDescrpAry, compoundTypeAry, colClssAry);
+		      	setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellDescrpAry, compoundTypeAry, compoundColNumAry, colClssAry);
 		      	createParentAjaxReceive(arry, arryBackFromPhp, cellId);
 		      	stickyAjaxReceive(arry, arryBackFromPhp, cellId, savedCellClassesArry);
 		      	withdrawnPaidinAjaxReceive(arry, arryBackFromPhp);
@@ -337,6 +341,7 @@ conLog("HERE ##################################### atomicAjaxCall()   PRE-AJAX S
 //                                                                                                         #########
 
 
+/* Clears all fields in allRecords table to default values for the displayed row, except recordDate. While the server is carrying out the clear procedure the cells are set to the orange "waitingForServer" colour and later cleared of displayed data and set to normal colour by clearRowExcptRecDateAjaxReceive() when it receives confirmation back from the server. In addition to clearing the visible cells 'compound' and 'reconcileDocId' are cleared as well. Rows that are either a family parent or part of a compound grouping will not attempt to clear but display a message instead.   */
 function clearRowExcptRecDateAjaxSend(arry, cellId, colClssAry, auxButtonTxt, compoundTypeAry) {
 	if (auxButtonTxt == "Clear") { //only run if Clear button has been clicked
 		START("clearRowExcptRecDateAjaxSend()");
@@ -351,7 +356,7 @@ function clearRowExcptRecDateAjaxSend(arry, cellId, colClssAry, auxButtonTxt, co
 		}
 		else { //not compound so press on
 			var recordDate = document.getElementById(idR+"-0").innerText;
-			var newValues = [reverseDate(recordDate), "", "", "0", "0", "", "", "", reverseDate("01-01-2000"), "", "", "", "0", "0", "0"] //these values include 13:compound and 14:reconcileDocId that are used on the server to reset table values, but not used here to change any cell values as these display cells don't exist. fileName (for the associated document) is not changed on the server either, so the row still has some meaning before deciding to change the date to 01-01-2000 to finally delete it
+			var newValues = [reverseDate(recordDate), "", "", "0", "0", "", "", "", reverseDate("01-01-2000"), "", "", "", "0", "0", "0", reverseDate("01-01-2000")] //these values include 13:compound, 14:reconcileDocId and 15:parentDate that are used on the server to reset table values, but not used here to change any cell values as these display cells don't exist. fileName (for the associated document) is not changed on the server either, so the row still has some meaning before deciding to change the date to 01-01-2000 to finally delete it
 			for (var i = 1; i < 13; i++) { //iterate each cell except 0:Date which must remain unchanged in case the row may still be required before deciding to change the date to 01-01-2000 to finally delete it
 				//document.getElementById(idR+"-"+i).innerText = newValues[i];
 				changeSuffixClass((idR+"-"+i), colClssAry["waitingForServer"]);
@@ -371,7 +376,7 @@ function clearRowExcptRecDateAjaxReceive(arry, arryBackFromPhp, OrigCellId, colC
 		var rowId = Object.keys(arryBackFromPhp["aryBackFromWriteReadRows"])[0]; //extract rowId from returned array - PHP writeReadRows() can return several rows if required but only single row used here
 		var origValueAry = arry["writeValuesAry"][rowId];
 		var updatedValueAry = arryBackFromPhp["aryBackFromWriteReadRows"][rowId];	
-		if ((updatedValueAry[14] == 0) && (updatedValueAry[13] == 0)) { //check that reconcileDocId and compound have both been set to 0 before setting other cells
+		if ((updatedValueAry[15] == reverseDate("01-01-2000")) && (updatedValueAry[14] == 0) && (updatedValueAry[13] == 0)) { //check that reconcileDocId and compound have both been set to 0 before setting other cells
 			for (var i = 12; 0 <= i; i--) { //start at highest index of 13 and count down to 0 (direction doesn't really matter but continues in order of checking from 14, 13)
 				cellId = rowId+"-"+i;
 				if ((i == 0) || (i == 8)) { //a date column so reverse date for comparison and display WOULD BE BETTER IF THESE IF ELSE'S TESTED ROW NAMES IN CASE ORDER IS CHANGED OR ADDITIONS MADE !
@@ -420,7 +425,11 @@ function clearRowExcptRecDateAjaxReceive(arry, arryBackFromPhp, OrigCellId, colC
 }
 
 function setCompoundTransAjaxSend(arry, cellId, heldKey, compoundNum, auxButtonTxt) {
-	if ((heldKey == "AltGr") && (auxButtonTxt != "Clear")) { //only run if "AltGr" is held down
+	if (((heldKey == "AltGr") || (heldKey == "RightShift")) && (auxButtonTxt != "Clear")) { //only run if "AltGr" or "ShiftRight" is held down
+		arry["compoundColNum"] = 0;
+		if (heldKey == "RightShift") {
+			arry["compoundColNum"] = 1;
+		}
 		START("setCompoundTransAjaxSend()");
 		arry["cellIdForCompoundTrans"] = cellId;
 		arry["compoundNum"] = compoundNum;
@@ -431,7 +440,7 @@ function setCompoundTransAjaxSend(arry, cellId, heldKey, compoundNum, auxButtonT
 	return arry;
 }
 
-function setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellDescrpAry, compoundTypeAry, colClssAry) {
+function setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellDescrpAry, compoundTypeAry, compoundColNumAry, colClssAry) {
 	if (existsAndTrue(arryBackFromPhp, "PHPsetCompoundTransHasRun")) { //only run if returning PHP has already run on server
 		START("setCompoundTransAjaxReceive()");
 		var maxColIdx = displayCellDescrpAry.length - 1; //derive maximum column index from displayCellDescrpAry which holds single word descriptions for each column
@@ -442,23 +451,37 @@ function setCompoundTransAjaxReceive(arry, arryBackFromPhp, cellId, displayCellD
 			if (compoundActionAry[key] == "NewMaster") {
 				compoundTypeAry[key] = "Master"; //change global variable to record new master creation
 				for(i = 0; i <= maxColIdx; i++) { //loop through all the columns in the row
-					if ((displayCellDescrpAry[i] == "MoneyOut") || (displayCellDescrpAry[i] == "MoneyIn")) { //check fro this section and use compound colours if necessary
-				    	changeSuffixClass(key+"-"+i, colClssAry["compoundMaster"]);
+					if ((displayCellDescrpAry[i] == "MoneyOut") || (displayCellDescrpAry[i] == "MoneyIn")) { //check for this section and use compound colours if necessary
+						if (arry["compoundColNum"] == 0) {
+				    		changeSuffixClass(key+"-"+i, colClssAry["compoundMaster"]);
+				    		compoundColNumAry[key] = 0;
+						}
+						else {
+							changeSuffixClass(key+"-"+i, colClssAry["compoundMasterAlt"]);
+							compoundColNumAry[key] = 1;
+						}
 				    }
 			    } 
 			}
 			if (compoundActionAry[key] == "NewSlave") {
-				compoundTypeAry[key] = "FinalSlave"; //change global variable to record new master creation
+				compoundTypeAry[key] = "FinalSlave"; //change global variable to record new slave creation
 				for(i = 0; i <= maxColIdx; i++) { //loop through all the columns in the row
-					if ((displayCellDescrpAry[i] == "MoneyOut") || (displayCellDescrpAry[i] == "MoneyIn")) { //check fro this section and use compound colours if necessary
-				    	changeSuffixClass(key+"-"+i, colClssAry["compoundSlaveFinal"]);
+					if ((displayCellDescrpAry[i] == "MoneyOut") || (displayCellDescrpAry[i] == "MoneyIn")) { //check for this section and use compound colours if necessary
+						if (arry["compoundColNum"] == 0) {
+				    		changeSuffixClass(key+"-"+i, colClssAry["compoundSlaveFinal"]);
+				    		compoundColNumAry[key] = 0;
+						}
+						else {
+							changeSuffixClass(key+"-"+i, colClssAry["compoundSlaveFinalAlt"]);
+							compoundColNumAry[key] = 1;
+						}
 				    }
 			    } 
 			}
 			if (compoundActionAry[key] == "Destroyed") {
 				compoundTypeAry[key] = "None"; //change global variable to record destruction of compound state for this row
 				for(i = 0; i <= maxColIdx; i++) { //loop through all the columns in the row
-					if ((displayCellDescrpAry[i] == "MoneyOut") || (displayCellDescrpAry[i] == "MoneyIn")) { //check fro this section and use compound colours if necessary
+					if ((displayCellDescrpAry[i] == "MoneyOut") || (displayCellDescrpAry[i] == "MoneyIn")) { //check for this section and use compound colours if necessary
 				    	var adjacentClass = getSuffixClass(key+"-"+familyColKeyStr); //get selection class for row from the family cell in the row (not normally selectable)
 				    	changeSuffixClass(key+"-"+i, adjacentClass);
 				    }
@@ -733,7 +756,7 @@ function docUpdateSend(arry, docUpdateCellId, accountBankLinksArry, auxButtonTxt
 		//arry["accountIsRelevant"] = "Yes"; //the selected row is a valid account in terms of showing a bank statement for reconciling purposes
 		arry["bankAccName"] = accountBankLinksArry[accountName];
 	}
-	if ((currentDocRnd != previousDocRnd) || (docUpdateCellId.split("-")[1] == 8) || (valGet("previousCellId").split("-")[1] == 8)) { //only if new doc random has been selected or column 8 (reconcilation column to show relevant bank statement) or previous selection was column 8 so the basic document needs to be displayed again - otherwise this routine doesn't run as the doc doesn't need to be updated
+	if ((currentDocRnd != previousDocRnd) || (docUpdateCellId.split("-")[1] == 8) || (valGet("previousCellId").split("-")[1] == 8) || (docUpdateCellId.split("-")[1] == 6) || (valGet("previousCellId").split("-")[1] == 6)) { //only if new doc random has been selected or column 8 (reconcilation column to show relevant bank statement) or previous selection was column 8 so the basic document or a different reconciliation bank statement needs to be displayed again or column 6 (budget column to show relevant grant info) or previous selection was column 6 so the basic document or a different budget doc needs to be displayed again - otherwise this routine doesn't run as the doc doesn't need to be updated
 		valSet("previousDocRnd", currentDocRnd); //doc has changed so update placeholder for previous doc random so it can be used to check if the next clicked record represents a doc change
 		arry["docUpdateCellId"] = docUpdateCellId;
 		arry["auxButtonTxt"] = auxButtonTxt;
@@ -767,6 +790,40 @@ function docUpdateReceive(arry, arryBackFromPhp) {
 //                                                                                                 #################
 
 
+/* Attempts to extract a budget end date from the last group of characters of the budget name, and budget start date from the 2nd last group of characters of the budget name (e.g. a budget name as in "FiSCAF 06Apr21 05Mar22". In each case if the extracted date has a day of month suffix (and isn't simply a month and year - "Apr21") this D.O.M. prefix is used in the creation of the extracted date. If either group contains no prefix then in the case of the last group (end date) the created date defaults to the last day of the month and in the case of the 2nd last group (start date) the created date defaults to the 1st day of the month. If no dates groups can be detected then "NoDatesInBudget" is returned, otherwise comparisons are them made with recordDate using either both start and end date if they are both available, or just the end date (last group) if that is all that is available. If just the last group (single) date is available it is used as a start date too with either it's D.O.M. prefix (in which case it is a single day budget) or, in the absence of the D.O.M. prefix, the first day of the month "01" is used. The comparison process yields one of three return results: "Expired", "NotYetActive", or "InDate" to indicate the date(s) of the budget in relation to the transaction date. A CORRESPONDING PHP FUNCTION EXISTS. */
+function checkBudgetDatesJS(recordDate, budgetName) {
+    transDateYYMMDD = convertYYYYMMDDdateToYYMMDD(recordDate); //transaction date as YYMMDD
+    budgetDateLastYYMMDD = getDateSuffixYYMMDD(budgetName, true, true); //get date in YYMMDD format from the last group, last D.O.M. if no D.O.M. prefix - defaults to "NoDate" if doesn't decode to date
+     if (budgetDateLastYYMMDD.substr(-6) == "NoDate") {
+     	return "NoDatesInBudget";
+     }
+    budgetDateSecLastYYMMDD = getDateSuffixYYMMDD(budgetName, false, false); //get date in YYMMDD format from the 2nd last group, 1st D.O.M. if no D.O.M. prefix - defaults to "NoDate" if doesn't decode to date
+    if (budgetDateSecLastYYMMDD.substr(-6) == "NoDate") { //single date (using last group only)
+	budgetDateLastYYMMDDsetFirstDOM = getDateSuffixYYMMDD(budgetName, false, true); //get date in YYMMDD format from the last group, 1st D.O.M. if no D.O.M. prefix - cannot be "NoDate" 
+
+    	if (budgetDateLastYYMMDD < transDateYYMMDD) { //budget date is earlier than the transaction date
+	        return "Expired";
+	    }
+	    else if (transDateYYMMDD < budgetDateLastYYMMDDsetFirstDOM) { //budget date is later than the transaction date
+	        return "NotYetActive";
+	    }
+	    else {
+	        return "InDate";
+	    }
+    }
+    else { //both dates (using both groups)
+	    if (budgetDateLastYYMMDD < transDateYYMMDD) { //budget date is earlier than the transaction date
+	        return "Expired";
+	    }
+	    else if (transDateYYMMDD < budgetDateSecLastYYMMDD) { //budget date is later than the transaction date
+	        return "NotYetActive";
+	    }
+	    else {
+	        return "InDate";
+	    }
+	}
+}
+
 /* Attempts to extract a budget end date from the last group of characters of the budget name - using getDateSuffixYYMMDD() - and compares the date with the transaction date. If the budget start date is later than the transaction date TRUE is returned. Otherwise FALSE. A CORRESPONDING PHP FUNCTION EXISTS. */
 function budgetNotYetActiveJS(recordDate, budgetName) {
 	var transDateYYMMDD = convertYYYYMMDDdateToYYMMDD(recordDate);
@@ -791,12 +848,12 @@ function budgetExpiredJS(recordDate, budgetName) {
 	}
 }
 
-/* Takes the passed $date string in format "09-02-2021" and converts it to YYMMDD format "210209".  */
+/* Takes the passed date string in format "09-02-2021" and converts it to YYMMDD format "210209".  */
 function convertYYYYMMDDdateToYYMMDD(date) {
     return date.substr(8, 2)+date.substr(3, 2)+date.substr(0, 2); //extract two digit year substring and concatonate it with extracted month substring
 }
 
-/* If $setForLastDayOfMonth is set to TRUE this function extracts the last group (if setForLastGroup is TRUE) or 2nd last group (if setForLastGroup is FALSE) of characters from value. The extracted group should be an abreviated month-year date string in the form "7Feb20", "15Feb20" or "Feb20") and, if it can be interpreted as a date, it is decoded to a number, reversed, in the form "200207", "200215" or in the case where no day of month suffix is included it sets the day of month output to the last day e.g. "200228" (taking into account that for leap years Feb's last day will be 29). This allows proper sorting using a simple sort algorithm or comparisons with other dates similarly formatted. If any extracted group of characters in the passed value doesn't properly decode to a date the original value with "-NoDate" (the preceding hyphen ensures that in sorting routines with SORT_NATURAL a value of "" will come first before any numbers) concatonated onto it is returned. If setForLastDayOfMonth is set to FALSE it works in a similar manner when there is a provided day of month suffix, but where there are none the day of month output is now set to "01". NOTE: only works with 2 character year designator and assumes every date is in the century 2000. Months designators must all be 3 character with leading Capital i.e. Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec.  A CORRESPONDING PHP FUNCTION EXISTS. */
+/* If setForLastDayOfMonth is set to TRUE this function extracts the last group (if setForLastGroup is TRUE) or 2nd last group (if setForLastGroup is FALSE) of characters from value. The extracted group should be an abreviated month-year date string in the form "7Feb20", "15Feb20" or "Feb20") and, if it can be interpreted as a date, it is decoded to a number, reversed, in the form "200207", "200215" or in the case where no day of month suffix is included it sets the day of month output to the last day e.g. "200228" (taking into account that for leap years Feb's last day will be 29). This allows proper sorting using a simple sort algorithm or comparisons with other dates similarly formatted. If any extracted group of characters in the passed value doesn't properly decode to a date the original value with "-NoDate" (the preceding hyphen ensures that in sorting routines with SORT_NATURAL a value of "" will come first before any numbers) concatonated onto it is returned. If setForLastDayOfMonth is set to FALSE it works in a similar manner when there is a provided day of month suffix, but where there are none the day of month output is now set to "01". NOTE: only works with 2 character year designator and assumes every date is in the century 2000. Months designators must all be 3 character with leading Capital i.e. Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec.  A CORRESPONDING PHP FUNCTION EXISTS. */
 function getDateSuffixYYMMDD(value, setForLastDayOfMonth, setForLastGroup) {
 	var groupsAry = value.trim().split(" ");  //create an array from the groups of characters separated by a space in value string
 	if (setForLastGroup) { //set group to be extracted according to setForLastGroup being TRUE (last group) or FALSE (2nd last group)
@@ -885,6 +942,10 @@ function notHiddenCompound() {
 
 function messageChangeInhibited() {
 	alert("Please remove filters before trying to change this row!");
+}
+
+function msgEditDenied() {
+	alert("Sorry, you don't have editing privileges!");
 }
 
 /* Used to replace eval() which is deprecated and not advised. Creates a function name out of two passed strings, nameFirstPart, nameSecondPart, and returns a reference to the actual function so it can be called using the form:
@@ -1416,6 +1477,7 @@ function strToHex(strng){
 }
 
 document.addEventListener("keydown", function(event) {
+	//alert(event.code);
 	if (((event.code =="ControlLeft") && (currentKey == "Shift")) || ((event.code =="ShiftLeft") && (currentKey == "Control"))) {
 		currentKey = "ControlShift";
 	}
@@ -1425,6 +1487,9 @@ document.addEventListener("keydown", function(event) {
 	else if (event.code =="ShiftLeft") {
 		currentKey = "Shift";
 	}
+	else if (event.code =="ShiftRight") {
+		currentKey = "RightShift";
+	}
 	else if (event.code =="AltRight") {
 		altGrLastPressedTime = (new Date).getTime() % 1000000000; //time in milliseconds, truncated to 9 digits from 1970 time, to rollover in 11.574 days (so it can fit in a mariadb INT)
 		currentKey = "AltGr";
@@ -1433,17 +1498,20 @@ document.addEventListener("keydown", function(event) {
 	else {
 		currentKey = event.which || event.keyCode; //an effort to capture the key number for different operating systems/browsers. different number for uppercase/lowercase
 	}
-
+//alert(currentKey);
 })
 
 document.addEventListener("keyup", function(event) { //the if and if elses are a bit redundent as currentKey is always set to "None" on keyup!
-	if (currentKey == "AltGr") { //AltGr key has just been released
+	if ((currentKey == "AltGr") || (currentKey == "RightShift")) { //AltGr key has just been released
 		document.getElementById("7EKR03N0CJ").submit(); //calls new (same) page immediately (refresh to impose compound order for newly created)
 	}
   	if ((event.code =="ControlLeft") && (currentKey == "Control")) {
 		currentKey = "None";
 	}
 	else if ((event.code =="ShiftLeft") && (currentKey == "Shift")) {
+		currentKey = "None";
+	}
+	else if ((event.code =="ShiftRight") && (currentKey == "ShiftRight")) {
 		currentKey = "None";
 	}
 	else if ((event.code =="AltRight") && (currentKey == "AltGr")) {
@@ -1561,7 +1629,7 @@ function setOneStrClassUnsetRest(baseId, onClass, offClass, itemKeysCsv, itemKey
     FINISH("setOneStrClassUnsetRest()");
 }
 
-/* Converts passed $date string by reversing it, e.g. "07-04-2020" to "2020-04-07" or "2020-04-07" to "07-04-2020" to change to and from database table format when required for display in "07-04-2020" format. */
+/* Converts passed date string by reversing it, e.g. "07-04-2020" to "2020-04-07" or "2020-04-07" to "07-04-2020" to change to and from database table format when required for display in "07-04-2020" format. */
 function reverseDate(date) {
 	START("reverseDate()");
 	var dateAry = date.split("-");
@@ -1570,7 +1638,7 @@ function reverseDate(date) {
 	return reversedDate;
 }
 
-/* Converts passed date string, $date, (which is in the form "07-04-2020") by reversing it, removing the separator "-"s, and returning "20200407" which can be used directly for comparisons such as > < ==. */
+/* Converts passed date string, date, (which is in the form "07-04-2020") by reversing it, removing the separator "-"s, and returning "20200407" which can be used directly for comparisons such as > < ==. */
 function reverseDateNumsOnly(date) {
 	START("reverseDateNumsOnly()");
 	var dateAry = date.split("-");
@@ -1579,7 +1647,7 @@ function reverseDateNumsOnly(date) {
 	return reversedDateNumsOnly; 
 }
 
-/* Converts passed date string, $date, (which is in the form "07-04-2020" or "2020-04-07") by removing the separator "-"s, and returning "07042020" or "20200407" which can be used directly for comparisons such as > < ==. */
+/* Converts passed date string, date, (which is in the form "07-04-2020" or "2020-04-07") by removing the separator "-"s, and returning "07042020" or "20200407" which can be used directly for comparisons such as > < ==. */
 function dateNumsOnly(date) {
 	START("dateNumsOnly()");
 	var dateAry = date.split("-");
@@ -1594,9 +1662,10 @@ function selectTableRowsForDoc(
 	rowSel,				//if true indicates row should be selected, false indicates row should be unselected
 	colClssAry,			// array of suffix classes that are all used to difine the color of cells and rows
 	compoundTypeAry,	//array of row types for compound rows - like Master, Slave, FinalSlave, None
+	compoundColNumAry,  //array of comound colour numbers - 0 = normal colours, 1 = budget onlu colours
 	moneyDisplayStr,    //string to inform if either withdrawn or paidin are to be blanked out
 	elementId,			//id of clicked element
-	rowSelColorClass,		//sets background colour to indicate element has been chosen - tailored to each cell depending on array element for column and is a light grey colour
+	rowSelColorClass,	//sets background colour to indicate element has been chosen - tailored to each cell depending on array element for column and is a light grey colour
 	columnCsv,			//cvs of all column numbers that have been set to filter, i.e. "2, 5"
 	filterClass,		//sets filtered columns in selected rows to the filter colour - pale yellow
 	filterClassRightAlign, //sets filtered columns in selected rows to the filter colour - pale yellow, but with right alignment for withdrawn and  paidin cells
@@ -1625,14 +1694,30 @@ function selectTableRowsForDoc(
 			    			changeSuffixClass(cellId, colClssAry["blankedMoneyCol"]); //blank
 			    		}
 			    		else if (compoundTypeAry[rowId] == "Master") {
-					    	changeSuffixClass(cellId, colClssAry["compoundMaster"]); //compound master
-			    		}
-			    		else if (compoundTypeAry[rowId] == "Slave") {
-					    	changeSuffixClass(cellId, colClssAry["compoundSlave"]); //compound slave
-			    		}
-			    		else if (compoundTypeAry[rowId] == "FinalSlave") {
-					    	changeSuffixClass(cellId, colClssAry["compoundSlaveFinal"]); //compound slave final
-			    		}
+                            if (compoundColNumAry[rowId] == 0) {
+                                changeSuffixClass(cellId, colClssAry["compoundMaster"]); //normal compound master colour
+                            }
+                            else {
+                                changeSuffixClass(cellId, colClssAry["compoundMasterAlt"]); //alternative (budgets) compound master colour
+                            }
+                        }
+                        else if (compoundTypeAry[rowId] == "Slave") {
+                            if (compoundColNumAry[rowId] == 0) {
+                                changeSuffixClass(cellId, colClssAry["compoundSlave"]); //normal compound slave colour
+                            }
+                            else {
+                                changeSuffixClass(cellId, colClssAry["compoundSlaveAlt"]); //alternative (budgets) compound slave colour
+                            }
+
+                        }
+                        else if (compoundTypeAry[rowId] == "FinalSlave") {
+                            if (compoundColNumAry[rowId] == 0) {
+                                changeSuffixClass(cellId, colClssAry["compoundSlaveFinal"]); //normal compound final slave colour
+                            }
+                            else {
+                                changeSuffixClass(cellId, colClssAry["compoundSlaveFinalAlt"]); //alternative (budgets) compound final slave colour
+                            }
+                        }
 			    		else {
 			    			if (rowSel) { //not compound rows so use normal select or unselect colours
 					    		changeSuffixClass(cellId, colClssAry["selCol"]);
@@ -1647,14 +1732,30 @@ function selectTableRowsForDoc(
 			    			changeSuffixClass(cellId, colClssAry["blankedMoneyCol"]); //blank
 			    		}
 			    		else if (compoundTypeAry[rowId] == "Master") {
-					    	changeSuffixClass(cellId, colClssAry["compoundMaster"]); //compound master
-			    		}
-			    		else if (compoundTypeAry[rowId] == "Slave") {
-					    	changeSuffixClass(cellId, colClssAry["compoundSlave"]); //compound slave
-			    		}
-			    		else if (compoundTypeAry[rowId] == "FinalSlave") {
-					    	changeSuffixClass(cellId, colClssAry["compoundSlaveFinal"]);
-			    		}
+                            if (compoundColNumAry[rowId] == 0) {
+                                changeSuffixClass(cellId, colClssAry["compoundMaster"]); //normal compound master colour
+                            }
+                            else {
+                                changeSuffixClass(cellId, colClssAry["compoundMasterAlt"]); //alternative (budgets) compound master colour
+                            }
+                        }
+                        else if (compoundTypeAry[rowId] == "Slave") {
+                            if (compoundColNumAry[rowId] == 0) {
+                                changeSuffixClass(cellId, colClssAry["compoundSlave"]); //normal compound slave colour
+                            }
+                            else {
+                                changeSuffixClass(cellId, colClssAry["compoundSlaveAlt"]); //alternative (budgets) compound slave colour
+                            }
+
+                        }
+                        else if (compoundTypeAry[rowId] == "FinalSlave") {
+                            if (compoundColNumAry[rowId] == 0) {
+                                changeSuffixClass(cellId, colClssAry["compoundSlaveFinal"]); //normal compound final slave colour
+                            }
+                            else {
+                                changeSuffixClass(cellId, colClssAry["compoundSlaveFinalAlt"]); //alternative (budgets) compound final slave colour
+                            }
+                        }
 			    		else {
 			    			if (rowSel) { //not compound rows so use normal select or unselect colours
 					    		changeSuffixClass(cellId, colClssAry["selCol"]);
@@ -1665,10 +1766,11 @@ function selectTableRowsForDoc(
 			    		}			    	
 			    	}
 			    	else if (displayCellDescrpAry[i] == "Budget") {
-			    		if (budgetNotYetActiveJS(document.getElementById(rowId+"-0").innerText, document.getElementById(cellId).innerText)) {
+			    		let checkBudgetDatesJSresult = checkBudgetDatesJS(document.getElementById(rowId+"-0").innerText, document.getElementById(cellId).innerText);
+			    		if (checkBudgetDatesJSresult == "NotYetActive") {
 			    			changeSuffixClass(cellId, colClssAry["budgetNotYetActive"]);
 			    		}
-			    		else if (budgetExpiredJS(document.getElementById(rowId+"-0").innerText, document.getElementById(cellId).innerText)) {
+			    		else if (checkBudgetDatesJSresult == "Expired") {
 			    			changeSuffixClass(cellId, colClssAry["budgetExpired"]);
 			    		}
 			    		else {
@@ -1774,6 +1876,8 @@ function cellMatchInObj(dispCellDescrpAry, elementId, conditionsObj) {
 /* First all button panels are made invisible and then, for the selected cell, the relevent identifier from the butPanelControlAry is used to unhide the specified button panel. Unless the test with conditionsObj succeeds or there is no relevant data for the current column (see description in cellMatchInObj() function) only the panel referenced by dummyButPanelId will displayed. If "None" is the identifier the panel referenced by dummyButPanelId will be displayed. Facilitates granular overriding of general no-edit directive for specific button panels (e.g. budget column) for specific users. */
 function selectButPanel(displayCellDescrpAry, fieldNameAry, butPanelControlAry, elementId, prefix, dummyButPanelId, noEditButPanelId, outerContainerForPanel, conditionsObj, restrictionsAry, edit) {
 	START("selectButPanel()");
+	let show = true;
+	let editAllowed = true;
 	document.getElementById(outerContainerForPanel).style.display = 'inline'; //makes containing div visible (it is hidden by default so display area sits at the left for 'non-editing' users)
 	document.getElementById(noEditButPanelId).style.display = 'none';
 	for (index = 0; index < butPanelControlAry.length; index++) { //start by hiding all button panels
@@ -1784,20 +1888,20 @@ function selectButPanel(displayCellDescrpAry, fieldNameAry, butPanelControlAry, 
 		var objTestResult = cellMatchInObj(displayCellDescrpAry, elementId, conditionsObj);
 		if ((panelIdStrValue != "None") && ((objTestResult == "Match Success") || (objTestResult == "Nothing To Test")) ) { //the butPanelControlAry value indexed by elementId is not "None" and cellMatchInObj() passes test
 			document.getElementById(prefix+panelIdStrValue).style.display = 'inline';
-			START("selectButPanel() 1st eval statement");
-			getFunc(prefix+butPanelControlAry[elementId.split("-")[1]], 'initButPanel')(elementId); //target the initialisation function in the selected button panel using eval to assemble the name of the function which has been dynamically created in each button panel
-			FINISH("selectButPanel() 1st eval statement");
+			START("1st getFunc statement - in selectButPanel()");
+			getFunc(prefix+butPanelControlAry[elementId.split("-")[1]], 'initButPanel')(elementId, show, editAllowed); //target the initialisation function in the selected button panel using getFunc to assemble the name of the function which has been dynamically created in each button panel
+			FINISH("1st getFunc statement - in selectButPanel()");
 		}
 		else {
 			document.getElementById(dummyButPanelId).style.display = 'inline'; //make visible the dummy button panel - no prefix required for this as it is incorporated into dummyButPanelId
-			START("selectButPanel() 2nd eval statement");
-			getFunc(dummyButPanelId, 'initButPanel')(elementId); //target the initialisation function in the selected button panel using eval to assemble the name of the function which has been dynamically created in each button panel
-			FINISH("selectButPanel() 2nd eval statement");
+			START("2nd getFunc statement - in selectButPanel()");
+			getFunc(dummyButPanelId, 'initButPanel')(elementId, show, editAllowed); //target the initialisation function in the selected button panel using getFunc to assemble the name of the function which has been dynamically created in each button panel
+			FINISH("2nd getFunc statement - in selectButPanel()");
 		}
 	}
 	else { //set for no edit so display default empty panel
 		document.getElementById(noEditButPanelId).style.display = 'inline'; //make visible the empty no edit button panel - no prefix required for this as it is incorporated into noEditButPanelId
-		getFunc(noEditButPanelId, 'initButPanel')(elementId); //target the initialisation function in the selected button panel using eval to assemble the name of the function which has been dynamically created in each button panel
+		getFunc(noEditButPanelId, 'initButPanel')(elementId, show, editAllowed); //target the initialisation function in the selected button panel using getFunc to assemble the name of the function which has been dynamically created in each button panel
 	}
 	//checkTimeout("selectButPanel", 0);
 	FINISH("selectButPanel()");
@@ -1953,7 +2057,7 @@ function ajaxUpdateDocFileName(
 }
 
 
-/* If the array and key exist, tests the subarray designated by key to see if it contains the value $valueToTestFor. If conditions are met returns true, otherwise false.   */
+/* If the array and key exist, tests the subarray designated by key to see if it contains the value valueToTestFor. If conditions are met returns true, otherwise false.   */
 function subAryHasValue(ary, key, valueToTestFor) {
      if (ary.hasOwnProperty(key)) {
         if (Object.values(ary[key]).indexOf(valueToTestFor) > -1) {

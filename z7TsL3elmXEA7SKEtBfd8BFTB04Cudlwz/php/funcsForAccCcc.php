@@ -211,7 +211,7 @@ function createPivotDisplData(
         $headingsCarriedFwdAry[] = 			0;
         $spacerRowAry[] = 					"ZZZ";
 
-        if (($headingsIdx == 0) || ($showBudgetsDateValidity && budgetExpired(date("Y-m-d"), $headingText))) {
+        if (($headingsIdx == 0) || ($showBudgetsDateValidity && (checkBudgetDates(date("Y-m-d"), $headingText) == "Expired" ))) {
             $headingsClassesAry[] = $pivotCellClass;
         }
         else {
@@ -290,10 +290,11 @@ function createPivotDisplData(
                     if ($singleRecArry[$spendColumnToSumKey] != 0) { //a value other than 0 exists and is being summed
                     	$rowContainsSpendData = TRUE;
 
-                        if ($showBudgetsDateValidity && budgetExpired($singleRecArry["maxRecordDate"], $pivotHeadingName)) {
+
+                        if ($showBudgetsDateValidity && (checkBudgetDates($singleRecArry["maxRecordDate"], $pivotHeadingName) == "Expired")) {
                             $budgetExpired = TRUE;
                         }
-                        if ($showBudgetsDateValidity && budgetNotYetActive($singleRecArry["minRecordDate"], $pivotHeadingName)) {
+                        if ($showBudgetsDateValidity && (checkBudgetDates($singleRecArry["minRecordDate"], $pivotHeadingName) == "NotYetActive")) {
                             $budgetNotActiveYet = TRUE;
                         }
 
@@ -485,28 +486,41 @@ if (($singleRecArry[$columnForRows] == 23) && ($singleRecArry[$columnForHeadings
    ##########################          ##############          ##############          ##############          ############################# */
 
 
-/* Attempts to extract a budget end date from the last group of characters of the budget name - using getDateSuffix() - and compares the date with the transaction date. If the transaction date is later than the budget end date TRUE is returned. Otherwise FALSE.  */
-function budgetExpired($recordDate, $budgetName) {
-    $transDateYYMMDD = convertDateToYYMMDD($recordDate); //transaction date as YYMMDD
-    $budgetDateYYMMDD = getDateSuffix($budgetName, TRUE, TRUE); //get date in YYMMDD format from the last group in the budget name - defaults to "No Date" if $budgetName doesn't contain the date suffix
-    if ((subStr($budgetDateYYMMDD, -6) != "NoDate") && ($budgetDateYYMMDD < $transDateYYMMDD)) { //where a budget date is present it is earlier than the transaction date
-        return TRUE; //budget expiry date earlier than transaction date
-    }
-    else {
-        return FALSE; //budget not expired for this record date
-    }
-}
 
-/* Attempts to extract a budget start date from the 2nd last group of characters of the budget name - using getDateSuffix() - and compares the date with the transaction date. If the transaction date is earlier than the budget start date TRUE is returned. Otherwise FALSE.  */
-function budgetNotYetActive($recordDate, $budgetName) {
+
+
+/* Attempts to extract a budget end date from the last group of characters of the budget name, and budget start date from the 2nd last group of characters of the budget name (e.g. a budget name as in "FiSCAF 06Apr21 05Mar22". In each case if the extracted date has a day of month suffix (and isn't simply a month and year - "Apr21") this D.O.M. prefix is used in the creation of the extracted date. If either group contains no prefix then in the case of the last group (end date) the created date defaults to the last day of the month and in the case of the 2nd last group (start date) the created date defaults to the 1st day of the month. If no dates groups can be detected then "NoDatesInBudget" is returned, otherwise comparisons are them made with $recordDate using either both start and end date if they are both available, or just the end date (last group) if that is all that is available. If just the last group (single) date is available it is used as a start date too with either it's D.O.M. prefix (in which case it is a single day budget) or, in the absence of the D.O.M. prefix, the first day of the month "01" is used. The comparison process yields one of three return results: "Expired", "NotYetActive", or "InDate" to indicate the date(s) of the budget in relation to the transaction date. A CORRESPONDING JAVASCRIPT FUNCTION EXISTS. */
+function checkBudgetDates($recordDate, $budgetName) {
     $transDateYYMMDD = convertDateToYYMMDD($recordDate); //transaction date as YYMMDD
-    $budgetDateYYMMDD = getDateSuffix($budgetName, FALSE, FALSE); //get date in YYMMDD format from the 2nd last group in the budget name - defaults to "No Date" if $budgetName doesn't contain a date suffix
-    if ((subStr($budgetDateYYMMDD, -6) != "NoDate") && ($transDateYYMMDD < $budgetDateYYMMDD)) { //where a budget date is present it is later than the transaction date
-        return TRUE; //budget expiry date earlier than transaction date
+    $budgetDateLastYYMMDD = getDateSuffix($budgetName, TRUE, TRUE); //get date in YYMMDD format from the last group, last D.O.M. if no D.O.M. prefix - defaults to "NoDate" if doesn't decode to date
+     if (subStr($budgetDateLastYYMMDD, -6) == "NoDate") {
+     	return "NoDatesInBudget";
+     }
+    $budgetDateSecLastYYMMDD = getDateSuffix($budgetName, FALSE, FALSE); //get date in YYMMDD format from the 2nd last group, 1st D.O.M. if no D.O.M. prefix - defaults to "NoDate" if doesn't decode to date
+    if (subStr($budgetDateSecLastYYMMDD, -6) == "NoDate") { //single date (using last group only)
+	$budgetDateLastYYMMDDsetFirstDOM = getDateSuffix($budgetName, FALSE, TRUE); //get date in YYMMDD format from the last group, 1st D.O.M. if no D.O.M. prefix - cannot be "NoDate" 
+
+    	if ($budgetDateLastYYMMDD < $transDateYYMMDD) { //budget date is earlier than the transaction date
+	        return "Expired";
+	    }
+	    elseif ($transDateYYMMDD < $budgetDateLastYYMMDDsetFirstDOM) { //budget date is later than the transaction date
+	        return "NotYetActive";
+	    }
+	    else {
+	        return "InDate";
+	    }
     }
-    else {
-        return FALSE; //budget not expired for this record date
-    }
+    else { //both dates (using both groups)
+	    if ($budgetDateLastYYMMDD < $transDateYYMMDD) { //budget date is earlier than the transaction date
+	        return "Expired";
+	    }
+	    elseif ($transDateYYMMDD < $budgetDateSecLastYYMMDD) { //budget date is later than the transaction date
+	        return "NotYetActive";
+	    }
+	    else {
+	        return "InDate";
+	    }
+	}
 }
 
 
@@ -514,20 +528,6 @@ function budgetNotYetActive($recordDate, $budgetName) {
 function convertDateToYYMMDD($date) {
     return substr($date, 2, 2).substr($date, 5, 2).substr($date, 8, 2); //concatonate extracted two digit year substring, two digit month substring and two digit day of month substring
 }
-
-function sortAryBySuffixDate($array) {
-    $dateKeysAry = []; //temporary array that will have keys of the decoded date suffix or the original value (where date suffix doesn't exist)
-    $arrayLength = count($array); //get the number of items in the array which equates to the maximum index (+1)
-    $indexMaxCharsNeeded = strlen(strval($arrayLength - 1)); //get the number of string characters that would be needed to represent the maximum possible index for $array
-    sort($array); //do initial sort to get in value order (sort of to force a 'sort in place' action)
-    foreach ($array as $index=>$value) {
-        $dateKeysAry[getDateSuffix($value, TRUE, TRUE).str_pad($index, $indexMaxCharsNeeded, "0", STR_PAD_LEFT)] = $value; //create a new array entry of $value with key set to decoded date suffix or the original value with " No Date" concatonated onto it (when date suffix doesn't exist). Left padded $index is appended to the key so two keys that are the same - which is highly likely - will be made different and will sort in place
-    }
-    ksort($dateKeysAry, SORT_NATURAL);
-    return array_values($dateKeysAry);
-}
-
-
 
 /* If $setForLastDayOfMonth is set to TRUE this function extracts the last group (if $setForLastGroup is TRUE) or 2nd last group (if $setForLastGroup is FALSE) of characters from $value. The extracted group should be an abreviated month-year date string in the form "7Feb20", "15Feb20" or "Feb20") and, if it can be interpreted as a date, it is decoded to a number, reversed, in the form "200207", "200215" or in the case where no day of month suffix is included it sets the day of month output to the last day e.g. "200228" (taking into account that for leap years Feb's last day will be 29). This allows proper sorting using a simple sort algorithm or comparisons with other dates similarly formatted. If any extracted group of characters in the passed $value doesn't properly decode to a date the original $value with "-NoDate" (the preceding hyphen ensures that in sorting routines with SORT_NATURAL a $value of "" will come first before any numbers) concatonated onto it is returned. If $setForLastDayOfMonth is set to FALSE it works in a similar manner when there is a provided day of month suffix, but where there are none the day of month output is now set to "01". NOTE: only works with 2 character year designator and assumes every date is in the century 2000. Months designators must all be 3 character with leading Capital i.e. Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec. A CORRESPONDING JAVASCRIPT FUNCTION EXISTS.  */
 function getDateSuffix($value, $setForLastDayOfMonth, $setForLastGroup) {
@@ -608,6 +608,20 @@ function getDateSuffix($value, $setForLastDayOfMonth, $setForLastGroup) {
         else { //last two characters is not a number so just return $value
             return $value."-NoDate";
         }
+}
+
+
+/* Does in place sort - alphabetical done first - of pivot headings array by date suffix (which could be the end date or only date).  */
+function sortAryBySuffixDate($array) {
+    $dateKeysAry = []; //temporary array that will have keys of the decoded date suffix or the original value (where date suffix doesn't exist)
+    $arrayLength = count($array); //get the number of items in the array which equates to the maximum index (+1)
+    $indexMaxCharsNeeded = strlen(strval($arrayLength - 1)); //get the number of string characters that would be needed to represent the maximum possible index for $array
+    sort($array); //do initial sort to get in value order (sort of to force a 'sort in place' action)
+    foreach ($array as $index=>$value) {
+        $dateKeysAry[getDateSuffix($value, TRUE, TRUE).str_pad($index, $indexMaxCharsNeeded, "0", STR_PAD_LEFT)] = $value; //create a new array entry of $value with key set to decoded date suffix or the original value with " No Date" concatonated onto it (when date suffix doesn't exist). Left padded $index is appended to the key so two keys that are the same - which is highly likely - will be made different and will sort in place
+    }
+    ksort($dateKeysAry, SORT_NATURAL);
+    return array_values($dateKeysAry);
 }
 
 
@@ -1080,18 +1094,62 @@ function createStndDisplData(
 //##############################
 
 
+
+                    /*    else if (compoundTypeAry[rowId] == "Master") {
+                            if (compoundColNumAry[rowId] == 0) {
+                                changeSuffixClass(cellId, colClssAry["compoundMaster"]); //normal compound master colour
+                            }
+                            else {
+                                changeSuffixClass(cellId, colClssAry["compoundMasterAlt"]); //alternative (budgets) compound master colour
+                            }
+                        }
+                        else if (compoundTypeAry[rowId] == "Slave") {
+                            if (compoundColNumAry[rowId] == 0) {
+                                changeSuffixClass(cellId, colClssAry["compoundSlave"]); //normal compound slave colour
+                            }
+                            else {
+                                changeSuffixClass(cellId, colClssAry["compoundSlaveAlt"]); //alternative (budgets) compound slave colour
+                            }
+
+                        }
+                        else if (compoundTypeAry[rowId] == "FinalSlave") {
+                            if (compoundColNumAry[rowId] == 0) {
+                                changeSuffixClass(cellId, colClssAry["compoundSlaveFinal"]); //normal compound final slave colour
+                            }
+                            else {
+                                changeSuffixClass(cellId, colClssAry["compoundSlaveFinalAlt"]); //alternative (budgets) compound final slave colour
+                            }
+                        } */
+
+
             $compoundHiddenAry[$singleRecArry["idR"]] = $singleRecArry["compoundHidden"];
+            $compoundColNumAry[$singleRecArry["idR"]] = $singleRecArry["compoundColNum"];
 
             if ($singleRecArry["compoundType"] == "Master") {
-            	$colorSuffixClass = $colClssAry["compoundMaster"];
+                if ($singleRecArry["compoundColNum"] == 0) { //normal compound master colour
+            	   $colorSuffixClass = $colClssAry["compoundMaster"];
+                }
+                else { //alternative (budgets) compound master colour
+                    $colorSuffixClass = $colClssAry["compoundMasterAlt"];
+                }
             	$compoundTypeAry[$singleRecArry["idR"]] = "Master";
             }
             else if ($singleRecArry["compoundType"] == "Slave") {
-            	$colorSuffixClass = $colClssAry["compoundSlave"];
+                if ($singleRecArry["compoundColNum"] == 0) { //normal compound slave colour
+            	   $colorSuffixClass = $colClssAry["compoundSlave"];
+                }
+                else { //alternative (budgets) compound slave colour
+                   $colorSuffixClass = $colClssAry["compoundSlaveAlt"];
+                }
             	$compoundTypeAry[$singleRecArry["idR"]] = "Slave";
             }
             else if ($singleRecArry["compoundType"] == "FinalSlave") {
-            	$colorSuffixClass = $colClssAry["compoundSlaveFinal"];
+                if ($singleRecArry["compoundColNum"] == 0) { //normal compound final slave colour
+            	   $colorSuffixClass = $colClssAry["compoundSlaveFinal"];
+                }
+                else { //alternative (budgets) compound final slave colour
+                   $colorSuffixClass = $colClssAry["compoundSlaveFinalAlt"];
+                }
             	$compoundTypeAry[$singleRecArry["idR"]] = "FinalSlave";
             }
             else {
@@ -1131,11 +1189,12 @@ function createStndDisplData(
             $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["unselCol"]; //account class
 
             //SECTION FOR COLOURING BUDGETS THAT HAVE EXPIRED FOR THE TRANSACTION DATE THEY HAVE BEEN APPLIED TO
-            if (budgetExpired($singleRecArry["recordDate"], aryValueOrZeroStr($budgetListAry, $singleRecArry["budget"]))) {
+            $checkBudgetDatesResult = checkBudgetDates($singleRecArry["recordDate"], aryValueOrZeroStr($budgetListAry, $singleRecArry["budget"]));
+            if ($checkBudgetDatesResult == "Expired") {
             	$displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["budgetExpired"]; //budget class - budget expiry date earlier than transaction date colour
             	$budgetNotWithinDate = TRUE; //used to inhibit filter colour where a budget notwithin date colour has been applied to a transaction
             }
-            else if (budgetNotYetActive($singleRecArry["recordDate"], aryValueOrZeroStr($budgetListAry, $singleRecArry["budget"]))) {
+            else if ($checkBudgetDatesResult == "NotYetActive") {
                 $displayRowsClassesAry[] = $standardCellClass." ".$colClssAry["budgetNotYetActive"]; //budget class - budget start date later than transaction date colour
                 $budgetNotWithinDate = TRUE; //used to inhibit filter colour where a budget notwithin date colour has been applied to a transaction
             }
@@ -1303,6 +1362,7 @@ function createStndDisplData(
     $returnAry["rowsAry"] = $rowsAry;
     $returnAry["compoundHiddenAry"] = $compoundHiddenAry;
     $returnAry["compoundTypeAry"] = $compoundTypeAry;
+    $returnAry["compoundColNumAry"] = $compoundColNumAry;
     $returnAry["compoundGroupIdrAry"] = $compoundGroupIdrAry;
     $returnAry["rowStatusArray"] = $rowStatusArray;
     
@@ -2310,7 +2370,7 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
                             id="<?php echo $dayOfMnthUniqueId.$dayOfMnthButIdx;?>"
                             value="<?php echo $dayOfMnthStr;?>"
                             onclick="
-                                if (notHiddenCompound()) { //only run this function to update the tables on the server if the row being edited isn't normally a hidden but has only been displayed because it's part of a filtered compound
+                                if (notHiddenCompound()) { //only run this function to update the tables on the server as long as the row being edited hasn't been set to hidden (but temporarily visible)
                                     setClassAndCopyNameUnique(
                                         '<?php echo $dayOfMnthUniqueId;?>',
                                         1,
@@ -2361,7 +2421,7 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
                             id="<?php echo $mnthUniqueId.$mnthButIdx;?>"
                             value="<?php echo $mnthStr;?>"
                             onclick="{
-                                if (notHiddenCompound()) { //only run this function to update the tables on the server if the row being edited isn't normally a hidden but has only been displayed because it's part of a filtered compound
+                                if (notHiddenCompound()) { //only run this function to update the tables on the server as long as the row being edited hasn't been set to hidden (but temporarily visible)
                                     setClassAndCopyNameUnique( //sets the clicked panel button to selected class and all others to unselected. Also copies selected date (i.e. 3) to month text box
                                         '<?php echo $mnthUniqueId;?>',
                                         1,
@@ -2408,7 +2468,7 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
                             id="<?php echo $yrUniqueId.$yrButIdx;?>"
                             value="<?php echo $yearStr; ?>"
                             onclick="
-                                if (notHiddenCompound()) { //only run this function to update the tables on the server if the row being edited isn't normally a hidden but has only been displayed because it's part of a filtered compound
+                                if (notHiddenCompound()) { //only run this function to update the tables on the server as long as the row being edited hasn't been set to hidden (but temporarily visible)
                                     setClassAndCopyNameUnique(
                                         '<?php echo $yrUniqueId;?>',
                                         '<?php echo $baseYr;?>',
@@ -2441,7 +2501,8 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
         function <?php echo $uniqueId;?>getFocusBack() { //called from toggleClickDown() to remove focus from the auto button and return it to the minimulist button
             document.getElementById('<?php echo $miniButId;?>').focus(); //focuses on the minimulist button
         }
-        function <?php echo $uniqueId;?>initButPanel(cellId) { //uses cellId to get cell inner text, splits into date parts and compares them with each panel button text for each column to set the matching ones to 'selected' and others to 'not selected'
+        function <?php echo $uniqueId;?>initButPanel(cellId, show, editAllowed) { //uses cellId to get cell inner text, splits into date parts and compares them with each panel button text for each column to set the matching ones to 'selected' and others to 'not selected'
+            START("initButPanel() - in calJavaScrpInteractnLite()");
             document.getElementById('<?php echo $miniButId;?>').focus(); //focuses on the minimulist button
             var domMaxId = <?php echo $dayOfMnthMaxId;?>; //maximum day of month panel button id (they start at 0)
             var mnthMaxId = <?php echo $mnthMaxId;?>; //maximum month panel button id (they start at 0)
@@ -2492,6 +2553,7 @@ function calJavaScrpInteractnLite($uniqueId, $viewOnly, $outerDivClass, $outerDi
                 }
             }
             <?php echo $uniqueId;?>setMaxDom();
+            FINISH("initButPanel() - in calJavaScrpInteractnLite()");
         }
         function <?php echo $uniqueId;?>updateRecsAndCell() {
             var newDateValue = document.getElementById('<?php echo $dateUniqueId;?>').value; //get date in 2018-08-23 format
@@ -2543,8 +2605,10 @@ function butPanelJSdummy(
     echo 'Key In Data Directly';
     echo '</div>';
     ?><script> //dummy function no longer needed as it now isn't called by JS selectButPanel()
-        function <?php echo $uniqueId;?>initButPanel(cellId) {
+        function <?php echo $uniqueId;?>initButPanel(cellId, show, editAllowed) {
+            START("initButPanel() - in butPanelJSdummy()");
             //dummy function - here so initilisatioin call from selectButPanel() doesn't cause things to hang!
+            FINISH("initButPanel() - in butPanelJSdummy()");
         }
     </script><?php
 }
@@ -2561,9 +2625,11 @@ function butPanelJSNoEdit(
     <?php
     echo '</div>';
     ?><script> //dummy function no longer needed as it now isn't called by JS selectButPanel()
-        function <?php echo $uniqueId;?>initButPanel(cellId) {
+        function <?php echo $uniqueId;?>initButPanel(cellId, show, editAllowed) {
+            START("initButPanel() - in butPanelJSNoEdit()");
             //dummy function - here so initilisatioin call from selectButPanel() doesn't cause things to hang!
             document.getElementById('<?php echo $miniButId;?>').focus(); //focuses on the minimulist button (to enable return key clickDown when in no edit mode)
+            FINISH("initButPanel() - in butPanelJSNoEdit()");
         }
     </script><?php
 }
@@ -2581,8 +2647,10 @@ function subButPanelJSreconcile(
         <button class=<?php echo $butClass;?> type="button" onclick="atomicCall('Reset accWorkedOn')"><i class="fas fa-trash"></i></button>
     </div>
     <script> //dummy function no longer needed as it now isn't called by JS selectButPanel()
-        function <?php echo $uniqueId;?>initButPanel(cellId) {
+        function <?php echo $uniqueId;?>initButPanel(cellId, show, editAllowed) {
+            START("initButPanel() - in subButPanelJSreconcile()");
             //dummy function - here so initilisatioin call from selectButPanel() doesn't cause things to hang!
+            FINISH("initButPanel() - in subButPanelJSreconcile()"));
         }
     </script>
     <?php
@@ -2600,8 +2668,10 @@ function subButPanelJSclickDown(
         <button class=<?php echo $butClass;?> type="button" id=<?php echo 'but1'.$uniqueId;?> onclick="toggleClickDown()"><i class="fas fa-magic"></i> Auto</button>
     </div>
     <script> //dummy function no longer needed as it now isn't called by JS selectButPanel()
-        function <?php echo $uniqueId;?>initButPanel(cellId) {
+        function <?php echo $uniqueId;?>initButPanel(cellId, show, editAllowed) {
+            START("initButPanel() - in subButPanelJSclickDown()");
             //dummy function - here so initilisation call from selectButPanel() doesn't cause things to hang!
+            FINISH("initButPanel() - in subButPanelJSclickDown()");
         }
         var but1Id = <?php echo json_encode('but1'.$uniqueId);?>;
         var unselectedClass = <?php echo json_encode($butClass);?>;
@@ -2628,8 +2698,10 @@ function subButPanelJSDummy(
     <div class=<?php echo $outerDivClass;?>  id=<?php echo $uniqueId;?>> <!-- submenu outer container to hold reconciliation setup buttons  -->
     </div>
     <script> //dummy function no longer needed as it now isn't called by JS selectButPanel()
-        function <?php echo $uniqueId;?>initButPanel(cellId) {
+        function <?php echo $uniqueId;?>initButPanel(cellId, show, editAllowed) {
+            START("initButPanel() - in subButPanelJSDummy()");
             //dummy function - here so initilisatioin call from selectButPanel() doesn't cause things to hang!
+            FINISH("initButPanel() - in subButPanelJSDummy()");
         }
     </script>
     <?php
@@ -2725,6 +2797,7 @@ function butPanelJSInteracStrOnly(
     </div>
     <input hidden id="<?php echo $itemCellUniqueId;?>" type="text"></input>
     <script>
+    var editingEnabled = false;
     var <?php echo $uniqueId;?>presetValNotUsedYet = true; //flag to show whether preset value has been loaded at initialisation or not
     var <?php echo $uniqueId;?>presetVal = <?php echo json_encode($presetVal);?>; //value passed as argument that if other than "" will be used to a home in on buttons at panel initialisation. Could select a single button.
     function <?php echo $uniqueId;?>homeInOnButtons(event) { //button filtering function - only shows those buttons whose first few characters matched what is typed in the 'home-in div' box
@@ -2751,36 +2824,50 @@ function butPanelJSInteracStrOnly(
     function <?php echo $uniqueId;?>getFocusBack() { //called from toggleClickDown() to remove focus from the auto button and return it to the home in area
             document.getElementById('<?php echo $homeInDivId;?>').focus(); //focuses on the home in area ready for typing without having to select it with the mouse first
         }
-    function <?php echo $uniqueId;?>initButPanel(cellId) { //uses cellId to get cell inner text and compare it with each panel button text to set the matching one to 'selected' and others to 'not selected'
+    function <?php echo $uniqueId;?>initButPanel(cellId, show, editAllowed) { //uses cellId to get cell inner text and compare it with each panel button text to set the matching one to 'selected' and others to 'not selected'
+        START('<?php echo $uniqueId;?>'+"initButPanel() - in butPanelJSInteracStrOnly()");
+        editingEnabled = editAllowed;
         document.getElementById('<?php echo $homeInDivId;?>').innerText = ""; //clears inner text at initialisation so any characters from previous uses are deleted
         document.getElementById('<?php echo $homeInDivId;?>').focus(); //focuses on the home in area ready for typing without having to select it with the mouse first
         valSet("<?php echo $itemCellUniqueId;?>", cellId); //copy cellId for use in ajaxRecordsItemAndCellUpdate() below
         var idxMax = <?php echo $index - 1;?>; //maximum panel button id (they start at 0)     
         var idPrefix = '<?php echo $itemUniqueId;?>'; //unique prefix (derived in php code above) to be used to distinguish these buttons from those in other instances of button panel
         var cellStr = inrGet(cellId); //the text in the cell that initiated the call to this button panel
-        //console.log("cell value in initButPanel() = "+cellStr);        
+        //console.log("cell value in initButPanel() = "+cellStr);
+        START("1st for loop in initButPanel()  - in butPanelJSInteracStrOnly()");       
         for (i = 0; i <= idxMax; i++) { //loop through all the panel button ids
-            document.getElementById(idPrefix+i).style.display = 'inline'; //set all buttons to visible as a new cell is selected - clears any button filtering from previous operation
             var butStr = inrGet(idPrefix+i); //for each iteration of the loop get the text from the relevant button        
             if (cellStr == butStr) { //if the calling cell text matches the current loop button set that button to 'selected' by changing the class
-                //console.log("button value in initButPanel() = "+butStr); 
                 document.getElementById(idPrefix+i).className = '<?php echo $btnSelectedClass;?>';
             }
             else { //if the calling cell text doesn't match the current loop button set that button to 'not selected' by changing the class
                 document.getElementById(idPrefix+i).className = '<?php echo $btnClass;?>';
             }
-        } 
+        }
+        FINISH("1st for loop in initButPanel()  - in butPanelJSInteracStrOnly()");
+        START("2nd for loop in initButPanel()  - in butPanelJSInteracStrOnly()");
+        for (i = 0; i <= idxMax; i++) { //loop through all the panel button ids - this was in loop above but seems to work quicker when done separately here
+            document.getElementById(idPrefix+i).style.display = 'inline'; //set all buttons to visible as a new cell is selected - clears any button filtering from previous operation
+        }
+        FINISH("2nd for loop in initButPanel()  - in butPanelJSInteracStrOnly()");
         if (<?php echo $uniqueId;?>presetValNotUsedYet && (<?php echo $uniqueId;?>presetVal != "")) { //if presetVal has not been used since this php function was run at page load, and argument is not empty
             <?php echo $uniqueId;?>homeInOnButtons(); //run the homeInOnButtons() function where presetVal will be used to select a button
         }
         <?php echo $uniqueId;?>presetValNotUsedYet = false; //set to false so from here on the button function will operate normally with no reference to the presetVal
+        FINISH('<?php echo $uniqueId;?>'+"initButPanel() - in butPanelJSInteracStrOnly()");
     }
     function <?php echo $uniqueId;?>clickPanelButs(event) { //uses clicked button id to get inner text and compare it with each panel button text to set the matching one to 'selected' and others to 'not selected'. Then calls ajaxRecordsItemAndCellUpdate() to update table record on server with clicked button value and eventually from data echoed back from the server update the cell that has activated this button panel
-        if (notHiddenCompound()) { //only run this function to update the tables on the server if the row being edited isn't normally a hidden but has only been displayed because it's part of a filtered compound
-            var selButId = event.target.id;
-            var idxMax = <?php echo $index - 1;?>; //maximum panel button id (they start at 0)     
-            var idPrefix = '<?php echo $itemUniqueId;?>'; //unique prefix (derived in php code above) to be used to distinguish these buttons from those in other instances of button panel
-            var selButStr = inrGet(selButId); //the text of the selected button on this button panel
+        var selButId = event.target.id;
+        var idxMax = <?php echo $index - 1;?>; //maximum panel button id (they start at 0)     
+        var idPrefix = '<?php echo $itemUniqueId;?>'; //unique prefix (derived in php code above) to be used to distinguish these buttons from those in other instances of button panel
+        var selButStr = inrGet(selButId); //the text of the selected button on this button panel
+        if (currentKey == "Control") { //if control key is being held down initiate filter action using the clicked panel button instead of the normal cell update
+            valSet("SearchFiltCellId", valGet("<?php echo $itemCellUniqueId;?>")); //set "SearchFiltCellId" to the currently selected cell on the display - used to get column to filter
+            valSet("SearchFiltStrValue", selButStr); //the value of the clicked panel button is set in "SearchFiltStrValue"
+            document.getElementById("q2ZKxPKThZP").submit(); //calls new (same) page immediately with search filter set
+            return "function exited";
+        }
+        if (editingEnabled && notHiddenCompound()) { //only run this function to update the tables on the server as long as the row being edited hasn't been set to hidden (but temporarily visible)
             for (i = 0; i <= idxMax; i++) { //loop through all the panel button ids
                 var butStr = inrGet(idPrefix+i); //for each iteration of the loop get the text from the relevant button        
                 if (selButStr == butStr) { //if the calling cell text matches the current loop button set that button to 'selected' by changing the class
@@ -2802,7 +2889,12 @@ function butPanelJSInteracStrOnly(
             )
         }
         else {
-            messageChangeInhibited();
+            if (!editingEnabled) {
+                msgEditDenied();
+            }
+            else {
+                messageChangeInhibited();
+            }
         }
     }
 
@@ -2816,7 +2908,7 @@ function butPanelJSInteracStrOnly(
 
 
 /* NEED TO WRITE DESCRIPTION!! LOTS OF THEARGUMENTS ARE NOT NEEDED AND CAN BE REMOVED !! */
-function textPanelJSInteracStrOnly(
+function textPanelJSInteracStrOnlyDEPR(
     $uniqueId,          //id to provide target info and distinguish this from other instances of this button panel (for javascript interaction with panel elements)
     $outerDivClass,     //class of containing div that acts as a container for the buttons
     $filepath,          //the path/name of the php file that is a target (usually index.php)
@@ -2833,9 +2925,11 @@ function textPanelJSInteracStrOnly(
     </div>
     <input hidden id="<?php echo $itemCellUniqueId;?>" type="text"></input>
     <script>
-    function <?php echo $uniqueId;?>initButPanel(cellId) { //uses cellId to get cell inner text 
+    function <?php echo $uniqueId;?>initButPanel(cellId, show, editAllowed) { //uses cellId to get cell inner text 
+        START("initButPanel() - in textPanelJSInteracStrOnlyDEPR()");
         valSet("<?php echo $itemCellUniqueId;?>", cellId); //copy cellId for use in ajaxRecordsItemAndCellUpdate() below
         valSet("<?php echo $textAreaUniqueId;?>", inrGet(cellId)); //the text in the cell that initiated the call to this button panel
+        FINISH("initButPanel() - in textPanelJSInteracStrOnlyDEPR()");
     }
     function <?php echo $uniqueId;?>testAreaChange(event) { //uses clicked button id to get inner text . Then calls ajaxRecordsItemAndCellUpdate() to update table record on server with clicked button value and eventually from data echoed back from the server update the cell that has activated this button panel
         var selButId = event.target.id;

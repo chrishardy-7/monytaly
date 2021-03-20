@@ -6,6 +6,9 @@ if (empty($_calledFromIndexPage)) { //prevents someone trying to open this page 
 
 $nameOfThisPage = "Show References";
 
+$startFreshPage = new persistVar("startFreshPage", FALSE); //trys to create and initialise a persistant variable called "startFreshPage". If it already exists it will neither be recreated nor initialised
+$startFreshPage->set(FALSE); //set to FALSE so that the next call of showRecsForFullYr.php from the main menu button will not clear filters and set buttons etc. (which is the usual behaviour)
+
 //include_once("./".$sdir."createMenuRndms.php");
 include_once("./".$sdir."head.php");
 include_once("./".$sdir."menu.php");

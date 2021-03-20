@@ -16,6 +16,16 @@ $timeStart = microtime(true); //use microtime to time how long this page takes t
 $download = FALSE; //flag to indicate record data should be downloaded
 
 
+$startFreshPage = new persistVar("startFreshPage", TRUE); //trys to create and initialise a persistant variable called "startFreshPage". If it already exists it will neither be recreated nor initialised
+
+if (($subCommand == "FromMainMenu") && $startFreshPage->get()) {
+	$pageNewStart = TRUE; //clears everything back to default settings - i.e. removes all filters, set buttons etc.
+}
+else {
+	$pageNewStart = FALSE;
+	$startFreshPage->set(TRUE); //set to TRUE so that the next call to this page (showRecsForFullYr.php) will clear filters and set buttons etc. Used to cancel non-clear effect set up in other pages
+}
+
 
 //TEST AREA START ###########################
 
@@ -44,9 +54,14 @@ $colClssAry = [	"unselCol"					=>	"white",
 				"negativeValue"				=>	"redWhiteTxt",
 				"columnFiltCol"				=>	"tan",
 				"compoundMaster"			=>	"yellowGradientHardBot",
-
 				"compoundSlave"				=>	"green",
 				"compoundSlaveFinal"		=>	"greenGradientHardTop",
+
+				"compoundMasterAlt"			=>	"pinkGradientHardBot",
+				"compoundSlaveAlt"			=>	"brown",
+				"compoundSlaveFinalAlt"		=>	"brownGradientHardTop",
+
+
 				"blankedMoneyCol"			=>	"borderGrey",
 				"budgetBothExprdAndNyActv"	=>	"blueGrnOrangeYelGradientLR",
 				"budgetNotYetActive"		=>	"blueGrn",
@@ -66,12 +81,12 @@ $nonVolatileArray["onTheHoofRandsAry"] = array(); //clear the array so any old p
 $nonVolatileArray["docNameNumStr"] = ""; //NOT SURE IF THIS IS THE RIGHT PLACE FOR THIS !!!! (to create blank filename so first refreshed page thinks it needs to display a new doc)
 
 
-$showFamBut = new toggleBut("Show Families", "fas fa-plus-square", "subMenuBtn", "subMenuBtnSel", ($subCommand == "FromMainMenu"));
-$editFamBut = new toggleBut("Family Edit", "fas fa-users", "subMenuBtn", "subMenuBtnSel", ($subCommand == "FromMainMenu"));
-$findDuplsBut = new toggleBut("Dupls", "fas fa-equals", "subMenuBtn", "subMenuBtnSel", ($subCommand == "FromMainMenu"));
+$showFamBut = new toggleBut("Show Families", "fas fa-plus-square", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
+$editFamBut = new toggleBut("Family Edit", "fas fa-users", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
+$findDuplsBut = new toggleBut("Dupls", "fas fa-equals", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
 
 $tables = new dataBaseTables(); //used by custom buttons to get filter keys from string values
-$moneyDisplay = new moneyCols("monyColmnDisply", ($subCommand == "FromMainMenu"));
+$moneyDisplay = new moneyCols("monyColmnDisply", $pageNewStart);
 
 
 //pr($tables->getKey("accWorkedOn", "Church Cash"));
@@ -160,24 +175,28 @@ if (isClicked("prevStatement")) {
 //saveRestrictionsArray($userId, ["includeFilt"=>["umbrella" => "Furniture Project"], "allowColumnEdit"=>["budget", "docType"]]); //used to set restrictions for individual users - hard code for now, insert user id and uncomment for one page load
 
 //COLUMN FILTER SECTION
-$restrictFilter = new filterColumns("restrictFilter", $tables, ($subCommand == "FromMainMenu")); //create new restriction filter with $nonVolatileArray key of "genFilter" and reset all filters if this page called from main menu
+$restrictFilter = new filterColumns("restrictFilter", $tables, $pageNewStart); //create new restriction filter with $nonVolatileArray key of "genFilter" and reset all filters if this page called from main menu
 //$restrictionsAry = recoveredRestrictionsAry($userId);  //recovers restrictions arrays from current user from personSession table. NOW ON INDEX PAGE TO BE ACCESSIBLE FROM ATOMIC PHP AND OTHER PHP CODE
 if (array_key_exists ("includeFilt", $restrictionsAry)) {
 	$restrictFilter->replaceIncludeFiltStrValAry($restrictionsAry["includeFilt"]); //sets restriction filter to values from restriction field in personSession table;
 }
 
-$genFilter = new filterColumns("genFilter", $tables, ($subCommand == "FromMainMenu")); //create new filter with $nonVolatileArray key of "genFilter" and reset all filters if this page called from main menu
-if (sanPost("IncludeFiltIdr")) { //only do this if a filter term has been POSTed
+$genFilter = new filterColumns("genFilter", $tables, $pageNewStart); //create new filter with $nonVolatileArray key of "genFilter" and reset all filters if this page called from main menu
+if (sanPost("IncludeFiltIdr")) { //only do this if an include filter term has been POSTed
 	$genFilter->setIncludeFilterUsingCellId(sanPost("IncludeFiltIdr"));
 }
 
-if (sanPost("ExcludeFiltIdr")) { //only do this if a filter term has been POSTed
+if (sanPost("ExcludeFiltIdr")) { //only do this if an exclude filter term has been POSTed
 	$genFilter->setExcludeFilterUsingCellId(sanPost("ExcludeFiltIdr"));
 }
 
+if (sanPost("SearchFiltCellId")) { //only do this if a search filter term has been POSTed
+	//pr(sanPost("SearchFiltCellId")." ".sanPost("SearchFiltStrValue"));
+	$genFilter->setIncludeFilterUsingCellIdAndCellContentStr(sanPost("SearchFiltCellId"), sanPost("SearchFiltStrValue"));
+}
 
 
-if (!array_key_exists ("headingIdForGroupSel", $nonVolatileArray) || ($subCommand == "FromMainMenu")) { //create the key "headingForGroupSel" if it doesn't already exist or a new main menu command cancels any previous grouping
+if (!array_key_exists ("headingIdForGroupSel", $nonVolatileArray) || $pageNewStart) { //create the key "headingForGroupSel" if it doesn't already exist or a new main menu command cancels any previous grouping
 	$nonVolatileArray["headingIdForGroupSel"] = 0; //set to default heading for group selection
 }
 $colKeyForGroupAry = array("recordDate", "personOrOrg", "transCatgry", "amountWithdrawn", "amountPaidIn", "accWorkedOn", "budget", "referenceInfo", "reconciledDate", "umbrella", "docType", "recordNotes", "parent");
@@ -324,11 +343,11 @@ if (getPlain($subSubCommand) == "Filters From Pivot") { //this if section runs w
 	$nonVolatileArray["Pivot"] = FALSE;
 }
 
-$pivotBut = new toggleBut("Pivot", "fas fa-table", "subMenuBtn", "subMenuBtnSel", ($subCommand == "FromMainMenu"));
+$pivotBut = new toggleBut("Pivot", "fas fa-table", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
 
 
 
-$fam = new familyCommand("FamId", $editFamBut->isSet(), $showFamBut->isSet(), ($subCommand == "FromMainMenu"));
+$fam = new familyCommand("FamId", $editFamBut->isSet(), $showFamBut->isSet(), $pageNewStart);
 
 if (sanPost("idRforFamily")) {
 	$fam->inputFamId(sanPost("idRforFamily"));
@@ -350,7 +369,9 @@ if ($subSubCommand == "Restricted2021") { //same as 2019-20 but for 2020-21 - a 
 
 
 if ($subSubCommand == "Unrestricted2021") { //sets up pivot table for all of 2019-20 filtered for furniture project and show families selected
-	$genFilter->replaceIncludeFiltStrValAry(["budget" => "Church Main"]);
+	$genFilter->replaceIncludeFiltStrValAry(["umbrella" => "Church"]);
+	$genFilter->replaceExcludeFiltStrValAry( [ ["budget" => ["None", "SPLIT"]] ] );
+	//$genFilter->replaceIncludeFiltStrValAry(["budget" => "Church Main"]);
 	$nonVolatileArray["AllDates"] = FALSE;
 	$nonVolatileArray["masterYear"] = "2021";
 	$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
@@ -1456,6 +1477,22 @@ else {
     ?>
     </form>
 
+
+
+
+    <form id="q2ZKxPKThZP" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data">
+    <?php
+    	//SEARCH FILTER FORM !!
+    	//this form is submited by javascript 'document.getElementById("fn445dya48d").submit();'' which is implemented by 'if (event.ctrlKey)' in 'function clickField(event)' it passes filter settings
+        formValHolder("command", $menuRandomsArray["Show Records For Full Year"]); //this page!
+        formValHolder("SearchFiltCellId", 0); //this value is set in 'clickField(event)' whenever a cell is clicked on'
+        formValHolder("SearchFiltStrValue", 0);
+    ?>
+    </form>
+
+
+
+
     <form id="e7j4UT42v4x" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data">
     <?php //this form is submited by javascript 'document.getElementById("e7j4UT42v4x").submit();' via 'function toggleSingleFamDisplay(id)' < 'doEverything();' < 'function clickField(event)'
     	namedValHolder("sessionCommitRnd", $recoveredSessionAryCommitRnd); //used to verify currency of session array
@@ -1507,6 +1544,7 @@ else {
 	var displayStndClassesAry = <?php echo json_encode($displayData["displayStndClassesAry"]);?>;
 	var displayLineSelClassesAry = <?php echo json_encode($displayData["displayLineSelClassesAry"]);?>;
 	var compoundTypeAry = <?php echo json_encode($displayData["compoundTypeAry"]);?>;
+	var compoundColNumAry = <?php echo json_encode($displayData["compoundColNumAry"]);?>;
 	var compoundGroupIdrAry = <?php echo json_encode($displayData["compoundGroupIdrAry"]);?>;
 	var compoundHiddenAry = <?php echo json_encode($displayData["compoundHiddenAry"]);?>;
 
@@ -1567,6 +1605,7 @@ else {
         	'<?php echo $endDate;?>',
         	currentKey,
         	compoundNum,
+        	compoundColNumAry,
         	compoundTypeAry,
         	compoundGroupIdrAry,
         	altGrLastPressedTime,

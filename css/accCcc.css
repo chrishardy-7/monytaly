@@ -292,6 +292,17 @@ input: focus, textarea: focus, select: focus {
     user-select:  none;          /* Likely future */
 }
 
+.pinkGradientHardBot {
+  /*  font-weight:  bold; */
+    background-color: yellow;
+    background-image: linear-gradient(to bottom, white, #FF8080 15px);
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
 .lightGreen {
     background-color: #C0FFC0;
     cursor:  pointer;
@@ -332,6 +343,25 @@ input: focus, textarea: focus, select: focus {
 .greenGradientHardTop {
     background-color: #80FF80;
     background-image: linear-gradient(to top, white, #80FF80 15px);
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.brown {
+    background-color: #C1C171;
+    cursor:  pointer;
+    -webkit-user-select:  none;  /* Chrome all / Safari all */
+    -moz-user-select:  none;     /* Firefox all */
+    -ms-user-select:  none;      /* IE 10+ */
+    user-select:  none;          /* Likely future */
+}
+
+.brownGradientHardTop {
+    background-color: #AAAA4A;
+    background-image: linear-gradient(to top, white, #C1C171 15px);
     cursor:  pointer;
     -webkit-user-select:  none;  /* Chrome all / Safari all */
     -moz-user-select:  none;     /* Firefox all */

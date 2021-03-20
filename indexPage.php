@@ -86,7 +86,7 @@ $_cmndRndmLngth = 7;
 $_onTheHoofRandsLength = 5;
 $_filenameRandLength = 5;
 $_ImagickExceptionVisibility = TRUE;
-$_fieldNameAry = array("recordDate", "personOrOrg", "transCatgry", "amountWithdrawn", "amountPaidIn", "accWorkedOn", "budget", "referenceInfo", "reconciledDate", "umbrella", "docType", "recordNotes", "parent", "compound", "reconcileDocId"); //fieldNames for column ids (0 - 11). index 12 is used to reference none displayed 'compound' number and it is thought that in routines that don't index it nothing untoward will happen. The array would need to be changed if the column order (and therefore the cell ids) on the display page changes!!
+$_fieldNameAry = array("recordDate", "personOrOrg", "transCatgry", "amountWithdrawn", "amountPaidIn", "accWorkedOn", "budget", "referenceInfo", "reconciledDate", "umbrella", "docType", "recordNotes", "parent", "compound", "reconcileDocId", "parentDate"); //fieldNames for column ids (0 - 11). index 12 is used to reference none displayed 'compound' number and it is thought that in routines that don't index it nothing untoward will happen. The array would need to be changed if the column order (and therefore the cell ids) on the display page changes!!
 $_commitLoopCountMax = 30;
 $_saveMessageEnabled = FALSE;
 
