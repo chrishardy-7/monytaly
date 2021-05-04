@@ -39,6 +39,8 @@ include_once("/var/monytalyData/".$dir."globals.php"); //includes the globals.ph
 $sdir = $dir.$subdir;
 $pathToPhpFiles = "./".$sdir."php/";
 
+
+
 include_once("./".$sdir."php/funcsForAccCcc.php");
 include_once("./".$sdir."php/classesForAccCcc.php");
 include_once("./".$sdir."php/funcsToRdWrTblesForAccCcc.php");
@@ -89,6 +91,8 @@ $_ImagickExceptionVisibility = TRUE;
 $_fieldNameAry = array("recordDate", "personOrOrg", "transCatgry", "amountWithdrawn", "amountPaidIn", "accWorkedOn", "budget", "referenceInfo", "reconciledDate", "umbrella", "docType", "recordNotes", "parent", "compound", "reconcileDocId", "parentDate"); //fieldNames for column ids (0 - 11). index 12 is used to reference none displayed 'compound' number and it is thought that in routines that don't index it nothing untoward will happen. The array would need to be changed if the column order (and therefore the cell ids) on the display page changes!!
 $_commitLoopCountMax = 30;
 $_saveMessageEnabled = FALSE;
+$_familyPrefixAry = ["parentPrefix"=>"PP ", "dependentChildPrefix"=>"c ", "independentChildPrefix"=>"CC "];
+
 
 /* End of global section for setting various constants */
 
@@ -327,10 +331,21 @@ if ($menuBtnStr == "Submit New Password") { //call from 'new password page' do p
 	exit("");
 }
 
-if ($menuBtnStr == "Ajax Atomic") {
+if ($menuBtnStr == "Ajax Atomic") { 
 	saveMessage("About to include ajaxAtomic");
 	include_once("./".$sdir."php/ajaxAtomic.php");
 	exit("");
+}
+
+switch ($menuBtnStr) { //these scripts are intended to be called by JS ajax routines directly and don't normally load new pages so createMenuRndms.php below is not wanted
+	case "Ajax Atomic":
+		include_once("./".$sdir."php/ajaxAtomic.php");
+		exit("");
+	case "checkServerFlag": //initial call to add user page
+		include_once("./".$sdir."php/ajaxGetServerFlag.php");
+		exit("");
+	default:
+		break;
 }
 
 //saveMessage("TEST from indexPage.php line 331");

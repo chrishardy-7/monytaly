@@ -15,7 +15,7 @@ var altGrLastPressedTime = 0;
 var compoundNum = 0;
 
 var conLogMode = "Off";
-var consoleAryMode = "Off";
+var consoleAryMode = "On";
 var checkTimeMode = "Off"; //set to "Off" or "On" (prints as each START() FINISH() pair complete - for troubleshooting code problems
 var checkTimeLastRun = 0;
 var checkTimeTabCount = 0;
@@ -45,15 +45,14 @@ function clickField(event) {
 	fromClickCellCmnd = false;
 	
 
-//alert(compound.mastIdr);
 	if (id.split("-")[1] == "piv") { //click comes from pivot table
 		document.getElementById("pivCellId").value = id;
 		document.getElementById("pivCellVal").value = document.getElementById(id).innerText;
 		if ((id.split("-")[0] == "surplus") || (id.split("-")[0] == "bal") || (id.split("-")[0] == "spacer")) { //if any of these rows clicked do nothing as it would be meaningless
-
+			//do nothing
 		}
 		else {
-			document.getElementById("m88vof5A73").submit(); //calls showRecsForFullYr.php with filter info from clicked pivot display
+			document.getElementById("m88vof5A73").submit(); //calls showRecsForFullYr.php with filter and value info (lines above) from clicked pivot display. Also sets subSubCommand to "Filters From Pivot"
 			
 		}
 		FINISH("clickField()")
@@ -91,6 +90,7 @@ function doEverything(id, heldKey, calledFrom) {
 
     // ########################### LOCAL JAVASCRIPT STUFF - DOES NOT INTERACT WITH SERVER ###################
     createParent = "no"; //set to no as default
+    lockChildToParentDate = "No"; //set to no as default
     var date = new Date();
     var msTime = date.getTime();
 
@@ -182,11 +182,16 @@ function doEverything(id, heldKey, calledFrom) {
 	}
 
 
-	if ((id.split("-")[1] == "12") && (valGet("editFamilies") == "Yes") && ((heldKey == 112) || (heldKey == 80))) { //if a cell in the family column has been clicked, Edit Families is selected, and p or P is held down (creat new parent) clear any sticky setting so there is no confusing operations and only the simple creation of a new parent proceeds
+	if ((id.split("-")[1] == "12") && (valGet("editFamilies") == "Yes") && ((heldKey == 112) || (heldKey == 80))) { //if a cell in the family column has been clicked, Edit Families is selected, and p or P is held down (create new parent) clear any sticky setting so there is no confusing operations and only the simple creation of a new parent proceeds
 		inrSet("sticky-"+id.split("-")[1], ""); //clear the sticky cell header
 		valSet("stickyActive-"+id.split("-")[1], "no"); //clears value holder flag to indicate that the sticky value has been cleared
 		createParent = "yes"; //set create parent flag to indicate to following functions that commands to create parent have been detected and any family sticky operations have been cancelled
 	}
+
+	if ((id.split("-")[1] == "12") && (valGet("editFamilies") == "Yes") && ((heldKey == 108) || (heldKey == 76))) { //if a cell in the family column has been clicked, Edit Families is selected, and l or L is held down set lockChildToParentDate to "Yes"
+		lockChildToParentDate = "Yes";
+	}
+
 	// ########################### LOCAL JAVASCRIPT STUFF - END ###################
 	
 	// ########################### STATEMENTS ALL ACCESS THE SERVER AND DATABASE #####################
@@ -195,6 +200,34 @@ function doEverything(id, heldKey, calledFrom) {
 	valSet("previousCellId", valGet("seltdRowCellId")); //store current row so that it is available next click (used with shift to copy sticky value to a range of selected cells)
 	// ########################### STATEMENTS ALL ACCESS THE SERVER AND DATABASE - END #####################
 	FINISH("doEverything()"+calledFrom);
+}
+
+
+function updateFlag(FlagStatus) {
+	alert("Set Flag!");
+}
+
+function checkServerFlag(pathToPhpFile, fileRndm) {
+	var random = (new Date).getTime(); //random number to add as GET variable to php calls to prevent xmlHttpReq caching (not used by php script).
+	var xmlhttp;
+	if (window.XMLHttpRequest) {// code for IE7+, Firefox, Chrome, Opera, Safari
+	  	xmlhttp=new XMLHttpRequest();
+	}
+	else {// code for IE6, IE5
+	  	xmlhttp=new ActiveXObject("Microsoft.XMLHTTP");
+	}
+	xmlhttp.onreadystatechange = function() {
+		if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+			alert(xmlhttp.responseText);
+		}
+	}
+	xmlhttp.ontimeout = function() {
+		alert("xmlhttp Timeout!");
+	}
+	xmlhttp.open("POST", pathToPhpFile, true);
+	xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+	xmlhttp.timeout = 10000; //must sit between the open() and send() methods
+	xmlhttp.send("command="+fileRndm+"&random="+random);
 }
 
 
@@ -225,6 +258,7 @@ function atomicAjaxCall(
 	compoundGroupIdrAry,
 	altGrLastPressedTime,
 	createParent,
+	lockChildToParentDate,
 	idrArry,
 	accountBankLinksArry,
 	auxButtonTxt,
@@ -241,6 +275,14 @@ function atomicAjaxCall(
 	if (atomicAjaxCallCompleted) { //prevents new calls to server before existing one has completed - NOT SURE IF THIS IS THE OPTIMUM PLACE FOR THIS (BUT COULD BE IF ALL SERVER CALLS COME THROUGH HERE!)
 conLog(fileRndm);
 conLog("HERE ##################################### atomicAjaxCall()   PRE-AJAX SENDS");
+
+
+
+if (cellId.split("-")[1] == 10) {
+	//checkServerFlag(pathToPhpFile, checkServerFlagMenuRandm);
+}
+
+
 
 		var random = (new Date).getTime(); //random number to add as GET variable to php calls to prevent xmlHttpReq caching (not used by php script).
 		var xmlhttp;
@@ -280,7 +322,7 @@ conLog("HERE ##################################### atomicAjaxCall()   PRE-AJAX S
 		
 		arry = setCompoundTransAjaxSend(arry, cellId, heldKey, compoundNum, auxButtonTxt); //only executes internally if heldKey == "AltGr"
 		arry = createParentAjaxSend(arry, cellId, createParent, cellWarnClass, auxButtonTxt); //only executes internally if createParent = "yes" (if this is so stickyAjaxSend() will have already been disabled for families)
-		arry = stickyAjaxSend(arry, itemStr, cellId, idrArry, cellWarnClass, displayCellDescrpAry, auxButtonTxt); //only executes internally if sticky item for this column has been set (i.e. isn't "")
+		arry = stickyAjaxSend(arry, itemStr, cellId, idrArry, lockChildToParentDate, cellWarnClass, displayCellDescrpAry, auxButtonTxt); //only executes internally if sticky item for this column has been set (i.e. isn't ""). Calls php writeReadAllRecordsItem() via ajaxAtomic.php
 		arry = withdrawnPaidinAjaxSend(arry, editableCellIdValHldr, moneyCellWarnClass, displayCellDescrpAry, headingAry, bankAccNameAry, compoundTypeAry, compoundGroupIdrAry, auxButtonTxt, colClssAry); //only executes internally if editableCellIdValHldr value is != 0 (i.e. a withdrawn/paidin value has been changed)	
 		arry = directStrEditAjaxSend(arry, editableCellIdValHldr, cellWarnClass, displayCellDescrpAry, allRecordsColNameRndAry, auxButtonTxt); //only executes internally if editableCellIdValHldr value is != 0 (i.e. a  editable string cell value has been clicked)
 
@@ -346,7 +388,7 @@ function clearRowExcptRecDateAjaxSend(arry, cellId, colClssAry, auxButtonTxt, co
 	if (auxButtonTxt == "Clear") { //only run if Clear button has been clicked
 		START("clearRowExcptRecDateAjaxSend()");
 		var idR = cellId.split("-")[0];
-		if (document.getElementById(idR+"-12").innerText.split(" ")[0] == "OOO") { //row is a parent of family so show alert and inhibit clear action and return from function
+		if (document.getElementById(idR+"-12").innerText.split(" ")[0] == familyPrefixAry["parentPrefix"]) { //row is a parent of family so show alert and inhibit clear action and return from function
 			alert("Clear will not work Parent rows !");
 			return arry;
 		}
@@ -512,13 +554,14 @@ function createParentAjaxReceive(arry, arryBackFromPhp, cellId) {
 		itemStrFromTable = arryBackFromPhp["createNewParentId"];
 	    cleanedItemStrFromTable = itemStrFromTable.trim(); //removes unwanted spaces.	    
 	    document.getElementById(cellId).className = arry["NewParentOrgClass"]; //re-enstate original class	    
-	    cleanedItemStrFromTable = "OOO "+cleanedItemStrFromTable; //prepend with parent pattern
+	    cleanedItemStrFromTable = familyPrefixAry["parentPrefix"]+cleanedItemStrFromTable; //prepend with parent pattern
 	    document.getElementById(cellId).innerText = cleanedItemStrFromTable; //write returned confirmatory string to cell
 	    FINISH("createParentAjaxReceive()");
 	}
 }
 
-function stickyAjaxSend(arry, itemStr, cellId, idrArry, cellWarnClass, displayCellDescrpAry, auxButtonTxt) {
+/*  Calls php writeReadAllRecordsItem() via ajaxAtomic.php  */
+function stickyAjaxSend(arry, itemStr, cellId, idrArry, lockChildToParentDate, cellWarnClass, displayCellDescrpAry, auxButtonTxt) {
 	 if (auxButtonTxt != "Clear") {
 	 	START("stickyAjaxSend()");
 		conLog("HERE ##################################### stickyAjaxSend()");
@@ -540,6 +583,7 @@ function stickyAjaxSend(arry, itemStr, cellId, idrArry, cellWarnClass, displayCe
 		}
 		if (displayCellDescrpAry[colId] == 'Family') { //if a child update - also uses different checking and update code in writeReadAllRecordsItem() php function
 			if ((valGet("stickyActive-"+cellId.split("-")[1]) == "yes")) { //check to make sure flag indicates a sticky itemStr for this column has been set so the function should be run 
+				arry["lockChildToParentDate"] = lockChildToParentDate;
 				arry["itemStr"] = itemStr.replace(/\D/g,''); //removes all characters except numbers 0-9 - returns empty string "" if no numeric characters are in itemStr
 				arry["cellId"] = cellId;
 				arry["stickyOrgClass"] = document.getElementById(cellId).className; //save original class for re-enstatement later
@@ -572,9 +616,14 @@ function stickyAjaxReceive(arry, arryBackFromPhp, cellId, savedCellClassesArry) 
 		    		retValue = "";
 		    	}
 		    	else { //an actual number, indicating it is a child or parent
-		    		prependPattern = "% ";
 		    		if (parentFlag == "Yes") {
-		    			prependPattern = "OOO ";
+		    			prependPattern = familyPrefixAry["parentPrefix"];
+		    		}
+		    		else if (arry["lockChildToParentDate"] == "Yes") { //a dependent child - will only sum or display when it's parent's recordDate is within startDate - EndDate
+		    			prependPattern = familyPrefixAry["dependentChildPrefix"];
+		    		}
+		    		else {
+		    			prependPattern = familyPrefixAry["independentChildPrefix"]; //an independent child - will sum or display when it's own recordDate is within startDate - EndDate
 		    		}
 		    	}
 			}
@@ -1502,25 +1551,12 @@ document.addEventListener("keydown", function(event) {
 })
 
 document.addEventListener("keyup", function(event) { //the if and if elses are a bit redundent as currentKey is always set to "None" on keyup!
+	//alert("Key up!");
 	if ((currentKey == "AltGr") || (currentKey == "RightShift")) { //AltGr key has just been released
+		currentKey = "None";
 		document.getElementById("7EKR03N0CJ").submit(); //calls new (same) page immediately (refresh to impose compound order for newly created)
 	}
-  	if ((event.code =="ControlLeft") && (currentKey == "Control")) {
-		currentKey = "None";
-	}
-	else if ((event.code =="ShiftLeft") && (currentKey == "Shift")) {
-		currentKey = "None";
-	}
-	else if ((event.code =="ShiftRight") && (currentKey == "ShiftRight")) {
-		currentKey = "None";
-	}
-	else if ((event.code =="AltRight") && (currentKey == "AltGr")) {
-		currentKey = "None";
-		compoundNum = 0;
-	}
-	else {
-		currentKey = "None";
-	}
+	currentKey = "None";
 })
 
 function keyPressDetectDEPR(event) { //this function is called by the system whenever a non-special key (like shift or control) is pressed

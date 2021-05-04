@@ -2,7 +2,107 @@
 
 //$thisFileName = "funcsForAccCcc.php";
 
+function noKidsFilter() {
+    return "(
+                (:recStartDate <= recordDate) AND (recordDate <= :recEndDate)
+            ) 
+            AND 
+            (
+                (parent = 0) OR (parent = idR)
+            )";
+}
 
+
+function allFilter() {
+    return  "(
+                ((parent = 0) AND (:recStartDate <= recordDate) AND (recordDate <= :recEndDate)) 
+            OR 
+                ((0 < parent) AND (parentDate != '2000-01-01') AND (:recStartDate <= parentDate) AND (parentDate <= :recEndDate))
+            OR
+                ((0 < parent) AND (parentDate = '2000-01-01') AND (:recStartDate <= recordDate) AND (recordDate <= :recEndDate))
+            )"; 
+
+}
+
+// Use the pivot table clicked cell id (e.g. row,col "251-piv-45") and the pivot table row and head names (e.g. "transCatgry-budget") to generate a filter array
+// (e.g. array ([transCatgry] => 16,  [budget] => 15)  ) based on pivot table click rules defined in this function. $_fieldNameAry is also passed as it is used to generate the ids of the filtered columns
+// from the pivot table row and headings names. (this is quite a hard concept to explain as the words used - and by derivation the variable names - to describe the different names used in the 
+// standard display and the pivot table are subject to overlap and confusion!)
+function getFiltersAryFromPivotCell($rowFiltId, $colFiltId, $rowAndHeadNames, $pivotCellEmpty, $pivotButMatchedBudgetsIsSet, $moneyDisplay) {
+
+    $rowFiltIdIsNum = is_numeric($rowFiltId); //set to TRUE if $rowFiltId is a number (e,g, 251) but FALSE if it is a string (e.g. "rowName")
+    $colFiltIdIsNum = is_numeric($colFiltId); //set to TRUE if $colFiltId is a number (e,g, 45) but FALSE if it is a string (e.g. "credit")
+
+    $rowAndHeadNamesSplit = explode("-", $rowAndHeadNames); //split - as in "transCatgry-budget" becomes $rowFieldName = "transCatgry", $colFieldName = "budget"
+    $rowFieldName = $rowAndHeadNamesSplit[0];
+    $colFieldName = $rowAndHeadNamesSplit[1];
+
+    
+
+    if (!$colFiltIdIsNum && !$rowFiltIdIsNum) { //header section, 6 rows in either far LH column or far RH column
+        if ($rowFiltId == "brtfwd") {           //header section, brought fwd row name - show all brought fwd values
+            $filtersAry =   [];
+            $moneyDisplay->setPaidinOnly();
+        }
+        elseif ($rowFiltId == "credit") {           //header section, credit row name - show all credits (receipts)
+            $filtersAry =   [];
+            $moneyDisplay->setPaidinOnly();
+        }
+        elseif ($rowFiltId == "spend") {            //header section, spend row name - show all spends (payments)
+            $filtersAry =   [];
+            $moneyDisplay->setWithdrawnOnly();
+        }
+        else {
+            $filtersAry =   [];
+        }
+    }
+    else {                                      //in an area that has ids of some sort
+        if ($colFiltId == "rowName") {              //main display area, far LH rowName column - ids from the column in the standard display that became rows in the pivot display
+            $filtersAry =   [$rowFieldName => $rowFiltId]; //filter for only transactions for that rowname (e.g. 'Van Crew')
+        }
+        elseif ($colFiltId == "rowTotal") {         //main display area, far RH totals column - ids from the column in the standard display that became rows in the pivot display
+            $filtersAry =   [$rowFieldName => $rowFiltId];
+        }
+        elseif ($rowFiltId == "heading") {          //header section, heading row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
+            $filtersAry =   [$colFieldName => $colFiltId]; //filter for only transactions for that colName (e.g. 'FiSCAF Apr20')
+        }
+        elseif ($rowFiltId == "brtfwd") {           //header section, credit row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
+            $filtersAry =   [$colFieldName => $colFiltId];
+            $moneyDisplay->setPaidinOnly();
+        }
+        elseif ($rowFiltId == "credit") {           //header section, credit row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
+            $filtersAry =   [$colFieldName => $colFiltId];
+            $moneyDisplay->setPaidinOnly();
+        }
+        elseif ($rowFiltId == "spend") {            //header section, spend row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
+            $filtersAry =   [$colFieldName => $colFiltId];
+            $moneyDisplay->setWithdrawnOnly();
+        }
+        elseif ($rowFiltId == "surplus") {          //header section, surplus row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
+            $filtersAry =   [];
+        }
+        elseif ($rowFiltId == "bal") {              //header section, bal row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
+            $filtersAry =   [];
+        }
+        elseif ($rowFiltId == "spacer") {           //header section, spacer row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
+            $filtersAry =   [];
+        }
+        else {                                      //main display area - ids from the two columns in the standard display that became rows and columns in the pivot display
+            if ($pivotButMatchedBudgetsIsSet) { //if pivot cell is empty substitute unallocated column for selected one 
+                $filtersAry =   [$rowFieldName => $rowFiltId]; //filter for only transactions matching the rowName, will be filtered for start date and end date at transaction display
+            }
+            elseif ($pivotCellEmpty) {
+                $filtersAry =   [$rowFieldName => $rowFiltId, $colFieldName => 0]; //filter for only transactions matching the rowName, and colName = unallocated (0) in the pivot table
+            }
+            else {
+                $filtersAry =   [$rowFieldName => $rowFiltId, $colFieldName => $colFiltId]; //filter for only transactions matching the rowName and colName in the pivot table
+            }
+        }
+    }
+
+    //pr($filtersAry);
+    return [$filtersAry];
+}
 
 
 /* Returns an array of record rows and sorted so any compound rows are grouped together inserted in the correct date position, with the Master first in its original position followed by any slaves (which will be in idR order). Any compound rows with the same compound number should already all have the same date from when they were set as compound in the allRecords table, because this was forced by the PHP function setCompoundTrans(). An extra field, "compoundType", is added to each subarry to indicate the kind of compound row - Master, Slave or FinalSlave. (SHOULD ALSO CONSIDER INCORPORATING THIS FORCING ACTION TO KEEP DATES IN SYNC IN OTHER PHP FUNCTIONS THAT ATTEMPT TO CHANGE THEM !!) */
@@ -121,6 +221,7 @@ function dateRemoveHyphs($date) {
 function createPivotDisplData(
         $pivotRecsDataAry,
         $colClssAry,
+        $pivotButMatchedBudgetsIsSet,
         $pivotCellClass,
         $pivotCellRowNameClass,
         $pivotCellRowNameRightClass,
@@ -174,8 +275,10 @@ function createPivotDisplData(
     foreach ($pivotRecsDataAry as $singleRecArry) { //ROW LOOP - through allRecords DATA, loop through all rows of supplied data from allRecords table creating array of heading names and an array of row names
         $headingVal =  $tables->getStrValue($columnForHeadings, $singleRecArry[$columnForHeadings]); //create a heading from the column selected for headings at the current row iteration
         if (!in_array($headingVal, $headingNamesAry)) { //if it's not in the array already, append it
-            $headingNamesAry[] = $headingVal;  
-            $dataExists = TRUE;          
+        	if (substr($headingVal, 0, 8) != "Furlough") { //excludes any column with heading name that has "Furlough" as the the first 8 characters
+	            $headingNamesAry[] = $headingVal; //add heading name to array
+	            $dataExists = TRUE; 
+	        }         
         }
         $rowsNameVal =  $tables->getStrValue($columnForRows, $singleRecArry[$columnForRows]); //create a row name from the column selected for row names at the  current row iteration
         if (!in_array($rowsNameVal, $rowNamesAry)) { //if it's not in the array already, append it
@@ -212,10 +315,15 @@ function createPivotDisplData(
         $spacerRowAry[] = 					"ZZZ";
 
         if (($headingsIdx == 0) || ($showBudgetsDateValidity && (checkBudgetDates(date("Y-m-d"), $headingText) == "Expired" ))) {
-            $headingsClassesAry[] = $pivotCellClass;
+            $headingsClassesAry[] = $pivotCellClass." ".$colClssAry["budgetEndInPast"];
         }
         else {
-            $headingsClassesAry[] = $pivotCellClass." ".$colClssAry["budgetEndInPast"];
+            if ($showBudgetsDateValidity && (checkBudgetDates(date("2021-04-01"), $headingText) == "Expired" )) {
+                $headingsClassesAry[] = $pivotCellClass." ".$colClssAry["budgetEndsMarch"];
+            }
+            else {
+                $headingsClassesAry[] = $pivotCellClass." ".$colClssAry["budgetStillCurrent"];
+            }
         }
 
 
@@ -258,7 +366,7 @@ function createPivotDisplData(
     array_unshift($headsSpacerCellIdsAry, 				"spacer-piv-rowName");
     
 
-    foreach ($rowNamesAry as $rowIdx => $pivotRowName) { //ROW LOOP - goes through all the predetermined pivot table row names creating and populate 2 dimensional array with summed spend data
+    foreach ($rowNamesAry as $rowIdx => $pivotRowName) { // row names LOOP       goes through all the predetermined pivot table row names creating and populate 2 dimensional array with summed spend data
         //pr($pivotRowName."</br>");
         $compoundHiddenAry[$singleRecArry["idR"]] = FALSE;
     	$rowContainsSpendData = FALSE; //flag that will be set to true if any cells in the row being created contain anything other than 0
@@ -270,25 +378,31 @@ function createPivotDisplData(
         $rowSum = 0;
 
 
-        foreach ($headingNamesAry as $headingIdx => $pivotHeadingName) { //COLUMN LOOP - goes through all the predetermined pivot table heading names summing all the spend data for the current pivot table row name 
-            //pr("------".$pivotHeadingName."</br>");
+        foreach ($headingNamesAry as $headingIdx => $pivotHeadingName) { // heading names LOOP      goes through all the predetermined pivot table heading names summing all the spend data for the current pivot table row name 
+
+
+
+            //############# SINGLE PIVOT TABLE CELL SECTION ################
+
         	$rowCellIdsTempAry[] = $rowTableId."-piv-".$tables->getKey($columnForHeadings, $pivotHeadingName); //create cell id from row name table index concatonated with "-piv-" and column heading table index. Will facilitate click filtering
 
+            $cellContainsSpendData = FALSE;
             $budgetNotActiveYet = FALSE;
         	$budgetExpired = FALSE;
+        	$budgetInDate = FALSE; //used to show indate transactions that are potentials for this budget - a budget may already have been allocated
             $colSum = 0;
             $headingTableIdx = $tables->getKey($columnForHeadings, $pivotHeadingName); //gets table index of heading name. If name is "" (empty), 0 is returned in keeping with allRecords column data
 
 
 
-            foreach ($pivotRecsDataAry as $singleRecArry) { //ROW LOOP - loops through all the selected rows of data from allRecords
+            foreach ($pivotRecsDataAry as $singleRecArry) { //############## allRecords LOOP  ###############   loops through all the selected rows of data from allRecords
 
                 if (($singleRecArry[$columnForRows] == $rowNameTableIdx) && ($singleRecArry[$columnForHeadings] == $headingTableIdx)) { //this records row has matches for the pivot table heading/row names
-                    $colSum = $singleRecArry[$spendColumnToSumKey] + $colSum; //add to the value
-
-
+                    
                     if ($singleRecArry[$spendColumnToSumKey] != 0) { //a value other than 0 exists and is being summed
+                        $colSum = $singleRecArry[$spendColumnToSumKey] + $colSum; //add to the value
                     	$rowContainsSpendData = TRUE;
+                        $cellContainsSpendData = TRUE;
 
 
                         if ($showBudgetsDateValidity && (checkBudgetDates($singleRecArry["maxRecordDate"], $pivotHeadingName) == "Expired")) {
@@ -300,8 +414,7 @@ function createPivotDisplData(
 
                     }
 
-
-
+                    
                     if ($singleRecArry[$colForBroughtFwdKey] == $broughtFwdKey) { //if allRecords cell in column for pivot 'row' display matches the $broughtFwd key, sum to "Brought Fwd" headings row instead
                     	$headingsTotalBroughtFwdSumAry[$headingIdx] =   fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey]    + $headingsTotalBroughtFwdSumAry[$headingIdx], TRUE);
                         $headingsTotalBroughtFwdSum =                   fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey]    + $headingsTotalBroughtFwdSum, TRUE);
@@ -312,39 +425,50 @@ function createPivotDisplData(
                         $headingsTotalReceiptsSum =                   fourThreeOrTwoDecimals($singleRecArry[$creditColumnToSumKey]    + $headingsTotalReceiptsSum, TRUE);
                     }
 
-                        
-
                     $headingsTotalPaymentsSumAry[$headingIdx] = 	fourThreeOrTwoDecimals($singleRecArry[$spendColumnToSumKey] 	+ $headingsTotalPaymentsSumAry[$headingIdx], TRUE);
                     $headingsTotalPaymentsSum = 					fourThreeOrTwoDecimals($singleRecArry[$spendColumnToSumKey] 	+ $headingsTotalPaymentsSum, TRUE);
                 }
 
-if (($singleRecArry[$columnForRows] == 23) && ($singleRecArry[$columnForHeadings] == 11)) {
-    //pr($singleRecArry["recordDate"]." ".$singleRecArry[$columnForRows]."</br>");
-}
+                //if $pivotButMatchedBudgetsIsSet (by button) check if any transactions having the current pivot cell row name fall within the date range extracted from the pivot cell budget name
+                if ($pivotButMatchedBudgetsIsSet && $showBudgetsDateValidity && ($singleRecArry[$columnForRows] == $rowNameTableIdx) && (checkBudgetDates($singleRecArry["recordDate"], $pivotHeadingName) == "InDate")) {
+                    $budgetInDate = TRUE;
+                }
+                
             }
 
-                    
+
+            
 
             $rowTempAry[] = fourThreeOrTwoDecimals($colSum); //append sum to array - format to two decimal places with single leading zero for amounts < £1.00
             $rowSum = $colSum + $rowSum;
 
-            if ($showBudgetsDateValidity && $budgetNotActiveYet && $budgetExpired) {
+            if (!$pivotButMatchedBudgetsIsSet && $showBudgetsDateValidity && $budgetNotActiveYet && $budgetExpired) {
             	$rowsClassesTempAry[] = $pivotCellClass." ".$colClssAry["budgetBothExprdAndNyActv"]; //append a warning colour class as budget used in some transaction dates both expired or not yet active
             }
-            else if ($showBudgetsDateValidity && $budgetNotActiveYet) {
+            else if (!$pivotButMatchedBudgetsIsSet && $showBudgetsDateValidity && $budgetNotActiveYet) {
                 $rowsClassesTempAry[] = $pivotCellClass." ".$colClssAry["budgetNotYetActive"]; //append a warning colour class as budget used in some transaction dates represesnted by this cell have expired
             }
-            else if ($showBudgetsDateValidity && $budgetExpired) {
+            else if (!$pivotButMatchedBudgetsIsSet && $showBudgetsDateValidity && $budgetExpired) {
                 $rowsClassesTempAry[] = $pivotCellClass." ".$colClssAry["budgetExpired"]; //append a warning colour class as budget used in some transaction dates represesnted by this cell have expired
             }
-            else {
+            else if (!$pivotButMatchedBudgetsIsSet && $cellContainsSpendData) {
             	$rowsClassesTempAry[] = $pivotCellClass; //append a new cell class of pivot cell class
             }
+            else if ($budgetInDate) { //transactions with the current pivot cell row name that are within the date range of the budget of the current pivot cell have been found, so colour the pivot cell
+                $rowsClassesTempAry[] = $pivotCellClass." ".$colClssAry["budgetStillCurrent"];
+            }
+            else {
+                $rowsClassesTempAry[] = $pivotCellClass; //append a new cell class of pivot cell class
+            }
+
+
+            
+
+            //############# SINGLE PIVOT TABLE CELL SECTION - END ################
+
 
 
         }
-
-
 
         //DO ALL THE FOLLOWING FOR EACH ROW OF THE PIVOT TABLE
         if ($rowContainsSpendData) { //if the row has any spend data (i.e. only create row in array if it has something to display and isn't empty!)
@@ -487,18 +611,38 @@ if (($singleRecArry[$columnForRows] == 23) && ($singleRecArry[$columnForHeadings
 
 
 
+/* Takes an array in the form [0=>$startDate, 1=>$endDate] and $budgetName in the form "VAF 7Mar21 25Jun21", and modifies $startDate by making it later if the decoded first budget date (7Mar20) is later but never makes it earlier. Similarly if the second decoded budget date (25Jun20) is earlier than $endDate then $endDate is made earlier but it is never made later. If only the one budget date exists it is considered to be the budget end date and only $enDate is modified, in the same manner as previously explained. If the day of month portion of the budget date(s) is not used the budget start date will default to the first day of the month and the budget end date will default to the last day of the month. */
+function restrictDates($startAndEndDateAry, $budgetName) {
+    $budgetDateLastYYMMDD = getDateSuffix($budgetName, TRUE, TRUE); //get date in YYMMDD format from the last group, last D.O.M. if no D.O.M. prefix - defaults to "NoDate" if doesn't decode to date
+     if (subStr($budgetDateLastYYMMDD, -6) == "NoDate") { //last goup doesn't exist therefore there are no dates in budget name
+        return $startAndEndDateAry; //no dates in budget so leave date array alone
+     }
+    $budgetDateSecLastYYMMDD = getDateSuffix($budgetName, FALSE, FALSE); //get date in YYMMDD format from the 2nd last group, 1st D.O.M. if no D.O.M. prefix - defaults to "NoDate" if doesn't decode to date
+    if (subStr($budgetDateSecLastYYMMDD, -6) == "NoDate") { //single date (using last group only)
+        $budgetDateLastYYMMDDsetFirstDOM = getDateSuffix($budgetName, FALSE, TRUE); //get date in YYMMDD format from the last group, 1st D.O.M. if no D.O.M. prefix - cannot be "NoDate" (would be picked up earlier)
+        $startAndEndDateAry[0] = convertShortDateToYYYYMMDD($budgetDateLastYYMMDDsetFirstDOM);
+        $startAndEndDateAry[1] = convertShortDateToYYYYMMDD($budgetDateLastYYMMDD);
+        return $startAndEndDateAry;
+    }
+    else { //both start and end dates exist
+        $startAndEndDateAry[0] = convertShortDateToYYYYMMDD($budgetDateSecLastYYMMDD);
+        $startAndEndDateAry[1] = convertShortDateToYYYYMMDD($budgetDateLastYYMMDD);
+        return $startAndEndDateAry;
+    }
+}
+
 
 
 /* Attempts to extract a budget end date from the last group of characters of the budget name, and budget start date from the 2nd last group of characters of the budget name (e.g. a budget name as in "FiSCAF 06Apr21 05Mar22". In each case if the extracted date has a day of month suffix (and isn't simply a month and year - "Apr21") this D.O.M. prefix is used in the creation of the extracted date. If either group contains no prefix then in the case of the last group (end date) the created date defaults to the last day of the month and in the case of the 2nd last group (start date) the created date defaults to the 1st day of the month. If no dates groups can be detected then "NoDatesInBudget" is returned, otherwise comparisons are them made with $recordDate using either both start and end date if they are both available, or just the end date (last group) if that is all that is available. If just the last group (single) date is available it is used as a start date too with either it's D.O.M. prefix (in which case it is a single day budget) or, in the absence of the D.O.M. prefix, the first day of the month "01" is used. The comparison process yields one of three return results: "Expired", "NotYetActive", or "InDate" to indicate the date(s) of the budget in relation to the transaction date. A CORRESPONDING JAVASCRIPT FUNCTION EXISTS. */
 function checkBudgetDates($recordDate, $budgetName) {
     $transDateYYMMDD = convertDateToYYMMDD($recordDate); //transaction date as YYMMDD
     $budgetDateLastYYMMDD = getDateSuffix($budgetName, TRUE, TRUE); //get date in YYMMDD format from the last group, last D.O.M. if no D.O.M. prefix - defaults to "NoDate" if doesn't decode to date
-     if (subStr($budgetDateLastYYMMDD, -6) == "NoDate") {
-     	return "NoDatesInBudget";
+     if (subStr($budgetDateLastYYMMDD, -6) == "NoDate") {  //last goup doesn't exist therefore there are no dates in budget name
+     	return "InDate";  //"NoDatesInBudget";
      }
     $budgetDateSecLastYYMMDD = getDateSuffix($budgetName, FALSE, FALSE); //get date in YYMMDD format from the 2nd last group, 1st D.O.M. if no D.O.M. prefix - defaults to "NoDate" if doesn't decode to date
     if (subStr($budgetDateSecLastYYMMDD, -6) == "NoDate") { //single date (using last group only)
-	$budgetDateLastYYMMDDsetFirstDOM = getDateSuffix($budgetName, FALSE, TRUE); //get date in YYMMDD format from the last group, 1st D.O.M. if no D.O.M. prefix - cannot be "NoDate" 
+	   $budgetDateLastYYMMDDsetFirstDOM = getDateSuffix($budgetName, FALSE, TRUE); //get date in YYMMDD format from the last group, 1st D.O.M. if no D.O.M. prefix - cannot be "NoDate" (would be picked up earlier) 
 
     	if ($budgetDateLastYYMMDD < $transDateYYMMDD) { //budget date is earlier than the transaction date
 	        return "Expired";
@@ -524,10 +668,17 @@ function checkBudgetDates($recordDate, $budgetName) {
 }
 
 
-/* Takes the passed $date string in format "2021-02-09" and converts it to YYMM format "210209".  */
+/* Takes the passed $date string in format "2021-02-09" and converts it to YYMMDD format "210209".  */
 function convertDateToYYMMDD($date) {
     return substr($date, 2, 2).substr($date, 5, 2).substr($date, 8, 2); //concatonate extracted two digit year substring, two digit month substring and two digit day of month substring
 }
+
+
+/* Takes the passed $date string in YYMMDD format "210209" format  and converts it to YYYY-MM-DD format "2021-02-09". All dates are assumed to be in year range 2000 to 2099.  */
+function convertShortDateToYYYYMMDD($date) {
+    return "20".substr($date, 0, 2)."-".substr($date, 2, 2)."-".substr($date, 4, 2); //concatonate two digit year substring, two digit month substring and two digit day of month substring to "20" and arranges "-" between each number group
+}
+
 
 /* If $setForLastDayOfMonth is set to TRUE this function extracts the last group (if $setForLastGroup is TRUE) or 2nd last group (if $setForLastGroup is FALSE) of characters from $value. The extracted group should be an abreviated month-year date string in the form "7Feb20", "15Feb20" or "Feb20") and, if it can be interpreted as a date, it is decoded to a number, reversed, in the form "200207", "200215" or in the case where no day of month suffix is included it sets the day of month output to the last day e.g. "200228" (taking into account that for leap years Feb's last day will be 29). This allows proper sorting using a simple sort algorithm or comparisons with other dates similarly formatted. If any extracted group of characters in the passed $value doesn't properly decode to a date the original $value with "-NoDate" (the preceding hyphen ensures that in sorting routines with SORT_NATURAL a $value of "" will come first before any numbers) concatonated onto it is returned. If $setForLastDayOfMonth is set to FALSE it works in a similar manner when there is a provided day of month suffix, but where there are none the day of month output is now set to "01". NOTE: only works with 2 character year designator and assumes every date is in the century 2000. Months designators must all be 3 character with leading Capital i.e. Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec. A CORRESPONDING JAVASCRIPT FUNCTION EXISTS.  */
 function getDateSuffix($value, $setForLastDayOfMonth, $setForLastGroup) {
@@ -836,7 +987,7 @@ Array (
                             [9] => Church 
                             [10] => Receipt 
                             [11] => Test Note 
-                            [12] => OOO 237 
+                            [12] => prefix 237 
                         ) 
                     [displayRowsClassesAry] =>      (these sections change classes for particular cells dynamically - such as displayCellRcnclBlank/displayCellRcnclEarly so are needed for each data section)
                         Array ( 
@@ -915,6 +1066,7 @@ function createStndDisplData(
         $allRecordsColNameRndAry,
         $displayBankAcc,
         $colClssAry,
+        $_familyPrefixAry,
         $moneyDisplayStr
         ) {
     global $orgPersonsListAry;
@@ -1072,7 +1224,8 @@ function createStndDisplData(
 
 
     foreach ($recordsDataArry as $recordsIdx=>$singleRecArry) { //loop through all persOrgs selected for display creating indexed array of values like "idR", "persOrgCategory" for each row to be displayed
-        if (!(($download) && ($singleRecArry["compoundHidden"] == TRUE))) { //in download mode, if the row is a compound one that is normally hidden unless a member of the compound is clicked, don't create it
+        //if (!(($download) && ($singleRecArry["compoundHidden"] == TRUE))) { //in download mode, if the row is a compound one that is normally hidden unless a member of the compound is clicked, don't create it
+        if ($singleRecArry["compoundHidden"] == FALSE) { //for the moment abandon hidden compound rows and only create compound rows that are meant to be seen all the time (prevents messing up sticky copy/paste that pastes values to idden rows inadvertantly. Compound show in JS has also been disabled
         	$budgetNotWithinDate = FALSE; //flag that will be set if section that sets colour classes sets a budget not within date colour for the current row
             $displayRowsAry = array();
             $displayRowsClassesAry = array();
@@ -1092,34 +1245,6 @@ function createStndDisplData(
 //##############################
 //##############################
 //##############################
-
-
-
-                    /*    else if (compoundTypeAry[rowId] == "Master") {
-                            if (compoundColNumAry[rowId] == 0) {
-                                changeSuffixClass(cellId, colClssAry["compoundMaster"]); //normal compound master colour
-                            }
-                            else {
-                                changeSuffixClass(cellId, colClssAry["compoundMasterAlt"]); //alternative (budgets) compound master colour
-                            }
-                        }
-                        else if (compoundTypeAry[rowId] == "Slave") {
-                            if (compoundColNumAry[rowId] == 0) {
-                                changeSuffixClass(cellId, colClssAry["compoundSlave"]); //normal compound slave colour
-                            }
-                            else {
-                                changeSuffixClass(cellId, colClssAry["compoundSlaveAlt"]); //alternative (budgets) compound slave colour
-                            }
-
-                        }
-                        else if (compoundTypeAry[rowId] == "FinalSlave") {
-                            if (compoundColNumAry[rowId] == 0) {
-                                changeSuffixClass(cellId, colClssAry["compoundSlaveFinal"]); //normal compound final slave colour
-                            }
-                            else {
-                                changeSuffixClass(cellId, colClssAry["compoundSlaveFinalAlt"]); //alternative (budgets) compound final slave colour
-                            }
-                        } */
 
 
             $compoundHiddenAry[$singleRecArry["idR"]] = $singleRecArry["compoundHidden"];
@@ -1269,12 +1394,17 @@ function createStndDisplData(
             $displayRowsAry[] = $singleRecArry["recordNotes"];
            
 
-            //set values and prefixes for family cell (12) - if neither of these criteria are met it defaults to "" (set above)
-            if ($singleRecArry["idR"] == $singleRecArry["parent"]) { //parent value same as index so this is an actual parent: show family num with "OOO " prefix
-                $displayRowsAry[] = "OOO ".$singleRecArry["parent"];
+            //set values and prefixes for family cell (12) - if neither of these criteria are met it defaults to ""
+            if ($singleRecArry["idR"] == $singleRecArry["parent"]) { //parent value same as index so this is an actual parent: show family num with prefix
+                $displayRowsAry[] = $_familyPrefixAry["parentPrefix"].$singleRecArry["parent"];
             }
-            elseif (0 < $singleRecArry["parent"]) { //parent value < 0 so this is a child: show family num with "% " prifix
-                $displayRowsAry[] = "% ".$singleRecArry["parent"];
+            elseif (0 < $singleRecArry["parent"]) { //0 < parent value so this is a child: show family num with "c " prefix
+                if ($singleRecArry["parentDate"] != "2000-01-01") {
+                    $displayRowsAry[] = $_familyPrefixAry["dependentChildPrefix"].$singleRecArry["parent"];
+                }
+                else {
+                    $displayRowsAry[] = $_familyPrefixAry["independentChildPrefix"].$singleRecArry["parent"];
+                }
             }
             else{
                 $displayRowsAry[] = ""; //default to show nothing for family status
@@ -2650,7 +2780,7 @@ function subButPanelJSreconcile(
         function <?php echo $uniqueId;?>initButPanel(cellId, show, editAllowed) {
             START("initButPanel() - in subButPanelJSreconcile()");
             //dummy function - here so initilisatioin call from selectButPanel() doesn't cause things to hang!
-            FINISH("initButPanel() - in subButPanelJSreconcile()"));
+            FINISH("initButPanel() - in subButPanelJSreconcile()");
         }
     </script>
     <?php

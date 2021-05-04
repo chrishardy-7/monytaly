@@ -9,6 +9,7 @@ $recoveredSessionAryCommitRnd = randomAlphaString($_cmndRndmLngth); //new random
 //creates new (refreshed) menu randoms that will be saved to the sessionArrays in the tail
 $menuRandomsArray = createKeysAndRandomsArray(array(
 	"Upload Scans",
+	"checkServerFlag",
 	"Add User",
 	"New Password",
 	"Submit New Password",

@@ -29,7 +29,9 @@ else {
 
 //TEST AREA START ###########################
 
-//pr(budgetExpired("02-04-2020", "Capability May20 Mar20"));
+
+
+
 
 //TEST AREA END #############################
 
@@ -67,7 +69,9 @@ $colClssAry = [	"unselCol"					=>	"white",
 				"budgetNotYetActive"		=>	"blueGrn",
 
 				"budgetExpired"				=>	"orangeYel",
-				"budgetEndInPast"			=>	"lightGreen"
+				"budgetEndInPast"			=>	"grey",
+				"budgetEndsMarch"			=>	"tan",
+				"budgetStillCurrent"		=>	"lightGreen"
 			];
 
 
@@ -81,15 +85,16 @@ $nonVolatileArray["onTheHoofRandsAry"] = array(); //clear the array so any old p
 $nonVolatileArray["docNameNumStr"] = ""; //NOT SURE IF THIS IS THE RIGHT PLACE FOR THIS !!!! (to create blank filename so first refreshed page thinks it needs to display a new doc)
 
 
-$showFamBut = new toggleBut("Show Families", "fas fa-plus-square", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
+$showFamBut = new toggleBut("Expand Fams", "fas fa-plus-square", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
 $editFamBut = new toggleBut("Family Edit", "fas fa-users", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
+$pivotBut = new toggleBut("Piv", "fas fa-table", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
+$pivotButMatchedBudgets = new toggleBut("Budg Sel", "fas fa-table", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
 $findDuplsBut = new toggleBut("Dupls", "fas fa-equals", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
 
 $tables = new dataBaseTables(); //used by custom buttons to get filter keys from string values
 $moneyDisplay = new moneyCols("monyColmnDisply", $pageNewStart);
 
 
-//pr($tables->getKey("accWorkedOn", "Church Cash"));
 
 //THIS SECTION NEEDS REDESCRIBING!!
 $orgPersonsListAry = getOrgOrPersonsList(); //gets array of all possible orgsOrPersons in alphabetical order ie: array([1] => RBS [8] => Robertson Tr [17] => Scottish Pwr [22] => Susan)
@@ -191,7 +196,6 @@ if (sanPost("ExcludeFiltIdr")) { //only do this if an exclude filter term has be
 }
 
 if (sanPost("SearchFiltCellId")) { //only do this if a search filter term has been POSTed
-	//pr(sanPost("SearchFiltCellId")." ".sanPost("SearchFiltStrValue"));
 	$genFilter->setIncludeFilterUsingCellIdAndCellContentStr(sanPost("SearchFiltCellId"), sanPost("SearchFiltStrValue"));
 }
 
@@ -240,113 +244,6 @@ else {
 
 
 
-// Use the pivot table clicked cell id (e.g. row,col "251-piv-45") and the pivot table row and head names (e.g. "transCatgry-budget") to generate a filter array
-// (e.g. array ([transCatgry] => 16,  [budget] => 15)  ) based on pivot table click rules defined in this function. $_fieldNameAry is also passed as it is used to generate the ids of the filtered columns
-// from the pivot table row and headings names. (this is quite a hard concept to explain as the words used - and by derivation the variable names - to describe the different names used in the 
-// standard display and the pivot table are subject to overlap and confusion!)
-function getFiltersAryFromPivotCell($rowFiltId, $colFiltId, $rowAndHeadNames, $pivotCellEmpty, $moneyDisplay) {
-
-	$rowFiltIdIsNum = is_numeric($rowFiltId); //set to TRUE if $rowFiltId is a number (e,g, 251) but FALSE if it is a string (e.g. "rowName")
-	$colFiltIdIsNum = is_numeric($colFiltId); //set to TRUE if $colFiltId is a number (e,g, 45) but FALSE if it is a string (e.g. "credit")
-
-	$rowAndHeadNamesSplit = explode("-", $rowAndHeadNames); //split - as in "transCatgry-budget" becomes $rowFieldName = "transCatgry", $colFieldName = "budget"
-	$rowFieldName = $rowAndHeadNamesSplit[0];
-	$colFieldName = $rowAndHeadNamesSplit[1];
-
-	
-
-	if (!$colFiltIdIsNum && !$rowFiltIdIsNum) { //header section, 6 rows in either far LH column or far RH column
-		if ($rowFiltId == "brtfwd") {			//header section, brought fwd row name - show all brought fwd values
-			$filtersAry = 	[];
-			$moneyDisplay->setPaidinOnly();
-		}
-		elseif ($rowFiltId == "credit") {			//header section, credit row name - show all credits (receipts)
-			$filtersAry = 	[];
-			$moneyDisplay->setPaidinOnly();
-		}
-		elseif ($rowFiltId == "spend") {			//header section, spend row name - show all spends (payments)
-			$filtersAry = 	[];
-			$moneyDisplay->setWithdrawnOnly();
-		}
-		else {
-			$filtersAry = 	[];
-		}
-	}
-	else {										//in an area that has ids of some sort
-		if ($colFiltId == "rowName") {				//main display area, far LH rowName column - ids from the column in the standard display that became rows in the pivot display
-			$filtersAry = 	[$rowFieldName => $rowFiltId]; //filter for only transactions for that rowname (e.g. 'Van Crew')
-		}
-		elseif ($colFiltId == "rowTotal") {			//main display area, far RH totals column - ids from the column in the standard display that became rows in the pivot display
-			$filtersAry = 	[$rowFieldName => $rowFiltId];
-		}
-		elseif ($rowFiltId == "heading") {			//header section, heading row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
-			$filtersAry = 	[$colFieldName => $colFiltId]; //filter for only transactions for that colName (e.g. 'FiSCAF Apr20')
-		}
-		elseif ($rowFiltId == "brtfwd") {			//header section, credit row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
-			$filtersAry = 	[$colFieldName => $colFiltId];
-			$moneyDisplay->setPaidinOnly();
-		}
-		elseif ($rowFiltId == "credit") {			//header section, credit row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
-			$filtersAry = 	[$colFieldName => $colFiltId];
-			$moneyDisplay->setPaidinOnly();
-		}
-		elseif ($rowFiltId == "spend") {			//header section, spend row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
-			$filtersAry = 	[$colFieldName => $colFiltId];
-			$moneyDisplay->setWithdrawnOnly();
-		}
-		elseif ($rowFiltId == "surplus") {			//header section, surplus row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
-			$filtersAry = 	[];
-		}
-		elseif ($rowFiltId == "bal") {				//header section, bal row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
-			$filtersAry = 	[];
-		}
-		elseif ($rowFiltId == "spacer") {			//header section, spacer row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
-			$filtersAry = 	[];
-		}
-		else {										//main display area - ids from the two columns in the standard display that became rows and columns in the pivot display
-			if ($pivotCellEmpty) { //if pivot cell empty substitute unallocated column for selected one 
-				$filtersAry = 	[$rowFieldName => $rowFiltId, $colFieldName => 0]; //filter for only transactions matching the rowName and colName = unallocated (0) in the pivot table
-			}
-			else {
-				$filtersAry = 	[$rowFieldName => $rowFiltId, $colFieldName => $colFiltId]; //filter for only transactions matching the rowName and colName in the pivot table
-			}
-
-			//$filtersAry = 	[$rowFieldName => $rowFiltId, $colFieldName => $colFiltId]; //filter for only transactions matching the rowName and colName in the pivot table
-		}
-	}
-
-	//pr($filtersAry);
-	return [$filtersAry];
-}
-
-
-
-
-$buttonPanelPresetVal = ""; //DEFAULT FOR presetVal. THIS IS USED ONLY FOR BUDGETS COLUMN JUST NOW - QUICK FIX - BUT NEEDS TO SORTED SO IT WORKS WITH ANY COLUMN (DERIVED FROM createPivotDisplData() OUTPUT)
-if (getPlain($subSubCommand) == "Filters From Pivot") { //this if section runs when a pivot table cell is clicked and sets up appropriate filters to display data according to a set of rules	
-	$rowAndHeadIdSplit = explode("-", sanPost("pivCellId")); //split - as in "251-piv-45" becomes $rowFiltId = 251, $colFiltId = 45 (in some cases either could be a string, like "rowName" instead of a number)
-	$rowFiltId = $rowAndHeadIdSplit[0];
-	$colFiltId = $rowAndHeadIdSplit[2];
-	$pivotCellEmpty = (sanPost("pivCellVal") === "");
-	$filtersAryFromPivotCell = getFiltersAryFromPivotCell($rowFiltId, $colFiltId, sanPost("rowAndHeadNames"), $pivotCellEmpty, $moneyDisplay); //use the pivot table clicked cell id (e.g. row,col "251-piv-45") and the pivot table row and head names (e.g. "transCatgry-budget") to replace any existing column filter with new one(s) e.g: array ([transCatgry] => 16,  [budget] => 15) based on pivot table click rules
-//pr($filtersAryFromPivotCell[0]);
-	$genFilter->mergeAryToIncludeFiltAry( $filtersAryFromPivotCell[0] ); //gets data as subarry at index 0 of main array - this is so index 1 can be used to indicate whether only rows with none zero values in either amountWithdrawn or amountPaidIn are required (for showing just income from grants or just expenditure of budgets)
-	$onlyRowsWhereThisFieldNotZero = $filtersAryFromPivotCell[1];
-	if ($pivotCellEmpty) {
-		//THIS IS USED ONLY FOR BUDGETS COLUMN JUST NOW - QUICK FIX - BUT NEEDS TO SORTED SO IT WORKS WITH ANY COLUMN (DERIVED FROM createPivotDisplData() OUTPUT)
-		$buttonPanelPresetVal = $budgetListAry[$colFiltId];
-
-
-	}
-
-
-	$nonVolatileArray["Pivot"] = FALSE;
-}
-
-$pivotBut = new toggleBut("Pivot", "fas fa-table", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
-
-
-
 $fam = new familyCommand("FamId", $editFamBut->isSet(), $showFamBut->isSet(), $pageNewStart);
 
 if (sanPost("idRforFamily")) {
@@ -365,6 +262,20 @@ if ($subSubCommand == "Restricted2021") { //same as 2019-20 but for 2020-21 - a 
 	$showFamBut->set();
 	$fam->rememberShowFamButIsSet();
 	$pivotBut->set();
+}
+
+
+if ($subSubCommand == "RestrictedMatchBudgets2021") { //same as 2019-20 but for 2020-21 - a lot of duplication!
+	$genFilter->replaceIncludeFiltStrValAry(["umbrella" => "Furniture Project"]);
+	$genFilter->replaceExcludeFiltStrValAry( [ ["budget" => ["Church Main", "None", "SPLIT"]] ] );
+	$nonVolatileArray["AllDates"] = FALSE;
+	$nonVolatileArray["masterYear"] = "2021";
+	$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
+	$nonVolatileArray["endYearOffsetPlusMnth"] = "103";
+	$showFamBut->set();
+	$fam->rememberShowFamButIsSet();
+	$pivotBut->set();
+	$pivotButMatchedBudgets->set();
 }
 
 
@@ -391,12 +302,12 @@ if ($subSubCommand == "Bank2021") { //sets up pivot table for all of 2019-20 fil
 }
 
 
-if ($subSubCommand == "EileenReclaim1") { //
-	$fam->inputFamId(5694);
+if ($subSubCommand == "EileenReclaim1") {
+	$fam->inputFamId(5869);
 }
 
-if ($subSubCommand == "EileenReclaim2") { //
-	$fam->inputFamId(5869);
+if ($subSubCommand == "EileenReclaim2") { //SET FAMILY NUMBER AND SET UP MENU BUTTON IF THIS IS REQUIRED
+	$fam->inputFamId(xxxx);
 }
 
 //########################	shortcut button section end
@@ -409,6 +320,31 @@ if ($fam->getFiltInhib()) { //detects when single family is being displayed and 
 }
 
 include_once("./".$sdir."monthSelProcess.php"); // Ensures empty arrays in $nonVolatileArray exist for holding month and year selections. Takes $subCommand (which will originate from the monthSelSideBar.php script wherever that is included) and uses it to either increment/decrement year or select new (or same) month. Produces start and finish dates that will be used outside this specific script for extracting data for a range of documents from the docCatalog table.
+
+
+$buttonPanelPresetVal = ""; //DEFAULT FOR presetVal. THIS IS USED ONLY FOR BUDGETS COLUMN JUST NOW - QUICK FIX - BUT NEEDS TO SORTED SO IT WORKS WITH ANY COLUMN (DERIVED FROM createPivotDisplData() OUTPUT)
+if (getPlain($subSubCommand) == "Filters From Pivot") { //this if section runs when a pivot table cell is clicked and sets up appropriate filters to display data according to a set of rules	
+	$rowAndHeadIdSplit = explode("-", sanPost("pivCellId")); //split - as in "251-piv-45" becomes $rowFiltId = 251, $colFiltId = 45 (in some cases either could be a string, like "rowName" instead of a number)
+	$rowFiltId = $rowAndHeadIdSplit[0];
+	$colFiltId = $rowAndHeadIdSplit[2];
+	$pivotCellEmpty = (sanPost("pivCellVal") === ""); //boolean that is TRUE if clicked pivot cell contains no data and is just blank
+	$filtersAryFromPivotCell = getFiltersAryFromPivotCell($rowFiltId, $colFiltId, sanPost("rowAndHeadNames"), $pivotCellEmpty, $pivotButMatchedBudgets->isSet(), $moneyDisplay); //use the pivot table clicked cell id (e.g. row,col "251-piv-45") and the pivot table row and head names (e.g. "transCatgry-budget") to replace any existing column filter with new one(s) e.g: array ([transCatgry] => 16,  [budget] => 15) based on pivot table click rules
+	$genFilter->mergeAryToIncludeFiltAry($filtersAryFromPivotCell[0]); //gets data as subarry at index 0 of main array - this is so index 1 can be used to indicate whether only rows with none zero values in either amountWithdrawn or amountPaidIn are required (for showing just income from grants or just expenditure of budgets)
+	$onlyRowsWhereThisFieldNotZero = $filtersAryFromPivotCell[1];
+	if ($pivotCellEmpty || $pivotButMatchedBudgets->isSet()) { //if pivot cell isn't showing amount already allocated or dates are restricted because budget match (sel) button is pressed
+		//THIS IS USED ONLY FOR BUDGETS COLUMN JUST NOW - QUICK FIX - BUT NEEDS TO SORTED SO IT WORKS WITH ANY COLUMN (DERIVED FROM createPivotDisplData() OUTPUT)
+		$buttonPanelPresetVal = $budgetListAry[$colFiltId]; //set budget button panel to busget selected by pivot cell click
+	}
+	$startAndEndDateAry = [$startDate, $endDate];
+	$startAndEndDateAryReturned = restrictDates($startAndEndDateAry, $tables->getStrValue("budget", $colFiltId));
+	if ($pivotButMatchedBudgets->isSet()) {
+		$startDate = $startAndEndDateAryReturned[0];
+		$endDate = $startAndEndDateAryReturned[1];
+	}
+	$pivotBut->unSet();
+	$pivotButMatchedBudgets->unSet();
+}
+
 
 
 //ids for main calander and item select panel
@@ -465,7 +401,7 @@ $targetPageRandom = $menuRandomsArray[$nameOfThisPage]; //get the menu random fo
 //#################     ################     ###################
 //#################     ################     ###################
 //#################     ################     ###################
-//pr($genFilter->getFiltStr());
+
 
 //GETS RECORD DATA FROM allRecords TABLE !!
 if ($displayBankAcc) {
@@ -474,7 +410,6 @@ if ($displayBankAcc) {
 else {
 	if ($pivotBut->isSet()) {
 		$recordsPivotArry = getPivotTableAry($startDate, $endDate, $genFilter->getFiltStr(), "", $fam->getCmnd(), $restrictFilter->getFiltStr(), "budget, transCatgry"); //for pivot table filters need to be applied as normal
-		//pr($recordsPivotArry);
 	}
 	elseif ($findDuplsBut->isSet()) {
 		$recordsDataArry = sortCompoundRows(getDuplicatesDataAry($startDate, $endDate, $genFilter->getFiltStr(), "", $restrictFilter->getFiltStr()));
@@ -486,11 +421,6 @@ else {
 	}
 }
 
-//pr($moneyDisplay->getStr());
-
-//pr($genFilter->getFiltStr());
-
-//pr($recordsDataArry);
 
 $headingAry = array("Date", "Pers / Org", "Trans Cat", "Withdrawn", "PaidIn", "Account", "Budget", "Reference", "Reconciled", "Umbrella", "Doc Type", "Note", "Family"); //names of columns used for display
 $colKeyForDownldAry = array("recordDate", "persOrgStr", "categoryStr", "amountWithdrawn", "amountPaidIn", "accountStr", "budgetStr", "reference", "reconciledDateForDownld", "umbrellaStr", "docVarietyStr", "note", "familyStatus"); //the names of teh columns in the allRecords table that will be used for the download function
@@ -707,17 +637,14 @@ else { //loop through all records that have been retrieved from the allRecords t
 
 
 	if ($pivotBut->isSet()) {
-		$displayData = createPivotDisplData($recordsPivotArry, $colClssAry, "pivotCellStd", "pivotCellRowName", "pivotCellRowNameRight", "budget", "transCatgry", "transCatgry", "Budget Fwd", TRUE); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scro;;able display area
+		$displayData = createPivotDisplData($recordsPivotArry, $colClssAry, $pivotButMatchedBudgets->isSet(), "pivotCellStd", "pivotCellRowName", "pivotCellRowNameRight", "budget", "transCatgry", "transCatgry", "Budget Fwd", TRUE); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scro;;able display area
 	}
 	else {
-			$displayData = createStndDisplData($recordsDataArry, $genFilter->getInclColIdxsAry(), "displayCellStd", "displayCellRowSel", "displayCellRowSelMoney", "displayCellFilt", "displayMoneyCellFiltClass", "displayCellMoney", "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", $endDate, $download, $allowedToEdit, $allRecordsColNameRndAry, $displayBankAcc, $colClssAry, $moneyDisplay->getStr()); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scrollable display area
+			$displayData = createStndDisplData($recordsDataArry, $genFilter->getInclColIdxsAry(), "displayCellStd", "displayCellRowSel", "displayCellRowSelMoney", "displayCellFilt", "displayMoneyCellFiltClass", "displayCellMoney", "displayCellRcnclBlank", "displayCellRcnclNot", "displayCellRcnclEarly", $endDate, $download, $allowedToEdit, $allRecordsColNameRndAry, $displayBankAcc, $colClssAry, $_familyPrefixAry, $moneyDisplay->getStr()); //create formatted data rom the $recordsDataArry for display in the rows of divs that constitute the scrollable display area
 	}
 
 	$idrArry = $displayData["idrArry"]; //simple indexed array of idRs
 }
-
-//pr($displayData);
-//pr($displayData["compoundGroupIdrAry"]);
 
 
 
@@ -786,7 +713,7 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 	$(window).resize(doPivotGangResizing);
 
 	function doPivotGangResizing() {
-		setTimeout(function() { //setTimeout() may not be needed but is here anyway - can jsut set to a low ms value if not really needed
+		setTimeout(function() { //setTimeout() may not be needed but is here anyway - can just set to a low ms value if not really needed
 			var rightInnerHeight = $('#multiRowPivotTableContainerRight')[0]['clientHeight']; // gets the height of the inner displayed area without the lower scroll bar
 			var rightInnerWidth = $('#multiRowPivotTableContainerRight')[0]['clientWidth']; // gets the width of the inner displayed area without the lower scroll bar
 			$("#multiRowPivotTableContainerLeft").innerHeight(rightInnerHeight); //set LH pivot table categories height to same as RH display rows height (so they are effectively ganged if window size changes)
@@ -1349,9 +1276,10 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 			}
 
 			$pivotBut->drawBut();
+			$pivotButMatchedBudgets->drawBut();
 
 			?>
-		    <button class="subMenuBtn" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-".$genrlAryRndms["Download"];?>><i class="fas fa-file-excel"></i> Download</button>
+		    <button class="subMenuBtn" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-".$genrlAryRndms["Download"];?>><i class="fas fa-download"></i> Csv</button>
 		    <?php
 
 
@@ -1364,13 +1292,13 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 			}
 			else { //not everything in display so show button as unset
 				formValHolder("runNormalBalFunc", "Yes");
-			    ?>
-			    <button class="subMenuBtn" type="button" onclick="document.getElementById('9EqXb73R1Pg').submit()"><i class="fas fa-tasks"></i></button>
-			    <?php
+			  /*  ?>
+			    <button class="subMenuBtn" type="button" onclick="document.getElementById('9EqXb73R1Pg').submit()"><i class="fas fa-tasks"></i></button> <!-- bank reconciliation but - not needed now adjacent arrow up and down buttons do the same thing
+			    <?php */
 			}
 		    ?>
-			<button class="subMenuBtn" type="button" onclick="document.getElementById('xPKThZPMNO8').submit()"><i class="fas fa-arrow-up"></i></button>  <!-- get previous bank statement -->
-			<button class="subMenuBtn" type="button" onclick="document.getElementById('uO6Oefk0Rep').submit()"><i class="fas fa-arrow-down"></i></button> <!-- get next bank statement -->
+			<button class="subMenuBtn" type="button" onclick="document.getElementById('xPKThZPMNO8').submit()">£ <i class="fas fa-arrow-up"></i></button>  <!-- get previous bank statement -->
+			<button class="subMenuBtn" type="button" onclick="document.getElementById('uO6Oefk0Rep').submit()">£ <i class="fas fa-arrow-down"></i></button> <!-- get next bank statement -->
 			<?php
 
 			
@@ -1397,6 +1325,9 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 				<!--	<button class="subMenuBtn" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-".$genrlAryRndms["deleteRec"];?>><i class="fas fa-trash-alt"></i> Bin</button> -->
 				<?php
 					$findDuplsBut->drawBut();
+					?>
+					<button class="subMenuBtn" type="button" onclick="updateFlag(true)"><i class="fas fa-flag"></i></button>
+					<?php
 				}
 
 			?>
@@ -1526,11 +1457,13 @@ else {
 <script type="text/javascript">
 	//var currentKey = "none"; //holds the keyboard key that is currently held down - for use when a cell is clicked to know if a particular command (like create new parent) has been selected
 	var createParent = "no"; //flag to indicate to JS functions that create new parent is in operation
+	var lockChildToParentDate = "No"; //set to no as default
 	var accountBankLinksArry = {"General":"RBS 8252", "Reserved":"Clyde 5477"}; //proxy for database table that will be created and editable - to describe the relationships between working accounts and the bank accounts they are linked to. The array provides the information required to display the correct bank's statements for a given working account and to enable the buttons that select the statements by date 
 	var butPanelIdSuffix = <?php echo json_encode($butPanelIdSuffix);?>;
 	var subButPanelIdSuffix = <?php echo json_encode($subButPanelIdSuffix);?>;
 	var dummyButPanelId = <?php echo json_encode($dummyButPanelId);?>;
 	var noEditButPanelId = <?php echo json_encode($noEditButPanelId);?>;
+	var familyPrefixAry = <?php echo json_encode($_familyPrefixAry);?>;
 
 	var autoClickDownSubId = <?php echo json_encode($autoClickDownSubId);?>;
 
@@ -1555,6 +1488,7 @@ else {
 	var pivotButIsSet = <?php echo json_encode($pivotBut->isSet());?>;
 	var moneyDisplayStr = <?php echo json_encode($moneyDisplay->getStr());?>;
 	var bankAccNameAry = ["RBS 8252", "Clyde 5477"];
+	var checkServerFlagMenuRandm = <?php echo json_encode($menuRandomsArray["checkServerFlag"]);?>;
 
 
 
@@ -1610,6 +1544,7 @@ else {
         	compoundGroupIdrAry,
         	altGrLastPressedTime,
         	createParent,
+        	lockChildToParentDate,
         	<?php echo json_encode($idrArry);?>, //convert php array of all idRs displayed to javascript array and pass as argument
         	accountBankLinksArry,
         	auxButtonTxt,

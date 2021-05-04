@@ -13,7 +13,7 @@ try {
 //$stmt = $conn->prepare('ALTER TABLE fffff ADD COLUMN xxxx VARCHAR(500) NOT NULL DEFAULT "" AFTER jjjj');
 //$stmt->execute(array());
 
-//$stmt = $conn->prepare('ALTER TABLE zzz ADD COLUMN private BOOLEAN NOT NULL DEFAULT FALSE AFTER uploadPersId');
+//$stmt = $conn->prepare('ALTER TABLE vvv ADD COLUMN rrrr BOOLEAN NOT NULL DEFAULT FALSE AFTER ssss');
 //$stmt->execute(array());
 
 //$stmt = $conn->prepare('ALTER TABLE cccc DROP INDEX hhhh');

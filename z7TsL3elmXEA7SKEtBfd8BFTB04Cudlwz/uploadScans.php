@@ -4,6 +4,8 @@ if (empty($_calledFromIndexPage)) { //prevents someone trying to open this page 
 	exit("");
 }
 
+
+
 //PDFMerger version is from: https://github.com/libremente/PDFMerger - it causes some deprecated notices because it was written/tested for PHP 5.x and not PHP 7.x - see error settings in indexPage.php
 include_once("./".$sdir."PDFMerger/PDFMerger.php"); //to facilitate PDF Merger use in doc upload and conversion - done on this page because nothing else uses it (at the moment)
 require_once("./".$sdir."PDFMerger/tcpdf/tcpdf.php"); //additional to cure error in PDFMerger - see: https://stackoverflow.com/questions/41298752/fatal-error-class-tcpdf-not-found-in-another-path
@@ -81,8 +83,6 @@ if(($uploadBtnNamesStr == "Individual pdfs") or ($uploadBtnNamesStr == "Multipag
 	}
 
 
-	
-
 
 
 	//UPDATE THE allRecords TABLE WITH THE UPLOADED FILE(S) DETAILS BY CREATING A NEW BLANK RECORD FOR EACH FILE OR SWAPPING FILE NAMES FOR EXISTING RECORD(S)
@@ -97,11 +97,12 @@ if(($uploadBtnNamesStr == "Individual pdfs") or ($uploadBtnNamesStr == "Multipag
 			updateAllRecsWithNewFileInfo($mergeReportAry);
 		}
 		else { //one or several single pdfs so use report array from uploadJpgFilesToSnglPdfs() function to update allRecords table
+			pr("3 On upload page ");
 			updateAllRecsWithNewFileInfo($fileUploadReportArray);
 		}
 	}
 
-
+	
     
 	
 }
