@@ -9,6 +9,7 @@
 8) install mariadb and enable for bootup and make secure (also allows root PW change: sudo apt-get install mariadb-server mariadb-client, sudo systemctl enable mariadb.service, mysql_secure_installation
 9) look at page about PWless login to mariadb from linux root/sudo - decide what to do (may be fine to leave it as long as a secure root mariadb PW exists)!: https://www.linuxmaker.com/en/tutorials/mariadb-problem-with-root-login.html
 10) install php: sudo apt-get install php libapache2-mod-php php-common php-mbstring php-xmlrpc php-soap php-gd php-xml php-intl php-mysql php-cli php-zip php-curl
+
 10b) install imageMagick: sudo apt-get install php-imagick  ##################### ensure pdf section in /etc/ImageMagick-6/policy.xml is set to 'read|write' and not 'none' !!! otherwise exeptiion: unauthorised will be thrown ###
 11) restart apache2: sudo systemctl restart apache2.service
 12) create test file: sudo nano /var/www/html/phpinfo.php and write '<?php phpinfo( ); ?>' to it. make sure firewall is open to html and test it.
@@ -16,6 +17,10 @@
 13) check access log: sudo tail -f /var/log/apache2/access.log
 14) check error log: sudo tail -f /var/log/apache2/error.log
 15) set up virtual host for monytaly.uk: https://www.digitalocean.com/community/tutorials/how-to-install-the-apache-web-server-on-ubuntu-18-04#step-5-%E2%80%94-setting-up-virtual-hosts-(recommended) , step 5 (other useful stuff too)
+    i.e (for church website as an example) sudo certbot --apache -d castlemilkcommunitychurch.co.uk,www.castlemilkcommunitychurch.co.uk (noting main domain name followed by alias domain name with comma and no spaces) 
+    *** TAKES TIME FOR CHANGES TO PROPAGATE INTERNET ***
+    ***TO DELETE CERTBOT CERTIFICATES: sudo certbot certificates (lists existing certificates), sudo certbot delete (interactive deleting)
+
 16) on: sudo apache2ctl configtest result gives: 'Could not reliably determine the server's fully qualified domain name...' not found satisfactory way of fixing this but old frankfurt site has same problem and seems to work ok.
 17) disable ufw & ensure digOcean FW allows http & https,
 18) set up letsencrypt: sudo add-apt-repository ppa:certbot/certbot, sudo apt update, sudo apt-get dist-upgrade, sudo apt install python-certbot-apache, sudo certbot --apache -d monytaly.uk (choose 2: redirect to secure HTTPS access)
@@ -97,9 +102,9 @@ IMPORTANT NOTES:
 
 
 20) do certificate renewal dry run to ensure all firewalls etc. will allow renewal (needs ports 80 http, and 433 https open to all): sudo certbot renew --dry-run
-21) set up certifiacate autorenewal with cron (root): sudo crontab -e, append '30 2 * * 1 /usr/bin/certbot renew >> /var/log/le-renew.log' to file and save.
+21) set up certificate autorenewal with cron (root): sudo crontab -e, append '30 2 * * 1 /usr/bin/certbot renew >> /var/log/le-renew.log' to file and save.
 22) check cron functionality: sudo systemctl status cron, or look at cron log to check things: sudo grep -i cron /var/log/syslog
-23) could temporarily set renewal to say every 4min (*/4) in sudo crontab -e, to check operation by looking at letsencrypt log from time tio time to check renewal attempts: tail -n 100 /var/log/le-renew.log
+23) could temporarily set renewal to say every 4min (*/4) in sudo crontab -e, to check operation by looking at letsencrypt log from time to time to check renewal attempts: tail -n 100 /var/log/le-renew.log
 24) test configuration with: https://www.ssllabs.com/ssltest/analyze.html?d=monytaly.uk
 
 25) set up ufw as cover in case the digitalocean firewall goes down or is miss-set: sudo ufw reset, sudo ufw allow ssh, sudo ufw allow http, sudo ufw allow https ,sudo ufw enable, sudo ufw status verbose. (need to check there's no problem for restic backups to DigitalOcean Spaces as think it will use https)
@@ -178,7 +183,8 @@ IMPORTANT NOTES:
 
 44) insert MAILTO=chris@thehardys.net at top of crontab file (under user chris) to enable emailing of errors.
 
-45) install pdftk for merging pdf files using linux shell under php control: sudo snap install pdftk, sudo ln -s /snap/pdftk/current/usr/bin/pdftk /usr/bin/pdftk (as per https://wilransz.com/pdftk-on-ubuntu-18-04/)
+45) install pdftk for merging pdf files using linux shell under php control: sudo snap install pdftk, //sudo ln -s /snap/pdftk/current/usr/bin/pdftk /usr/bin/pdftk (as per https://wilransz.com/pdftk-on-ubuntu-18-04/)
+                                                                                                        sudo apt  install pdftk-java  # version 3.0.9-1
 
 
 think about:

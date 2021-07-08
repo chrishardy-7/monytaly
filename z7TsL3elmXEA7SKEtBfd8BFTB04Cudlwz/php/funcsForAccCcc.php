@@ -41,67 +41,68 @@ function getFiltersAryFromPivotCell($rowFiltId, $colFiltId, $rowAndHeadNames, $p
 
     if (!$colFiltIdIsNum && !$rowFiltIdIsNum) { //header section, 6 rows in either far LH column or far RH column
         if ($rowFiltId == "brtfwd") {           //header section, brought fwd row name - show all brought fwd values
-            $filtersAry =   [];
+            $filtersAry["include"] =   [];
             $moneyDisplay->setPaidinOnly();
         }
         elseif ($rowFiltId == "credit") {           //header section, credit row name - show all credits (receipts)
-            $filtersAry =   [];
+            $filtersAry["include"] =   [];
             $moneyDisplay->setPaidinOnly();
         }
         elseif ($rowFiltId == "spend") {            //header section, spend row name - show all spends (payments)
-            $filtersAry =   [];
+            $filtersAry["include"] =   [];
             $moneyDisplay->setWithdrawnOnly();
         }
         else {
-            $filtersAry =   [];
+            $filtersAry["include"] =   [];
         }
     }
     else {                                      //in an area that has ids of some sort
         if ($colFiltId == "rowName") {              //main display area, far LH rowName column - ids from the column in the standard display that became rows in the pivot display
-            $filtersAry =   [$rowFieldName => $rowFiltId]; //filter for only transactions for that rowname (e.g. 'Van Crew')
+            $filtersAry["include"] =   [$rowFieldName => $rowFiltId]; //filter for only transactions for that rowname (e.g. 'Van Crew')
         }
         elseif ($colFiltId == "rowTotal") {         //main display area, far RH totals column - ids from the column in the standard display that became rows in the pivot display
-            $filtersAry =   [$rowFieldName => $rowFiltId];
+            $filtersAry["include"] =   [$rowFieldName => $rowFiltId];
         }
         elseif ($rowFiltId == "heading") {          //header section, heading row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
-            $filtersAry =   [$colFieldName => $colFiltId]; //filter for only transactions for that colName (e.g. 'FiSCAF Apr20')
+            $filtersAry["include"] =   [$colFieldName => $colFiltId]; //filter for only transactions for that colName (e.g. 'FiSCAF Apr20')
         }
         elseif ($rowFiltId == "brtfwd") {           //header section, credit row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
-            $filtersAry =   [$colFieldName => $colFiltId];
+            $filtersAry["include"] =   [$colFieldName => $colFiltId];
             $moneyDisplay->setPaidinOnly();
         }
         elseif ($rowFiltId == "credit") {           //header section, credit row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
-            $filtersAry =   [$colFieldName => $colFiltId];
+            $filtersAry["include"] =   [$colFieldName => $colFiltId];
             $moneyDisplay->setPaidinOnly();
         }
         elseif ($rowFiltId == "spend") {            //header section, spend row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
-            $filtersAry =   [$colFieldName => $colFiltId];
+            $filtersAry["include"] =   [$colFieldName => $colFiltId];
             $moneyDisplay->setWithdrawnOnly();
         }
         elseif ($rowFiltId == "surplus") {          //header section, surplus row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
-            $filtersAry =   [];
+            $filtersAry["include"] =   [];
         }
         elseif ($rowFiltId == "bal") {              //header section, bal row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
-            $filtersAry =   [];
+            $filtersAry["include"] =   [];
         }
         elseif ($rowFiltId == "spacer") {           //header section, spacer row (but not far LH or RH) - ids from the column in the standard display that became columns in the pivot display
-            $filtersAry =   [];
+            $filtersAry["include"] =   [];
         }
         else {                                      //main display area - ids from the two columns in the standard display that became rows and columns in the pivot display
-            if ($pivotButMatchedBudgetsIsSet) { //if pivot cell is empty substitute unallocated column for selected one 
-                $filtersAry =   [$rowFieldName => $rowFiltId]; //filter for only transactions matching the rowName, will be filtered for start date and end date at transaction display
+            if ($pivotButMatchedBudgetsIsSet) { //called from pivot display that shows date matched prospective budgets by colouring cells
+                $filtersAry["include"] =   [$rowFieldName => $rowFiltId]; //includes only transactions matching the rowName
+                $filtersAry["exclude"] =   [$colFieldName => $colFiltId]; //excludes the budget from the column that has been clicked
             }
-            elseif ($pivotCellEmpty) {
-                $filtersAry =   [$rowFieldName => $rowFiltId, $colFieldName => 0]; //filter for only transactions matching the rowName, and colName = unallocated (0) in the pivot table
+            elseif ($pivotCellEmpty) { //if pivot cell is empty substitute unallocated column for selected one 
+                $filtersAry["include"] =   [$rowFieldName => $rowFiltId, $colFieldName => 0]; //filter for only transactions matching the rowName, and colName = unallocated (0) in the pivot table
             }
             else {
-                $filtersAry =   [$rowFieldName => $rowFiltId, $colFieldName => $colFiltId]; //filter for only transactions matching the rowName and colName in the pivot table
+                $filtersAry["include"] =   [$rowFieldName => $rowFiltId, $colFieldName => $colFiltId]; //filter for only transactions matching the rowName and colName in the pivot table
             }
         }
     }
 
     //pr($filtersAry);
-    return [$filtersAry];
+    return $filtersAry;
 }
 
 
@@ -3280,7 +3281,7 @@ function setCookieOnClient($cookieName, $cookieData) {
 
 /* Deletes the cookie on client that matches the cookie name. */
 function deleteCookieOnClient($cookieName) {
-    setcookie($cookieName, "", time(TRUE) - 100000, "/", "", FALSE, TRUE); //time is set to over a day ago to force deletion
+    setcookie($cookieName, "", time() - 100000, "/", "", FALSE, TRUE); //time is set to over a day ago to force deletion
 }
 
 
@@ -3344,20 +3345,22 @@ function getRandNoSave($randLength) {
 }
 
 
-/* creates a random alphaNumeric that is added to the global array $nonVolatileArray["onTheHoofRandsAry"] using $inputString as the key. The length of the alphanumeric is set by the global variable $_onTheHoofRandsLength and the random is checked for uniqueness against all other randoms generated in the current session. $nonVolatileArray["onTheHoofRandsAry"] is saved by saveSession.php */
+/* creates a random alphaNumeric that is added to the global array $nonVolatileArray["onTheHoofRandsAry"] using $inputString as the key, and also returned. The length of the alphanumeric is set by the global variable $_onTheHoofRandsLength and the random is checked for uniqueness against all other randoms generated in the current session. $nonVolatileArray["onTheHoofRandsAry"] saved by saveSession.php. This routine doesn't run if a random has already been created and stored for an identical input string since $nonVolatileArray["onTheHoofRandsAry"] was last reset, instead the random already stored is returned.  */
 function getRand($inputString) {
     global $nonVolatileArray;
     global $uniqnsChkAryForRndms;
     global $_onTheHoofRandsLength;
-    $limitIndex = 0;
-    $randomAlphNum = randomAlphaString($_onTheHoofRandsLength);
-    while (in_array($randomAlphNum, $uniqnsChkAryForRndms) && ($limitIndex < 10)) { //checks to see whether generated $randomAlphNum has already been used, and if so continues to generate a new one until a unique one is found. Limits tries to 10 to prevent an endless loop if there are too many keys and too short a random length has been chosen. This means that when the total number of theoretically possible randoms is not much more than the number of keys there is no guarantee of all unique randoms.
+    if (!array_key_exists($inputString, $nonVolatileArray["onTheHoofRandsAry"])) { //only generates random and stores it if it hasn't already been done for identical input string since $nonVolatileArray["onTheHoofRandsAry"] was last reset
+        $limitIndex = 0;
         $randomAlphNum = randomAlphaString($_onTheHoofRandsLength);
-        $limitIndex++;
+        while (in_array($randomAlphNum, $uniqnsChkAryForRndms) && ($limitIndex < 10)) { //checks to see whether generated $randomAlphNum has already been used, and if so continues to generate a new one until a unique one is found. Limits tries to 10 to prevent an endless loop if there are too many keys and too short a random length has been chosen. This means that when the total number of theoretically possible randoms is not much more than the number of keys there is no guarantee of all unique randoms.
+            $randomAlphNum = randomAlphaString($_onTheHoofRandsLength);
+            $limitIndex++;
+        }
+        $nonVolatileArray["onTheHoofRandsAry"][$inputString] = $randomAlphNum; //add this alphanumeric random to $nonVolatileArray["onTheHoofRandsAry"] with $inputString as the key - saved by saveSession.php
+        $uniqnsChkAryForRndms[] = $randomAlphNum; //add to $uniqnsChkAryForRndms for further randoms generated in this function call but also in future calls, until $uniqueCheckKeysAry is reset.
     }
-    $nonVolatileArray["onTheHoofRandsAry"][$inputString] = $randomAlphNum; //add this alphanumeric random to $nonVolatileArray["onTheHoofRandsAry"] with $inputString as the key - saved by saveSession.php
-    $uniqnsChkAryForRndms[] = $randomAlphNum; //add to $uniqnsChkAryForRndms for further randoms generated in this function call but also in future calls, until $uniqueCheckKeysAry is reset.
-    return $randomAlphNum;
+    return $nonVolatileArray["onTheHoofRandsAry"][$inputString];
 }
 
 /* Returns the plain text that has been stored in a nonvolatile array on the server and is recovered using a key that is a random alphanumeric.  */

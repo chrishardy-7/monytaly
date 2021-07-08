@@ -71,7 +71,7 @@ try {
 //$stmt = $conn->prepare('INSERT INTO vvvvv (persommName, passuywordHash) VALUES ("Chris", "")'); 
 //$stmt->execute(array());
 
-//$stmt = $conn->prepare('DROP TABLE ccc'); 
+//$stmt = $conn->prepare('DROP TABLE mmmm'); 
 //$stmt->execute(array());
 
 //$stmt = $conn->prepare('CHECK TABLE bbbb'); 

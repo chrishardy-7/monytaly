@@ -1577,7 +1577,7 @@ function inactiveTimeout($userId, $noActivityTimeLimSecs) {
         $stmt->execute(array('userId' => $userId));
         $row = $stmt->fetch();
         $timeOfLastActivity = $row["unixSecsAtLastAccess"];
-        if (($timeOfLastActivity + $noActivityTimeLimSecs) < time(TRUE)) {
+        if (($timeOfLastActivity + $noActivityTimeLimSecs) < time()) {
             return TRUE;
         }
         else {
@@ -1617,13 +1617,13 @@ function loggedIn($userId) {
       }
 }
 
-/* Sets unixSecsAtLastAccess to time(TRUE).  */
+/* Sets unixSecsAtLastAccess to time().  */
 function resetActivTime($userId) {
     global $conn;
     global $_customSessionCookieLength;
     global $_cookieName;
     try {
-        $timeSecs = time(TRUE);
+        $timeSecs = time();
         $stmt = $conn->prepare('UPDATE personSession SET unixSecsAtLastAccess = :unixSecsAtLastAccess WHERE id = :userId');
         $stmt->execute(array('userId' => $userId, 'unixSecsAtLastAccess' => $timeSecs));
     } catch(PDOException $e) {
@@ -1631,13 +1631,13 @@ function resetActivTime($userId) {
       }
 }
 
-/* Refreshes the cookie in the personSession table for passed user and sets it on the client. Also sets unixSecsAtLastAccess to time(TRUE).  */
+/* Refreshes the cookie in the personSession table for passed user and sets it on the client. Also sets unixSecsAtLastAccess to time().  */
 function newCookiesAndResetActivTime($userId) {
     global $conn;
     global $_customSessionCookieLength;
     global $_cookieName;
     try {
-        $timeSecs = time(TRUE);
+        $timeSecs = time();
         $customSessionCookie = randomAlphaString($_customSessionCookieLength);
         setCookieOnClient($_cookieName, $customSessionCookie);
         $stmt = $conn->prepare('UPDATE personSession SET customSessionCookie = :customSessionCookie, unixSecsAtLastAccess = :unixSecsAtLastAccess WHERE id = :userId');
@@ -1937,7 +1937,7 @@ function sessionTimeout($userId, $sessionTimeLimSecs) {
         $stmt->execute(array('userId' => $userId));
         $row = $stmt->fetch();
         $timeOfStartOfSession = $row["unixSecsSessStartTime"];
-        if (($timeOfStartOfSession + $sessionTimeLimSecs) < time(TRUE)) {
+        if (($timeOfStartOfSession + $sessionTimeLimSecs) < time()) {
             return TRUE;
         }
         else {
@@ -1954,14 +1954,14 @@ function sessionTimeout($userId, $sessionTimeLimSecs) {
     serialDocArray = ""
     serialDocArray = ""
     docFileName = ""  
-    unixSecsSessStartTime = time(TRUE)
+    unixSecsSessStartTime = time()
   PLAN IN FUTURE - Opens the record of the current session in the sessionLog table by recording the reason. (any open record is closed with the reason that it is supereseded by the current session) */
 function startSession($userId) {
     global $conn;
     global $_customSessionCookieLength;
     global $_cookieName;
     try {
-        $timeSecs = time(TRUE);
+        $timeSecs = time();
         $customSessionCookie = randomAlphaString($_customSessionCookieLength);
         setCookieOnClient($_cookieName, $customSessionCookie);
         $stmt = $conn->prepare('UPDATE personSession SET customSessionCookie = :customSessionCookie, loggedIn = TRUE, serialMenuArray = "", serialDocArray = "", docFileName = "", unixSecsSessStartTime = :unixSecsSessStartTime WHERE id = :userId');

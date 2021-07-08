@@ -1,7 +1,8 @@
 <?php
 ini_set('display_errors',1);
 error_reporting(E_ALL & -E_DEPRECATED); //set to not show deprecated notices, primarily to allow PDFmerger to work on this PHP7 when it was only written and tested for PHP 5.x
-
+//phpinfo();
+//exit("");
 //setup php for working with Unicode data
 mb_internal_encoding('UTF-8');
 mb_http_output('UTF-8');
@@ -33,13 +34,14 @@ set_exception_handler('myException');
 
 //error_reporting(0);
 
+
 $arrayOfPathToThisFile = explode("/", __DIR__); //produces an array of the path to this file (not the simlink to this file)
 $dir = end($arrayOfPathToThisFile)."/"; //produces the parent dir of this file
 include_once("/var/monytalyData/".$dir."globals.php"); //includes the globals.php file that contains database credentials and other things
 $sdir = $dir.$subdir;
 $pathToPhpFiles = "./".$sdir."php/";
 
-
+//print_r($arrayOfPathToThisFile);
 
 include_once("./".$sdir."php/funcsForAccCcc.php");
 include_once("./".$sdir."php/classesForAccCcc.php");
@@ -277,14 +279,14 @@ if (inactiveTimeout($userId, $_noActivityTimeLimSecs)) { //if more than the set 
 
 resetActivTime($userId); //Sets the activity time in table
 
-$command = sanPost('command'); //save command single or double (hyphenated) random strings from post data
+$command = sanPost('command'); //save command single, double or triple (hyphenated) random strings from post data
 if (!$command) { //if NOT called from command random
 	clearSession($userId, "", "!$command in indexPage.php"); //don't display message in case page has been called with a stolen cookie
 	$message = "Logged Out -  No Menu or subCommand values";
 	include_once("./".$sdir."login.php");
 	exit("");
 }
-$menuBtnPlusSubCmndArray = explode('-', $command); //splits command into a two item array of menu-subCommand
+$menuBtnPlusSubCmndArray = explode('-', $command); //splits command into a three item array of menu-subCommand
 $menuBtn = $menuBtnPlusSubCmndArray[0]; //return the menuBtn random from the array and assigns it to $menuBtn so the program can continue
 $subCommand = "";
 if (array_key_exists (1, $menuBtnPlusSubCmndArray)) {
@@ -306,9 +308,8 @@ if (!in_array($menuBtn, $menuRandomsArray)) { //if the random alphanumeric repre
 $mainMenu = new buttonSet("mainMenu", "btn", "btnSelected", FALSE);
 //pr($mainMenu->getButLegend());
 
-$menuRandomsArrayArrayFlipped = array_flip($menuRandomsArray); //flip the array so the random alphanumerics become the keys and the file description the values - allows next line to get the file description
-//$menuBtnStr = $menuRandomsArrayArrayFlipped[$menuBtn];
-$menuBtnStr = $menuRandomsArrayArrayFlipped[$menuBtn];
+$menuRandomsArrayFlipped = array_flip($menuRandomsArray); //flip the array so the random alphanumerics become the keys and the file description the values - allows next line to get the file description
+$menuBtnStr = $menuRandomsArrayFlipped[$menuBtn];
 
 saveMessage($menuBtnStr);
 

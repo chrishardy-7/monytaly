@@ -167,8 +167,6 @@ function doEverything(id, heldKey, calledFrom) {
 	if (valGet("allowedToEdit") == "Yes") {
 
 		selectButPanel(staticArys["displayCellDescrpAry"], fieldNameAry, staticArys["butPanelControlAry"], id, butPanelIdSuffix, dummyButPanelId, noEditButPanelId, "dateAndItemSelectRecnclDivId", {}, restrictionsAry, "Edit"); //use the id of the current clicked cell (freshly stored in formValHolder for "seltdRowCellId") to display the appropriate but panel
-	
-		var conditionsObj = {"RcnclDate":{"Account":"General"} }; //conditions opject for panel display or not. See description in valueMatchInObj()
 
 		selectButPanel(staticArys["displayCellDescrpAry"], fieldNameAry, staticArys["subButPanelControlAry"], id, subButPanelIdSuffix, dummySubButPanelId, noEditButPanelId, "dateAndItemSelectRecnclDivId", conditionsObj, restrictionsAry, "Edit"); //for subButtons
 	}

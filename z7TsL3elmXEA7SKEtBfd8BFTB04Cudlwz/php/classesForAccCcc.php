@@ -483,6 +483,13 @@ class filterColumns {
 		setNonVolAryItem($this->nonVolFiltAryKey."Include", $this->includeFiltersAry);
 	}
 
+	function mergeAryToExcludeFiltAry($newExclFiltAry) { //merges argument filterAry with the one held internally. Any existing key (e.g.$fieldName = "budget") will be overwritten with incoming value (e.g. $fieldValue = 7)
+		foreach ($newExclFiltAry as $fieldName => $fieldValue) {
+			$this->excludeFiltersAry[$fieldName] = $fieldValue;
+		}
+		setNonVolAryItem($this->nonVolFiltAryKey."Exclude", $this->excludeFiltersAry);
+	}
+
 	function inhibit() {
 		$this->inhibitFilt = TRUE;
 	}

@@ -84,7 +84,6 @@ $nonVolatileArray["onTheHoofRandsAry"] = array(); //clear the array so any old p
 
 $nonVolatileArray["docNameNumStr"] = ""; //NOT SURE IF THIS IS THE RIGHT PLACE FOR THIS !!!! (to create blank filename so first refreshed page thinks it needs to display a new doc)
 
-
 $showFamBut = new toggleBut("Expand Fams", "fas fa-plus-square", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
 $editFamBut = new toggleBut("Family Edit", "fas fa-users", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
 $pivotBut = new toggleBut("Piv", "fas fa-table", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
@@ -252,26 +251,18 @@ if (sanPost("idRforFamily")) {
 
 //########################	shortcut button section start
 
-if ($subSubCommand == "Restricted2021") { //same as 2019-20 but for 2020-21 - a lot of duplication!
+if ($subSubCommand == "Restricted") { //same as 2019-20 but for 2020-21 - a lot of duplication!
 	$genFilter->replaceIncludeFiltStrValAry(["umbrella" => "Furniture Project"]);
 	$genFilter->replaceExcludeFiltStrValAry( [ ["budget" => ["Church Main", "None", "SPLIT"]] ] );
-	$nonVolatileArray["AllDates"] = FALSE;
-	$nonVolatileArray["masterYear"] = "2021";
-	$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
-	$nonVolatileArray["endYearOffsetPlusMnth"] = "103";
 	$showFamBut->set();
 	$fam->rememberShowFamButIsSet();
 	$pivotBut->set();
 }
 
 
-if ($subSubCommand == "RestrictedMatchBudgets2021") { //same as 2019-20 but for 2020-21 - a lot of duplication!
+if ($subSubCommand == "RestrictedMatchBudgets") { //same as 2019-20 but for 2020-21 - a lot of duplication!
 	$genFilter->replaceIncludeFiltStrValAry(["umbrella" => "Furniture Project"]);
 	$genFilter->replaceExcludeFiltStrValAry( [ ["budget" => ["Church Main", "None", "SPLIT"]] ] );
-	$nonVolatileArray["AllDates"] = FALSE;
-	$nonVolatileArray["masterYear"] = "2021";
-	$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
-	$nonVolatileArray["endYearOffsetPlusMnth"] = "103";
 	$showFamBut->set();
 	$fam->rememberShowFamButIsSet();
 	$pivotBut->set();
@@ -279,26 +270,22 @@ if ($subSubCommand == "RestrictedMatchBudgets2021") { //same as 2019-20 but for 
 }
 
 
-if ($subSubCommand == "Unrestricted2021") { //sets up pivot table for all of 2019-20 filtered for furniture project and show families selected
+if ($subSubCommand == "Unrestricted") { //sets up pivot table for all of 2019-20 filtered for furniture project and show families selected
 	$genFilter->replaceIncludeFiltStrValAry(["umbrella" => "Church"]);
 	$genFilter->replaceExcludeFiltStrValAry( [ ["budget" => ["None", "SPLIT"]] ] );
 	//$genFilter->replaceIncludeFiltStrValAry(["budget" => "Church Main"]);
-	$nonVolatileArray["AllDates"] = FALSE;
-	$nonVolatileArray["masterYear"] = "2021";
-	$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
-	$nonVolatileArray["endYearOffsetPlusMnth"] = "103";
 	$showFamBut->set();
 	$fam->rememberShowFamButIsSet();
 	$pivotBut->set();
 }
 
 
-if ($subSubCommand == "Bank2021") { //sets up pivot table for all of 2019-20 filtered for furniture project and show families selected
-	$genFilter->replaceIncludeFiltStrValAry(["umbrella" => "Bank"]);
-	$nonVolatileArray["AllDates"] = FALSE;
-	$nonVolatileArray["masterYear"] = "2021";
-	$nonVolatileArray["startYearOffsetPlusMnth"] = "004";
-	$nonVolatileArray["endYearOffsetPlusMnth"] = "103";
+if ($subSubCommand == "RBS") { //sets up pivot table for all of 2019-20 filtered for furniture project and show families selected
+	$genFilter->replaceIncludeFiltStrValAry(["accWorkedOn" => "RBS 8252"]);
+}
+
+if ($subSubCommand == "Unity") { //sets up pivot table for all of 2019-20 filtered for furniture project and show families selected
+	$genFilter->replaceIncludeFiltStrValAry(["accWorkedOn" => "Unity 2745"]);
 }
 
 
@@ -329,7 +316,7 @@ if (getPlain($subSubCommand) == "Filters From Pivot") { //this if section runs w
 	$colFiltId = $rowAndHeadIdSplit[2];
 	$pivotCellEmpty = (sanPost("pivCellVal") === ""); //boolean that is TRUE if clicked pivot cell contains no data and is just blank
 	$filtersAryFromPivotCell = getFiltersAryFromPivotCell($rowFiltId, $colFiltId, sanPost("rowAndHeadNames"), $pivotCellEmpty, $pivotButMatchedBudgets->isSet(), $moneyDisplay); //use the pivot table clicked cell id (e.g. row,col "251-piv-45") and the pivot table row and head names (e.g. "transCatgry-budget") to replace any existing column filter with new one(s) e.g: array ([transCatgry] => 16,  [budget] => 15) based on pivot table click rules
-	$genFilter->mergeAryToIncludeFiltAry($filtersAryFromPivotCell[0]); //gets data as subarry at index 0 of main array - this is so index 1 can be used to indicate whether only rows with none zero values in either amountWithdrawn or amountPaidIn are required (for showing just income from grants or just expenditure of budgets)
+	$genFilter->mergeAryToIncludeFiltAry($filtersAryFromPivotCell["include"]); //gets data as subarry at index 0 of main array - this is so index 1 can be used to indicate whether only rows with none zero values in either amountWithdrawn or amountPaidIn are required (for showing just income from grants or just expenditure of budgets)
 	$onlyRowsWhereThisFieldNotZero = $filtersAryFromPivotCell[1];
 	if ($pivotCellEmpty || $pivotButMatchedBudgets->isSet()) { //if pivot cell isn't showing amount already allocated or dates are restricted because budget match (sel) button is pressed
 		//THIS IS USED ONLY FOR BUDGETS COLUMN JUST NOW - QUICK FIX - BUT NEEDS TO SORTED SO IT WORKS WITH ANY COLUMN (DERIVED FROM createPivotDisplData() OUTPUT)
@@ -338,6 +325,7 @@ if (getPlain($subSubCommand) == "Filters From Pivot") { //this if section runs w
 	$startAndEndDateAry = [$startDate, $endDate];
 	$startAndEndDateAryReturned = restrictDates($startAndEndDateAry, $tables->getStrValue("budget", $colFiltId));
 	if ($pivotButMatchedBudgets->isSet()) {
+		$genFilter->mergeAryToExcludeFiltAry($filtersAryFromPivotCell["exclude"]); //excludes transactions with the budget who's column has been clicked
 		$startDate = $startAndEndDateAryReturned[0];
 		$endDate = $startAndEndDateAryReturned[1];
 	}
@@ -619,7 +607,7 @@ if ($groupColumnSelected) { //if $groupColumnSelected is TRUE loop through all r
 }
 else { //loop through all records that have been retrieved from the allRecords table using the normal procedure (not column group selector)
 
-	$tableColNamesAry = array("recordDate", "personOrOrg", "transCatgry", "amountWithdrawn", "amountPaidIn", "accWorkedOn", "budget", "referenceInfo", "reconciledDate", "umbrella", "docType", "recordNotes", "parent"); //create list of table names to be converted to random identifiers and used by JS and PHP on the server to update allRecords table			
+	$tableColNamesAry = $_fieldNameAry; //list of table names to be converted to random identifiers and used by JS and PHP on the server to update allRecords table			
 	$allRecordsColNameRndAry = array();
 	foreach ($tableColNamesAry as $colName) { //create and store in standard nonvolatile variable the radomised identifiers for table names
 		$allRecordsColNameRndAry[] = getRand($colName);
@@ -1458,7 +1446,9 @@ else {
 	//var currentKey = "none"; //holds the keyboard key that is currently held down - for use when a cell is clicked to know if a particular command (like create new parent) has been selected
 	var createParent = "no"; //flag to indicate to JS functions that create new parent is in operation
 	var lockChildToParentDate = "No"; //set to no as default
-	var accountBankLinksArry = {"General":"RBS 8252", "Reserved":"Clyde 5477"}; //proxy for database table that will be created and editable - to describe the relationships between working accounts and the bank accounts they are linked to. The array provides the information required to display the correct bank's statements for a given working account and to enable the buttons that select the statements by date 
+	var conditionsObj = {"RcnclDate":{"Account":"General,Wages"} }; //conditions opject for panel display or not. See description in valueMatchInObj()
+	var bankAccNameAry = ["RBS 8252", "Unity 2745"];
+	var accountBankLinksArry = {"General":"RBS 8252", "Wages":"Unity 2745"}; //proxy for database table that will be created and editable - to describe the relationships between working accounts and the bank accounts they are linked to. The array provides the information required to display the correct bank's statements for a given working account and to enable the buttons that select the statements by date 
 	var butPanelIdSuffix = <?php echo json_encode($butPanelIdSuffix);?>;
 	var subButPanelIdSuffix = <?php echo json_encode($subButPanelIdSuffix);?>;
 	var dummyButPanelId = <?php echo json_encode($dummyButPanelId);?>;
@@ -1487,7 +1477,7 @@ else {
 	var fieldNameAry = <?php echo json_encode($_fieldNameAry);?>;
 	var pivotButIsSet = <?php echo json_encode($pivotBut->isSet());?>;
 	var moneyDisplayStr = <?php echo json_encode($moneyDisplay->getStr());?>;
-	var bankAccNameAry = ["RBS 8252", "Clyde 5477"];
+	
 	var checkServerFlagMenuRandm = <?php echo json_encode($menuRandomsArray["checkServerFlag"]);?>;
 
 
