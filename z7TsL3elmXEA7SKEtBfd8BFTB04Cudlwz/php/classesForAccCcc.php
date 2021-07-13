@@ -156,10 +156,12 @@ class familyCommand {
 
 	function inputFamId($value) { //inputs the current clicked family id
 		if (getNonVolAryItem($this->name) == getFamilyId($value)) { //if NonVolAryItem family id is already set to passed value, set it to 0, else set it to passed value - this is a toggle action
+			setNonVolAryItem($this->name."callingRow", getNonVolAryItem($this->name)); //if the family value is about to be toggled to 0 remember the parent row id in nonvolatile array under name."callingRow". This is used by setToOriginRow($newRowId) so original calling row is selected again as a convenience
 			setNonVolAryItem($this->name, 0);
 		}
 		else {
 			setNonVolAryItem($this->name, $value);
+			setNonVolAryItem($this->name."callingRow", 0); //if the family value is about to be toggled to parent row id  set nonvolatile array under name."callingRow" to 0. This prevents the parent id being returned as $newRowId in setToOriginRow($newRowId) below (it is returned if display single family has just been terminated in if statement above - so original calling row is selected again as a convenience)
 		}
 	}
 
@@ -174,6 +176,15 @@ class familyCommand {
 			else {
 				return "NoKids";
 			}
+		}
+	}
+
+	function setToOriginRow($newRowId) { //if a single family display has just been terminated the original calling row id (which is the parent row id) is returned. Otherwise the passed argument is returned
+		if (0 < getNonVolAryItem($this->name."callingRow")) { //if getNonVolAryItem($this->name."callingRow") is not 0 then return original calling row id (really the parent id of the family whose display has just been terminated)
+			return getNonVolAryItem($this->name."callingRow"); //return value in array
+		}
+		else { //family is still being displayed so don't change $newRowId
+			return $newRowId;
 		}
 	}
 

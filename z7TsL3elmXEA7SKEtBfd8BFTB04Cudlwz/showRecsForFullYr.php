@@ -249,6 +249,9 @@ if (sanPost("idRforFamily")) {
 	$fam->inputFamId(sanPost("idRforFamily"));
 }
 
+
+
+
 //########################	shortcut button section start
 
 if ($subSubCommand == "Restricted") { //same as 2019-20 but for 2020-21 - a lot of duplication!
@@ -300,11 +303,10 @@ if ($subSubCommand == "EileenReclaim2") { //SET FAMILY NUMBER AND SET UP MENU BU
 //########################	shortcut button section end
 
 
-
-
 if ($fam->getFiltInhib()) { //detects when single family is being displayed and turns off the normal filter so whole of family can be seen
 	$genFilter->inhibit(); //inhibit general filter
 }
+
 
 include_once("./".$sdir."monthSelProcess.php"); // Ensures empty arrays in $nonVolatileArray exist for holding month and year selections. Takes $subCommand (which will originate from the monthSelSideBar.php script wherever that is included) and uses it to either increment/decrement year or select new (or same) month. Produces start and finish dates that will be used outside this specific script for extracting data for a range of documents from the docCatalog table.
 
@@ -371,7 +373,7 @@ if (array_key_exists ("genrlAryRndms", $nonVolatileArray) && (array_search($subC
 	$newRowId = sanpost("bankStatementIdRForDownload");
 }
 
-
+$newRowId = $fam->setToOriginRow($newRowId); //sets $newRowId to the original calling row after a single family display is terminated by clicking the family column of any displayed row in the family display
 
 
 $nonVolatileArray["genrlAryRndms"] = $genrlAryRndms;
@@ -645,6 +647,8 @@ if ($download) { //this file (showRecsForFullYr.php) is being run on the server 
 }
 
 
+//$newRowId = 333;
+
 $maxRowIdx = sizeof($idrArry) - 1;
 $maxColIdx = 11;
 $selectedRowCell = '0-0';
@@ -655,7 +659,6 @@ if (sizeof($idrArry) != 0) { //only sets the index for the array if array has so
 if (0 < $newRowId) { //sets initially selected row to the one of interest for the duplicate row after it is created and the last bank statement displayed row after bank statement button pressed
 	$selectedRowCell = $newRowId."-0";
 }
-
 
 
 include_once("./".$sdir."head.php");
@@ -1414,7 +1417,7 @@ else {
 
     <form id="e7j4UT42v4x" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data">
     <?php //this form is submited by javascript 'document.getElementById("e7j4UT42v4x").submit();' via 'function toggleSingleFamDisplay(id)' < 'doEverything();' < 'function clickField(event)'
-    	namedValHolder("sessionCommitRnd", $recoveredSessionAryCommitRnd); //used to verify currency of session array
+    	//namedValHolder("sessionCommitRnd", $recoveredSessionAryCommitRnd); //used to verify currency of session array
         formValHolder("command", $menuRandomsArray["Show Records For Full Year"]); //this page!
         formValHolder("idRforFamily", 0); //this value is set in 'function toggleSingleFamDisplay(id)' whenever a family column cell is clicked
     ?>
@@ -1423,7 +1426,7 @@ else {
     <form id="ff48f454n8f" ACTION="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]);?>" METHOD="post" enctype="multipart/form-data">
     <?php
     	//this form is submited by javascript 'document.getElementById("ff48f454n8f").submit();' via 'function groupSet(id)' < 'function clickField(event)'
-    	namedValHolder("sessionCommitRnd", $recoveredSessionAryCommitRnd); //used to verify currency of session array
+    	//namedValHolder("sessionCommitRnd", $recoveredSessionAryCommitRnd); //used to verify currency of session array
         formValHolder("command", $menuRandomsArray["Show Records For Full Year"]); //this page!
         formValHolder("headingCol", 0); //this value is set in 'function groupSet(id)' whenever a heading cell is clicked
     ?>
