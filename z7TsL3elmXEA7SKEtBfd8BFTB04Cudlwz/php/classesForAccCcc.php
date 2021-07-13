@@ -145,6 +145,7 @@ class familyCommand {
 		$this->name = $name; // save locally so $nonVolatileArray can be modified as needed
 		$this->editFamButSet = $editFamButSet;
 		$this->showFamButSet = $showFamButSet;
+		setNonVolAryItem($this->name."callingRow", 0); //set to 0 as default
 		if (!nonVolAryKeyExists($name) || $reset) { //if $nonVolatileArray key doesn't exist, or reset is true, create an array entry - 0
 	    	setNonVolAryItem($name, 0);
 	    }
@@ -171,7 +172,7 @@ class familyCommand {
 		}
 		else {
 			if (0 < getNonVolAryItem($this->name)) {
-				return getNonVolAryItem($this->name); //return value in array
+				return getNonVolAryItem($this->name); //return value in array - single family to be displayed
 			}
 			else {
 				return "NoKids";
