@@ -1,0 +1,5 @@
+Linux Commands:
+
+lsblk -p  (lists mount points)
+
+umount /dev/sdX?   (unmounts the relevant partition)
