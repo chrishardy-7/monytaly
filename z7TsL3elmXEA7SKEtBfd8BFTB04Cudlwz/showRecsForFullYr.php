@@ -373,7 +373,7 @@ if (array_key_exists ("genrlAryRndms", $nonVolatileArray) && (array_search($subC
 	$newRowId = sanpost("bankStatementIdRForDownload");
 }
 
-$newRowId = $fam->setToOriginRow($newRowId); //sets $newRowId to the original calling row after a single family display is terminated by clicking the family column of any displayed row in the family display
+//$newRowId = $fam->setToOriginRow($newRowId); //sets $newRowId to the original calling row after a single family display is terminated by clicking the family column of any displayed row in the family display
 
 
 $nonVolatileArray["genrlAryRndms"] = $genrlAryRndms;
