@@ -254,6 +254,10 @@ if (sanPost("idRforFamily")) {
 
 //########################	shortcut button section start
 
+if ($subSubCommand == "Reclaims") { //same as 2019-20 but for 2020-21 - a lot of duplication!
+	$genFilter->replaceIncludeFiltStrValAry(["transCatgry" => "Expenditure Reclaim"]);
+}
+
 if ($subSubCommand == "Restricted") { //same as 2019-20 but for 2020-21 - a lot of duplication!
 	$genFilter->replaceIncludeFiltStrValAry(["umbrella" => "Furniture Project"]);
 	$genFilter->replaceExcludeFiltStrValAry( [ ["budget" => ["Church Main", "None", "SPLIT"]] ] );
