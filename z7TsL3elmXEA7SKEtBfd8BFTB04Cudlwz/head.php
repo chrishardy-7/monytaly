@@ -13,15 +13,15 @@
 
 	<link rel="stylesheet" href="<?php echo $dir?>css/jquery-ui-1.9.2.custom.css" type="text/css" media="all" />
 	<link rel="stylesheet" href="<?php echo $dir?>css/jsDatePick_ltr.min.css" type="text/css" media="all" />
-	<link rel="stylesheet" href="<?php echo $dir?>css/expandText.css?version=<?php echo (string)time(TRUE); ?>" type="text/css" media="all" />
+	<link rel="stylesheet" href="<?php echo $dir?>css/expandText.css?version=<?php echo (string)time(); ?>" type="text/css" media="all" />
 	<link rel="stylesheet" href="<?php echo $dir?>css/jquery.jqplot.css" type="text/css" media="all" />
-	<link rel="stylesheet" href="<?php echo $dir?>css/accCcc.css?version=<?php echo (string)time(TRUE); ?>" type="text/css" media="all" />
+	<link rel="stylesheet" href="<?php echo $dir?>css/accCcc.css?version=<?php echo (string)time(); ?>" type="text/css" media="all" />
 	<link rel="stylesheet" href="<?php echo $dir?>css/all.css" type="text/css" media="all" />
 
 	<script type="text/javascript" src="<?php echo $dir?>scripts/jquery-1.8.3.min.js"></script> 
 	<script type="text/javascript" src="<?php echo $dir?>scripts/jquery-ui-1.9.2.custom.min.js"></script>
 	<script type="text/javascript" src="<?php echo $dir?>scripts/jsDatePick.min.1.3.js"></script>
-	<script type="text/javascript" src="<?php echo $dir?>scripts/JSforAccCcc.js?version=<?php echo (string)time(TRUE); ?>"></script>
+	<script type="text/javascript" src="<?php echo $dir?>scripts/JSforAccCcc.js?version=<?php echo (string)time(); ?>"></script>
 	<script type="text/javascript" src="<?php echo $dir?>scripts/jquery.jqplot.min.js"></script>
 	<script type="text/javascript" src="<?php echo $dir?>scripts/jqplot.pieRenderer.min.js"></script>
 	<script type="text/javascript" src="<?php echo $dir?>scripts/pdfDisplay.js"></script>

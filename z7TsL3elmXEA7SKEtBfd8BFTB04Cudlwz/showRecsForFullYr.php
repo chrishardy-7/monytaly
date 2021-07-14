@@ -84,8 +84,8 @@ $nonVolatileArray["onTheHoofRandsAry"] = array(); //clear the array so any old p
 
 $nonVolatileArray["docNameNumStr"] = ""; //NOT SURE IF THIS IS THE RIGHT PLACE FOR THIS !!!! (to create blank filename so first refreshed page thinks it needs to display a new doc)
 
-$showFamBut = new toggleBut("Expand Fams", "fas fa-plus-square", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
-$editFamBut = new toggleBut("Family Edit", "fas fa-users", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
+$showFamBut = new toggleBut("Exp Fams", "fas fa-plus-square", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
+$editFamBut = new toggleBut("Fam Edit", "fas fa-users", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
 $pivotBut = new toggleBut("Piv", "fas fa-table", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
 $pivotButMatchedBudgets = new toggleBut("Budg Sel", "fas fa-table", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
 $findDuplsBut = new toggleBut("Dupls", "fas fa-equals", "subMenuBtn", "subMenuBtnSel", $pageNewStart);
@@ -1274,24 +1274,21 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 		    <?php
 
 
-		    //button for selecting bank statement reconciliation view (bank statement first line then all debits/credits below and red/green indicators)
-			if ($displayBankAcc) { //include everything in display so show button as set
-				formValHolder("runNormalBalFunc", "No");
-				?>
-			    <button class="subMenuBtnSel" type="button" onclick="document.getElementById('9EqXb73R1Pg').submit()"><i class="fas fa-tasks"></i></button>
-			    <?php
-			}
-			else { //not everything in display so show button as unset
-				formValHolder("runNormalBalFunc", "Yes");
-			  /*  ?>
-			    <button class="subMenuBtn" type="button" onclick="document.getElementById('9EqXb73R1Pg').submit()"><i class="fas fa-tasks"></i></button> <!-- bank reconciliation but - not needed now adjacent arrow up and down buttons do the same thing
-			    <?php */
-			}
+		    
 		    ?>
 			<button class="subMenuBtn" type="button" onclick="document.getElementById('xPKThZPMNO8').submit()">£ <i class="fas fa-arrow-up"></i></button>  <!-- get previous bank statement -->
 			<button class="subMenuBtn" type="button" onclick="document.getElementById('uO6Oefk0Rep').submit()">£ <i class="fas fa-arrow-down"></i></button> <!-- get next bank statement -->
 			<?php
-
+			//button for selecting bank statement reconciliation view (bank statement first line then all debits/credits below and red/green indicators)
+			if ($displayBankAcc) { //include everything in display so show button as set
+				formValHolder("runNormalBalFunc", "No");
+				?>
+			    <button class="subMenuBtn" type="button" onclick="document.getElementById('9EqXb73R1Pg').submit()">£ <i class="fas fa-ban"></i></button>
+			    <?php
+			}
+			else { //not everything in display so show button as unset
+				formValHolder("runNormalBalFunc", "Yes");
+			}
 			
 			?>
 
@@ -1310,8 +1307,8 @@ formValHolder("editableCellIdHldr", 0); //used to hold cell id for updating with
 				?>
 					<button class="subMenuBtn" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-".$genrlAryRndms["duplicateRec"];?>><i class="fas fa-clone"></i> Clone</button>
 					<!-- for Swap Doc and Swap Group Doc buttons subCommand is not used (dummy string only) and subSubCommand is used instead to match the way the buttons in uploadScans.php operate  -->
-					<button class="subMenuBtn" type="submit" name="command" value=<?php echo $menuRandomsArray["Upload Scans"]."-dummy-".getRand("Swap Doc");?>><i class="fas fa-file"></i> Swap Doc</button>
-					<button class="subMenuBtn" type="submit" name="command" value=<?php echo $menuRandomsArray["Upload Scans"]."-dummy-".getRand("Swap Group Doc");?>><i class="fas fa-copy"></i> Swap Grp Doc</button>
+					<button class="subMenuBtn" type="submit" name="command" value=<?php echo $menuRandomsArray["Upload Scans"]."-dummy-".getRand("Swap Doc");?>><i class="fas fa-file"></i> New Doc</button>
+					<button class="subMenuBtn" type="submit" name="command" value=<?php echo $menuRandomsArray["Upload Scans"]."-dummy-".getRand("Swap Group Doc");?>><i class="fas fa-copy"></i> New Grp Doc</button>
 					<button class="subMenuBtn" type="button" onclick="atomicCall('Clear')"><i class="fas fa-trash-alt"></i> Bin</button>
 				<!--	<button class="subMenuBtn" type="submit" name="command" value=<?php echo $menuRandomsArray["Show Records For Full Year"]."-".$genrlAryRndms["deleteRec"];?>><i class="fas fa-trash-alt"></i> Bin</button> -->
 				<?php
