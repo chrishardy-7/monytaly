@@ -276,10 +276,10 @@ function createPivotDisplData(
     foreach ($pivotRecsDataAry as $singleRecArry) { //ROW LOOP - through allRecords DATA, loop through all rows of supplied data from allRecords table creating array of heading names and an array of row names
         $headingVal =  $tables->getStrValue($columnForHeadings, $singleRecArry[$columnForHeadings]); //create a heading from the column selected for headings at the current row iteration
         if (!in_array($headingVal, $headingNamesAry)) { //if it's not in the array already, append it
-        	if (substr($headingVal, 0, 8) != "Furlough") { //excludes any column with heading name that has "Furlough" as the the first 8 characters
+        	//if (substr($headingVal, 0, 8) != "Furlough") { //excludes any column with heading name that has "Furlough" as the the first 8 characters
 	            $headingNamesAry[] = $headingVal; //add heading name to array
 	            $dataExists = TRUE; 
-	        }         
+	        //}         
         }
         $rowsNameVal =  $tables->getStrValue($columnForRows, $singleRecArry[$columnForRows]); //create a row name from the column selected for row names at the  current row iteration
         if (!in_array($rowsNameVal, $rowNamesAry)) { //if it's not in the array already, append it
